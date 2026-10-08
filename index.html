@@ -71,13 +71,14 @@ function summaryRows(){
  const groups=new Map();
  labor.forEach(r=>{
   const categoria=categoryFor(r),fecha=date(r),bloque=String(r.bloque||""),cama=String(r.cama||"");
-  const k=JSON.stringify([fecha,bloque,cama,categoria]);
-  if(!groups.has(k))groups.set(k,{fecha,bloque,cama,categoria,esquejes:0,horas:0,tieneHoras:false});
+  const sembrador=person(r)||"Sin nombre", codigo=String(r.sembrador||sembrador).trim().toLowerCase();
+  const k=JSON.stringify([fecha,codigo,bloque,cama,categoria]);
+  if(!groups.has(k))groups.set(k,{fecha,sembrador,bloque,cama,categoria,esquejes:0,horas:0,tieneHoras:false});
   const row=groups.get(k),quantity=num(r.cantidad),id=workerDay(r),total=totals.get(id)||0;
   row.esquejes+=quantity;
   if(total>0&&minutes.has(id)){row.horas+=minutes.get(id)/60*quantity/total;row.tieneHoras=true;}
  });
- return [...groups.values()].map(r=>({...r,horas:r.tieneHoras?r.horas:null,promedio:r.tieneHoras&&r.horas>0?r.esquejes/r.horas:null})).sort((x,y)=>y.fecha.localeCompare(x.fecha)||x.bloque.localeCompare(y.bloque)||x.cama.localeCompare(y.cama));
+ return [...groups.values()].map(r=>({...r,horas:r.tieneHoras?r.horas:null,promedio:r.tieneHoras&&r.horas>0?r.esquejes/r.horas:null})).sort((x,y)=>y.fecha.localeCompare(x.fecha)||x.sembrador.localeCompare(y.sembrador)||x.bloque.localeCompare(y.bloque)||x.cama.localeCompare(y.cama));
 }
 
 const conform=r=>r.conforme===true||r.resultado==="Conforme"||(r.incumplimientos!==undefined&&finding(r)===0);
@@ -89,7 +90,7 @@ $("nHours").textContent=fmt(t.reduce((s,r)=>s+num(r.tiempoRealMin),0)/60);
 $("nQuality").textContent=fmt(q.length);$("nConform").textContent=fmt(q.filter(conform).length);
 $("nFindings").textContent=fmt(q.filter(r=>!conform(r)).length);
 $("nRate").textContent=q.length?fmt(100*q.filter(conform).length/q.length)+" %":"—";
-const columns={resumen:[["fecha","Fecha"],["bloque","Bloque"],["cama","Cama"],["categoria","Categoría"],["esquejes","Total esquejes hechos"],["horas","Horas trabajadas"],["promedio","Promedio esquejes/hora"]],labor:[["fecha","Fecha"],["sembradorNombre","Sembrador"],["bloque","Bloque"],["cama","Cama"],["variedad","Variedad"],["densidad","Densidad"],["cantidad","Cantidad"],["observaciones","Observaciones"]],
+const columns={resumen:[["fecha","Fecha"],["sembrador","Nombre del sembrador"],["bloque","Bloque"],["cama","Cama"],["categoria","Categoría"],["esquejes","Total esquejes hechos"],["horas","Horas trabajadas"],["promedio","Promedio esquejes/hora"]],labor:[["fecha","Fecha"],["sembradorNombre","Sembrador"],["bloque","Bloque"],["cama","Cama"],["variedad","Variedad"],["densidad","Densidad"],["cantidad","Cantidad"],["observaciones","Observaciones"]],
 tiempos:[["fecha","Fecha"],["sembradorNombre","Sembrador"],["horasLaboralesMin","Min. laborales"],["horasExtraMin","Min. extra"],["otrasLaboresMin","Min. otras labores"],["tiempoRealMin","Min. reales"],["observaciones","Observaciones"]],
 calidad:[["fecha","Fecha"],["colaborador","Colaborador"],["revision","Revisión"],["semana","Semana"],["asegurador","Asegurador"],["resultado","Resultado"],["incumplimientos","Hallazgos"],["observaciones","Observaciones"]]}[tab];
 const rows=tab==="resumen"?summaryRows():picked(tab);const val=(r,key)=>tab==="resumen"?(r[key]===null?"—":(["horas","promedio"].includes(key)?fmt(r[key]):r[key])):key==="sembradorNombre"?person(r):key==="resultado"?(conform(r)?"Conforme":"Con hallazgos"):key==="incumplimientos"?finding(r):r[key];
