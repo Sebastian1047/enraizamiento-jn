@@ -7,11 +7,30 @@
   <link rel="stylesheet" href="./styles.css">
   <style>
     .topbar { min-height: 135px; }
-    .menu-btn { display: block; text-decoration: none; }
-    .area-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 20px; }
-    .area-action { display: block; border: 1px solid var(--border); border-radius: 14px; background: #fbfdfc; padding: 22px 15px; text-align: left; color: var(--text); text-decoration: none; }
-    .area-action:hover { border-color: var(--green); }
-    .area-action strong { font-size: .95rem; }
+    .menu-btn { display:block; text-decoration:none; }
+    .module-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(225px,1fr)); gap:14px; margin-top:20px; }
+    .module-link { display:flex; align-items:center; justify-content:space-between; gap:12px; border:1px solid var(--border);
+      border-radius:15px; background:#fbfdfc; padding:20px 16px; color:var(--text); text-decoration:none; min-height:94px; }
+    .module-link:hover,.module-link:focus-visible { border-color:var(--green); background:var(--green-soft); outline-offset:2px; }
+    .module-link strong { font-size:.86rem; }
+    .module-link small { display:block; color:var(--muted); font-size:.65rem; margin-bottom:7px; }
+    .module-icon { display:grid; place-items:center; min-width:36px; height:36px; border-radius:11px; background:var(--green-soft); font-size:1.15rem; }
+    .module-heading { display:flex; align-items:start; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+    .back-link { display:inline-flex; gap:7px; align-items:center; text-decoration:none; }
+    .module-filters { display:flex; gap:10px; flex-wrap:wrap; align-items:end; margin:18px 0; }
+    .module-filters label { display:flex; flex-direction:column; gap:5px; font-size:.68rem; color:var(--muted); }
+    .module-filters input { border:1px solid var(--border); border-radius:10px; padding:9px; background:#fff; color:var(--text); max-width:190px; }
+    .module-summary { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:18px 0; }
+    .module-stat { background:#fbfdfc; border:1px solid var(--border); padding:17px; border-radius:13px; }
+    .module-stat span { display:block; font-size:.68rem; color:var(--muted); }
+    .module-stat strong { display:block; margin-top:8px; font-size:1.65rem; color:var(--green); }
+    .module-notice { margin-top:15px; padding:12px; border:1px solid var(--border); border-radius:12px; font-size:.72rem; color:var(--muted); background:#fbfdfc; }
+    .module-tablewrap { margin-top:16px; max-width:100%; overflow:auto; border:1px solid var(--border); border-radius:12px; }
+    .module-table { border-collapse:collapse; width:100%; min-width:560px; font-size:.7rem; }
+    .module-table th,.module-table td { padding:11px; border-bottom:1px solid var(--border); text-align:left; white-space:pre-wrap; vertical-align:top; }
+    .module-table th { background:#f2f7f4; white-space:nowrap; }
+    .module-empty { padding:30px; text-align:center; color:var(--muted); font-size:.78rem; }
+    @media(max-width:780px) { .module-summary { grid-template-columns:1fr 1fr; } }
   </style>
 </head>
 <body>
@@ -22,8 +41,7 @@
         <div><strong>FlowerLogix</strong><span>Analítica · Sede JN</span></div>
       </div>
       <div class="sidebar-section">MÓDULOS</div>
-      <!-- Menú único y permanente: nunca se reconstruye al cambiar de área. -->
-      <nav id="sidebarMenu" aria-label="Módulos">
+      <nav id="sidebarMenu" aria-label="Áreas">
         <a class="menu-btn" data-area="produccion" href="#produccion">Producción</a>
         <a class="menu-btn" data-area="poscosecha" href="#poscosecha">Poscosecha</a>
         <a class="menu-btn" data-area="mipe" href="#mipe">MIPE</a>
@@ -35,7 +53,7 @@
         <div>
           <div class="eyebrow">FLOWERLOGIX / SEDE JN</div>
           <h1 id="heading">Analítica · Sede JN</h1>
-          <p id="subtitle">Seleccione un área del menú para consultar sus reportes.</p>
+          <p id="subtitle">Seleccione un área para consultar sus módulos.</p>
         </div>
       </header>
       <main id="app" class="main-card"></main>
@@ -43,57 +61,197 @@
   </div>
   <script>
     "use strict";
+    // Los nombres proceden solamente de la columna izquierda de cada área en Labores JN.
     const AREAS = Object.freeze({
-      produccion: "Producción",
-      poscosecha: "Poscosecha",
-      mipe: "MIPE",
-      mirfe: "MIRFE"
+      produccion: {
+        label: "Producción", modules: [
+          {id:"siembra-campo",name:"Siembra Campo",icon:"🌾"},
+          {id:"desbotonado-mallas",name:"Desbotonado y Mallas",icon:"🌸"},
+          {id:"corte",name:"Corte",icon:"✂️"},
+          {id:"bandejas-enraizamiento",name:"Bandejas Enraizamiento",icon:"🪴"},
+          {id:"preparacion-camas",name:"Preparación Camas",icon:"🛏️"}
+        ]
+      },
+      poscosecha: {
+        label: "Poscosecha", modules: [
+          {id:"empacador-rendimiento",name:"Empacador - Rendimiento",icon:"📊"},
+          {id:"surtidor-rendimiento",name:"Surtidor - Rendimiento",icon:"📊"},
+          {id:"zunchador-rendimiento",name:"Zunchador - Rendimiento",icon:"📊"},
+          {id:"digitador-rendimiento",name:"Digitador - Rendimiento",icon:"📊"}
+        ]
+      },
+      mipe: {
+        label: "MIPE", modules: [
+          {id:"aspersion-rendimiento",name:"Aspersión - Rendimiento",icon:"📊"},
+          {id:"tanquista-rendimiento",name:"Tanquista - Rendimiento",icon:"📊"}
+        ]
+      },
+      mirfe: {label:"MIRFE",modules:[]}
     });
     const app = document.getElementById("app");
     const heading = document.getElementById("heading");
     const subtitle = document.getElementById("subtitle");
     const menuLinks = [...document.querySelectorAll("#sidebarMenu [data-area]")];
-
-    // Compatibilidad con enlaces anteriores (?area=mipe), sin volver a cargar la página.
+    const fmt = new Intl.NumberFormat("es-CO", {maximumFractionDigits:2});
+    const esc = v => String(v ?? "").replace(/[&<>"']/g, c =>
+      ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    const moduleURL = (area,id) => "#" + area + "/" + id;
+    const dataKey = (area,id) => "flowerlogix_jn_data_" + area + "_" + id;
+    const getPerson = r => String(r.sembradorNombre ?? r.colaboradorNombre ?? r.empleadoNombre ?? r.nombreColaborador ??
+      r.trabajadorNombre ?? r.sembrador ?? r.colaborador ?? r.empleado ?? "");
+    const getDate = r => String(r.fecha ?? r.fechaRegistro ?? "").slice(0,10);
+    const getRecords = (area,id) => {
+      try {
+        const result = JSON.parse(localStorage.getItem(dataKey(area,id)) || "[]");
+        return Array.isArray(result) ? result : [];
+      } catch { return []; }
+    };
+    function locationParts() {
+      const parts = decodeURIComponent(location.hash.slice(1)).toLowerCase().split("/");
+      return {areaId:parts[0], moduleId:parts[1] || ""};
+    }
+    // Enlaces anteriores por consulta llevan a la nueva navegación sin recarga.
     const legacyArea = new URLSearchParams(location.search).get("area");
     if (!location.hash && Object.prototype.hasOwnProperty.call(AREAS, legacyArea)) {
-      history.replaceState(null, "", location.pathname + "#" + legacyArea);
+      history.replaceState(null,"",location.pathname+"#"+legacyArea);
+    }
+
+    function renderArea(areaId) {
+      const area=AREAS[areaId];
+      heading.textContent=area.label;
+      subtitle.textContent=area.modules.length
+        ? "Seleccione una labor para consultar sus registros e indicadores."
+        : "Área sin módulos configurados en Labores JN.";
+      if (!area.modules.length) {
+        app.innerHTML='<div class="page-kicker">ÁREA / '+esc(area.label.toUpperCase())+'</div>' +
+          '<h2 class="page-title">'+esc(area.label)+'</h2>' +
+          '<div class="module-notice">Esta área aún no tiene módulos. No se agregaron formularios nuevos.</div>';
+        return;
+      }
+      app.innerHTML='<div class="page-kicker">ÁREA / '+esc(area.label.toUpperCase())+'</div>' +
+        '<h2 class="page-title">Módulos de '+esc(area.label)+'</h2>' +
+        '<p class="page-description">Se muestran únicamente las labores de la columna izquierda del menú original.</p>' +
+        '<div class="module-grid">'+area.modules.map(item =>
+          '<a class="module-link" href="'+moduleURL(areaId,item.id)+'">' +
+          '<div><small>'+esc(area.label)+'</small><strong>'+esc(item.name)+'</strong></div>' +
+          '<span class="module-icon" aria-hidden="true">'+item.icon+'</span></a>'
+        ).join("")+'</div>';
+    }
+
+    function downloadCSV(rows,columns,fileName) {
+      const quote = cell => {
+        const value=typeof cell==="object" && cell!==null ? JSON.stringify(cell) : String(cell ?? "");
+        const guarded=/^[=+\-@]/.test(value) ? "'"+value : value;
+        return '"' + guarded.replaceAll('"','""') + '"';
+      };
+      const csv="\uFEFF"+[columns.map(quote).join(";"),
+        ...rows.map(r=>columns.map(col=>quote(r[col])).join(";"))].join("\r\n");
+      const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+      const a=document.createElement("a");
+      a.href=url;a.download=fileName+".csv";a.click();
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+    }
+
+    function renderModule(areaId,mod) {
+      const area=AREAS[areaId],records=getRecords(areaId,mod.id);
+      heading.textContent=mod.name;
+      subtitle.textContent=area.label+" / Consulta de información";
+      app.innerHTML='<div class="module-heading"><div>' +
+        '<div class="page-kicker">'+esc(area.label.toUpperCase())+' / ANÁLISIS</div>' +
+        '<h2 class="page-title">'+esc(mod.name)+'</h2>' +
+        '<p class="page-description">Vista independiente para los registros de esta labor.</p></div>' +
+        '<a class="btn-secondary back-link" href="#'+areaId+'">← Volver a '+esc(area.label)+'</a></div>' +
+        '<div class="module-filters">' +
+        '<label>Desde<input id="filterFrom" type="date"></label>' +
+        '<label>Hasta<input id="filterTo" type="date"></label>' +
+        '<label>Colaborador<input id="filterWorker" type="search" placeholder="Nombre o código"></label>' +
+        '<label class="btn-primary" style="cursor:pointer;color:#fff">Importar JSON<input id="moduleFile" type="file" accept=".json,application/json" hidden></label>' +
+        '<button class="btn-secondary" id="exportCSV" type="button">Exportar CSV</button>' +
+        '<button class="btn-secondary" id="clearFilters" type="button">Limpiar filtros</button>' +
+        '</div>' +
+        '<div class="module-notice" id="moduleNotice">Los datos se importan manualmente mediante JSON y permanecen separados por módulo en este navegador. Todavía no hay conexión automática con Producción.</div>' +
+        '<div class="module-summary"><div class="module-stat"><span>Registros</span><strong id="count">0</strong></div>' +
+        '<div class="module-stat"><span>Colaboradores distintos</span><strong id="workers">0</strong></div></div>' +
+        '<div id="recordsTable"></div>';
+      const from=document.getElementById("filterFrom");
+      const to=document.getElementById("filterTo");
+      const worker=document.getElementById("filterWorker");
+      let currentRows=records;
+      const selected=()=>currentRows.filter(r=>(
+        (!from.value || getDate(r)>=from.value) &&
+        (!to.value || getDate(r)<=to.value) &&
+        (!worker.value || getPerson(r).toLowerCase().includes(worker.value.toLowerCase()))
+      ));
+      function refresh() {
+        const rows=selected();
+        document.getElementById("count").textContent=fmt.format(rows.length);
+        document.getElementById("workers").textContent=fmt.format(new Set(rows.map(getPerson).filter(Boolean)).size);
+        const keys=[...new Set(rows.flatMap(r=>Object.keys(r)))].slice(0,35);
+        document.getElementById("recordsTable").innerHTML=!rows.length
+          ?'<div class="module-empty">No hay registros cargados para este módulo y los filtros seleccionados.</div>'
+          :'<div class="module-tablewrap"><table class="module-table"><thead><tr>'+
+            keys.map(k=>'<th>'+esc(k)+'</th>').join("")+'</tr></thead><tbody>'+
+            rows.slice(0,1000).map(r=>'<tr>'+keys.map(k=>'<td>'+esc(
+              r[k]!==null && typeof r[k]==="object" ? JSON.stringify(r[k]) : r[k]
+            )+'</td>').join("")+'</tr>').join("")+
+            '</tbody></table></div>'+(rows.length>1000
+              ?'<p class="page-description">Se muestran los primeros 1.000 registros; la exportación incluye todos los filtrados.</p>':"");
+      }
+      [from,to,worker].forEach(field=>field.addEventListener("input",refresh));
+      document.getElementById("clearFilters").addEventListener("click",()=>{
+        [from,to,worker].forEach(field=>field.value="");refresh();
+      });
+      document.getElementById("moduleFile").addEventListener("change",async event=>{
+        const file=event.target.files[0];if(!file)return;
+        const notice=document.getElementById("moduleNotice");
+        try {
+          if (file.size>5*1024*1024) throw Error("El archivo no puede superar 5 MB.");
+          const data=JSON.parse(await file.text());
+          const list=Array.isArray(data) ? data : (Array.isArray(data.registros)?data.registros:null);
+          if (!list || !list.every(r=>r && typeof r==="object" && !Array.isArray(r)))
+            throw Error('Se necesita un arreglo JSON de registros, o un objeto con la propiedad "registros".');
+          if (list.length>20000) throw Error("El archivo supera 20.000 registros.");
+          // No se modifica otro módulo ni se sustituyen datos si el archivo es inválido.
+          localStorage.setItem(dataKey(areaId,mod.id),JSON.stringify(list));
+          currentRows=list;
+          notice.textContent="Importación local: "+list.length+" registros cargados para "+mod.name+". No son datos en tiempo real.";
+          refresh();
+        } catch (error) {
+          notice.textContent="No se pudo importar: "+error.message;
+        } finally {event.target.value="";}
+      });
+      document.getElementById("exportCSV").addEventListener("click",()=>{
+        const rows=selected();if(!rows.length)return;
+        const keys=[...new Set(rows.flatMap(r=>Object.keys(r)))];
+        downloadCSV(rows,keys,areaId+"-"+mod.id);
+      });
+      refresh();
     }
 
     function render() {
-      const id = decodeURIComponent(location.hash.slice(1)).toLowerCase();
-      const name = Object.prototype.hasOwnProperty.call(AREAS, id) ? AREAS[id] : null;
-
-      // La navegación conserva siempre los cuatro elementos.
+      const {areaId,moduleId}=locationParts();
+      const area=Object.prototype.hasOwnProperty.call(AREAS,areaId)?AREAS[areaId]:null;
+      const module=area ? area.modules.find(item=>item.id===moduleId) : null;
       for (const link of menuLinks) {
-        const active = link.dataset.area === id && name !== null;
-        link.classList.toggle("active", active);
-        if (active) link.setAttribute("aria-current", "page");
+        const active=Boolean(area) && link.dataset.area===areaId;
+        link.classList.toggle("active",active);
+        if(active)link.setAttribute("aria-current","page");
         else link.removeAttribute("aria-current");
       }
-
-      heading.textContent = name || "Analítica · Sede JN";
-      subtitle.textContent = name
-        ? "Consulta y análisis de información."
-        : "Seleccione un área del menú para consultar sus reportes.";
-
-      if (!name) {
-        app.innerHTML = '<div class="page-kicker">ÁREAS DISPONIBLES</div>' +
-          '<h2 class="page-title">Seleccione un módulo</h2>' +
-          '<div class="area-buttons">' +
-          menuLinks.map(link => '<a class="area-action" href="' + link.getAttribute("href") +
-            '"><strong>' + AREAS[link.dataset.area] + '</strong></a>').join("") +
-          '</div>';
-      } else {
-        app.innerHTML = '<div class="page-kicker">MÓDULO</div>' +
-          '<h2 class="page-title">' + name + '</h2>' +
-          '<p class="page-description">Esta sección está lista para configurar los reportes correspondientes. ' +
-          'Todavía no hay conexión automática con el sistema de origen.</p>';
-      }
-      document.title = (name || "Analítica") + " · FlowerLogix";
+      if(!area) {
+        heading.textContent="Analítica · Sede JN";
+        subtitle.textContent="Seleccione un área para consultar sus módulos.";
+        app.innerHTML='<div class="page-kicker">ÁREAS DISPONIBLES</div>'+
+          '<h2 class="page-title">Seleccione un área</h2>'+
+          '<div class="module-grid">'+menuLinks.map(link=>
+            '<a class="module-link" href="'+link.getAttribute("href")+'"><strong>'+
+            esc(AREAS[link.dataset.area].label)+'</strong><span aria-hidden="true">→</span></a>'
+          ).join("")+'</div>';
+      }else if(module){renderModule(areaId,module);}
+      else{renderArea(areaId);}
+      document.title=(module?module.name:area?area.label:"Analítica")+" · FlowerLogix";
     }
-
-    window.addEventListener("hashchange", render);
+    window.addEventListener("hashchange",render);
     render();
   </script>
 </body>
