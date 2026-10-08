@@ -41,6 +41,21 @@
     .module-table { border-collapse:collapse; width:100%; min-width:560px; font-size:.7rem; }
     .module-table th,.module-table td { padding:11px; border-bottom:1px solid var(--border); text-align:left; white-space:pre-wrap; vertical-align:top; }
     .module-table th { background:#f2f7f4; white-space:nowrap; }
+
+    .quality-heading{font-size:1.02rem;margin:10px 0 14px}
+    .quality-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:15px 0}
+    .quality-toolbar label:not(.quality-upload){display:flex;flex-direction:column;gap:5px;font-size:.7rem;color:var(--muted)}
+    .quality-toolbar input,.quality-toolbar select{padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff;font:inherit;max-width:220px;font-size:.75rem}
+    .quality-upload{display:inline-flex;align-items:center;cursor:pointer;font-size:.72rem}
+    .quality-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}
+    .quality-table{min-width:900px}
+    .quality-table th{font-size:.66rem;min-width:105px;text-align:center;white-space:normal}
+    .quality-table td{font-size:.71rem;text-align:center}
+    .quality-table td:first-child,.quality-table th:first-child{text-align:left;position:sticky;left:0;background:#fff;min-width:180px}
+    .quality-table th:first-child{background:#f2f7f4}
+    .quality-week-table{margin-top:24px;max-width:560px}
+    .quality-week-table h4{font-size:.81rem;margin:0 0 10px}
+    @media(max-width:650px){.quality-stats{grid-template-columns:1fr}}
     .module-empty { padding:30px; text-align:center; color:var(--muted); font-size:.78rem; }
     @media(max-width:780px) { .module-summary { grid-template-columns:1fr 1fr; } }
   </style>
@@ -71,6 +86,7 @@
       <main id="app" class="main-card"></main>
     </section>
   </div>
+  <script src="./quality-report.js"></script>
   <script>
     "use strict";
     // Los nombres proceden solamente de la columna izquierda de cada área en Labores JN.
@@ -213,6 +229,7 @@
         const title=isQuality?"Calidad":"Rendimiento";
         const key=isQuality?mod.id+"_calidad":mod.id;
         let currentRows=getRecords(areaId,key);
+        if(isQuality){window.QualityReports.render({areaId,mod,key,panel});return;}
         panel.innerHTML='<div class="page-kicker">'+title.toUpperCase()+' / '+esc(mod.name.toUpperCase())+'</div>' +
           '<p class="page-description">Registros de '+title.toLowerCase()+' de esta labor.</p>' +
           '<div class="module-filters">' +
