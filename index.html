@@ -1,59 +1,100 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
-<title>FlowerLogix · Analítica Sede JN</title>
-<link rel="stylesheet" href="./styles.css">
-<style>
-.topbar{min-height:135px}
-.menu-btn{display:block;text-decoration:none}
-.area-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px}
-.area-action{border:1px solid var(--border);border-radius:14px;background:#fbfdfc;padding:22px 15px;text-align:left;cursor:pointer;color:var(--text)}
-.area-action:hover{border-color:var(--green)}
-.area-action strong{font-size:.95rem}
-@media(max-width:780px){.area-buttons{grid-template-columns:1fr}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FlowerLogix · Analítica Sede JN</title>
+  <link rel="stylesheet" href="./styles.css">
+  <style>
+    .topbar { min-height: 135px; }
+    .menu-btn { display: block; text-decoration: none; }
+    .area-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 20px; }
+    .area-action { display: block; border: 1px solid var(--border); border-radius: 14px; background: #fbfdfc; padding: 22px 15px; text-align: left; color: var(--text); text-decoration: none; }
+    .area-action:hover { border-color: var(--green); }
+    .area-action strong { font-size: .95rem; }
+  </style>
 </head>
 <body>
-<div class="app-shell">
-<aside class="sidebar">
- <div class="brand"><div class="brand-logo">FL</div><div><strong>FlowerLogix</strong><span>Analítica · Sede JN</span></div></div>
- <div class="sidebar-section">MÓDULOS</div>
- <nav id="sidebarMenu" aria-label="Módulos"></nav>
-</aside>
-<section class="workspace">
- <header class="topbar"><div><div class="eyebrow">FLOWERLOGIX / SEDE JN</div><h1 id="heading">Analítica</h1><p id="subtitle">Consulta y análisis de información.</p></div></header>
- <main id="app" class="main-card"></main>
-</section>
-</div>
-<script>
-"use strict";
-const areas=[
- {id:"produccion",label:"Producción"},
- {id:"poscosecha",label:"Poscosecha"},
- {id:"mipe",label:"MIPE"},
- {id:"mirfe",label:"MIRFE"}
-];
-const nav=document.getElementById("sidebarMenu");
-const app=document.getElementById("app");
-const heading=document.getElementById("heading");
-function render(){
- const selected=new URLSearchParams(location.search).get("area");
- const area=areas.find(item=>item.id===selected);
- nav.innerHTML=areas.map(item=>'<a class="menu-btn'+(selected===item.id?' active':'')+'" href="?area='+item.id+'"'+(selected===item.id?' aria-current="page"':'')+'>'+item.label+'</a>').join("");
- if(!area){
-  heading.textContent="Analítica · Sede JN";
-  document.getElementById("subtitle").textContent="Seleccione un área del menú para consultar sus reportes.";
-  app.innerHTML='<div class="page-kicker">ÁREAS DISPONIBLES</div><h2 class="page-title">Seleccione un módulo</h2><div class="area-buttons">'+areas.map(item=>'<a class="area-action" href="?area='+item.id+'"><strong>'+item.label+'</strong></a>').join("")+'</div>';
- }else{
-  heading.textContent=area.label;
-  document.getElementById("subtitle").textContent="Consulta y análisis de información.";
-  app.innerHTML='<div class="page-kicker">MÓDULO</div><h2 class="page-title">'+area.label+'</h2><p class="page-description">Esta sección está lista para configurar los reportes correspondientes. Todavía no hay conexión automática con el sistema de origen.</p>';
- }
- document.title=(area?area.label:"Analítica")+" · FlowerLogix";
-}
-render();
-</script>
-</body></html>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">FL</div>
+        <div><strong>FlowerLogix</strong><span>Analítica · Sede JN</span></div>
+      </div>
+      <div class="sidebar-section">MÓDULOS</div>
+      <!-- Menú único y permanente: nunca se reconstruye al cambiar de área. -->
+      <nav id="sidebarMenu" aria-label="Módulos">
+        <a class="menu-btn" data-area="produccion" href="#produccion">Producción</a>
+        <a class="menu-btn" data-area="poscosecha" href="#poscosecha">Poscosecha</a>
+        <a class="menu-btn" data-area="mipe" href="#mipe">MIPE</a>
+        <a class="menu-btn" data-area="mirfe" href="#mirfe">MIRFE</a>
+      </nav>
+    </aside>
+    <section class="workspace">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">FLOWERLOGIX / SEDE JN</div>
+          <h1 id="heading">Analítica · Sede JN</h1>
+          <p id="subtitle">Seleccione un área del menú para consultar sus reportes.</p>
+        </div>
+      </header>
+      <main id="app" class="main-card"></main>
+    </section>
+  </div>
+  <script>
+    "use strict";
+    const AREAS = Object.freeze({
+      produccion: "Producción",
+      poscosecha: "Poscosecha",
+      mipe: "MIPE",
+      mirfe: "MIRFE"
+    });
+    const app = document.getElementById("app");
+    const heading = document.getElementById("heading");
+    const subtitle = document.getElementById("subtitle");
+    const menuLinks = [...document.querySelectorAll("#sidebarMenu [data-area]")];
+
+    // Compatibilidad con enlaces anteriores (?area=mipe), sin volver a cargar la página.
+    const legacyArea = new URLSearchParams(location.search).get("area");
+    if (!location.hash && Object.prototype.hasOwnProperty.call(AREAS, legacyArea)) {
+      history.replaceState(null, "", location.pathname + "#" + legacyArea);
+    }
+
+    function render() {
+      const id = decodeURIComponent(location.hash.slice(1)).toLowerCase();
+      const name = Object.prototype.hasOwnProperty.call(AREAS, id) ? AREAS[id] : null;
+
+      // La navegación conserva siempre los cuatro elementos.
+      for (const link of menuLinks) {
+        const active = link.dataset.area === id && name !== null;
+        link.classList.toggle("active", active);
+        if (active) link.setAttribute("aria-current", "page");
+        else link.removeAttribute("aria-current");
+      }
+
+      heading.textContent = name || "Analítica · Sede JN";
+      subtitle.textContent = name
+        ? "Consulta y análisis de información."
+        : "Seleccione un área del menú para consultar sus reportes.";
+
+      if (!name) {
+        app.innerHTML = '<div class="page-kicker">ÁREAS DISPONIBLES</div>' +
+          '<h2 class="page-title">Seleccione un módulo</h2>' +
+          '<div class="area-buttons">' +
+          menuLinks.map(link => '<a class="area-action" href="' + link.getAttribute("href") +
+            '"><strong>' + AREAS[link.dataset.area] + '</strong></a>').join("") +
+          '</div>';
+      } else {
+        app.innerHTML = '<div class="page-kicker">MÓDULO</div>' +
+          '<h2 class="page-title">' + name + '</h2>' +
+          '<p class="page-description">Esta sección está lista para configurar los reportes correspondientes. ' +
+          'Todavía no hay conexión automática con el sistema de origen.</p>';
+      }
+      document.title = (name || "Analítica") + " · FlowerLogix";
+    }
+
+    window.addEventListener("hashchange", render);
+    render();
+  </script>
+</body>
+</html>
