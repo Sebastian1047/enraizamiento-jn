@@ -63,24 +63,74 @@ function calc(records,group,items){
  }
  return {rows:[...people.values()].sort((a,b)=>a.name.localeCompare(b.name,"es")),excluded};
 }
+// Vista previa determinista: nunca se guarda en localStorage ni se mezcla con datos importados.
+const DEMO_PEOPLE=[
+  ["DEMO-001","Ana Pérez (ejemplo)"],
+  ["DEMO-002","Carlos Ruiz (ejemplo)"],
+  ["DEMO-003","María López (ejemplo)"],
+  ["DEMO-004","Juan Torres (ejemplo)"]
+];
+function demoItems(group){
+ if(group.items.length)return group.items;
+ return [["demo-a","Criterio ilustrativo A (no oficial)"],
+         ["demo-b","Criterio ilustrativo B (no oficial)"],
+         ["demo-c","Criterio ilustrativo C (no oficial)"]];
+}
+function sampleQualityRecords(groups,modId){
+ const rows=[];
+ for(const [roleIndex,[groupId,group]] of Object.entries(groups).entries()){
+   const items=demoItems(group);
+   const seed=modId.length+roleIndex*3;
+   for(let week=0;week<4;week++){
+     for(let personIndex=0;personIndex<DEMO_PEOPLE.length;personIndex++){
+       const [code,name]=DEMO_PEOPLE[personIndex];
+       for(let revision=0;revision<4;revision++){
+         const n=personIndex*7+week*5+revision+seed;
+         const pattern=n%7;
+         const fails=pattern===1||pattern===4?[items[n%items.length][0]]:
+           pattern===6?[items[n%items.length][0],items[(n+1)%items.length][0]]:[];
+         const stamp=new Date(Date.UTC(2026,8,14+7*week+revision)).toISOString().slice(0,10);
+         rows.push({id:"DEMO-"+modId+"-"+groupId+"-"+week+"-"+personIndex+"-"+revision,
+           __calidadGrupo:groupId, fecha:stamp, anio:2026, semana:38+week,
+           colaborador:code,colaboradorNombre:name,revision:revision+1,
+           incumplimientos:fails,esMuestraReal:true,__soloDemostracion:true});
+       }
+     }
+   }
+ }
+ return rows;
+}
 function render({areaId,mod,key:storageKey,panel}){
  const groups=CONFIG[mod.id]||{};const groupNames=Object.keys(groups);
  if(!groupNames.length){panel.innerHTML='<div class="module-empty">No hay catálogo de calidad para este módulo.</div>';return;}
- let selectedGroup=groupNames[0],records=read(key(areaId,storageKey)),reportRows=[],reportHeaders=[];
+ const demoRows=sampleQualityRecords(groups,mod.id);
+ let storedRows=read(key(areaId,storageKey));
+ let demoMode=storedRows.length===0;
+ let selectedGroup=groupNames[0],records=demoMode?demoRows:storedRows,reportRows=[],reportHeaders=[];
  panel.innerHTML='<h3 class="quality-heading">Resultados de conformidad individual</h3>'+
+ '<div class="quality-demo-banner" id="qDemoBanner" role="status"></div>'+
  '<div class="quality-toolbar"><label>Modalidad<select id="qGroup">'+groupNames.map(g=>'<option value="'+esc(g)+'">'+esc(groups[g].label)+'</option>').join("")+'</select></label>'+
  '<label>Año<select id="qYear"></select></label><label>Semana<select id="qWeek"></select></label>'+
  '<label>Colaborador<input id="qSearch" type="search" placeholder="Nombre o código"></label>'+
  '<label class="btn-primary quality-upload">Importar JSON<input type="file" id="qFile" accept=".json,application/json" hidden></label>'+
- '<button type="button" class="btn-secondary" id="qCSV">Exportar CSV</button></div>'+
+ '<button type="button" class="btn-secondary" id="qCSV">Exportar CSV</button>'+
+ '<button type="button" class="btn-secondary" id="qToggleDemo">Ver registros reales</button></div>'+
  '<div class="module-notice" id="qNotice">Fórmulas: conformidad por ítem = 100 × (muestras reales − muestras con incumplimiento) / muestras reales; '+
  'conformidad total = 100 × muestras completamente conformes / muestras reales. Las muestras no realizadas se excluyen.</div>'+
  '<div id="qReport"></div>';
+ const demoBanner=panel.querySelector("#qDemoBanner"),demoToggle=panel.querySelector("#qToggleDemo");
  const g=panel.querySelector("#qGroup"),y=panel.querySelector("#qYear"),w=panel.querySelector("#qWeek"),
  search=panel.querySelector("#qSearch"),area=panel.querySelector("#qReport"),note=panel.querySelector("#qNotice");
+ function setViewNotice(){
+   demoBanner.hidden=!demoMode;
+   demoBanner.innerHTML=demoMode?
+     '<strong>DATOS DE PRUEBA — VISTA DEMOSTRATIVA</strong><span>Los nombres, fechas, resultados y porcentajes son ficticios. No se almacenan ni se mezclan con datos reales.</span>':"";
+   demoToggle.textContent=demoMode?"Ver registros reales":"Ver datos de prueba";
+   panel.querySelector("#qCSV").textContent=demoMode?"Exportar CSV de prueba":"Exportar CSV";
+ }
  const active=()=>records.filter(r=>real(r)&&rowRole(r,groups)===selectedGroup);
  const cols=()=>{const c=groups[selectedGroup],saved=read(key(areaId,mod.id+"_quality_catalog_"+selectedGroup));
- return (c.external&&saved.length?saved:c.items).filter(x=>Array.isArray(x)&&x.length===2)
+ return (demoMode?demoItems(c):(c.external&&saved.length?saved:c.items)).filter(x=>Array.isArray(x)&&x.length===2)
  .filter(x=>!c.conformIds.includes(String(x[0]))&&!/^(ramo\s+)?conforme$/.test(norm(x[1])))
  .map(x=>[String(x[0]),String(x[1])]);};
  function periods(){
@@ -94,14 +144,17 @@ function render({areaId,mod,key:storageKey,panel}){
  }
  function refresh(){
    const c=groups[selectedGroup],items=cols();
-   if(c.pending){area.innerHTML='<div class="module-notice">Mallas no tiene ítems configurados en el formulario original. No se inventan columnas.</div>';reportRows=[];return;}
-   if(c.external&&!items.length){area.innerHTML='<div class="module-notice">Los ítems del Cortador provienen de un catálogo externo que no está incluido en GitHub. Importe JSON con "registros" y "catalogoItems" para obtener los nombres reales.</div>';reportRows=[];return;}
+   setViewNotice();
+   if(c.pending&&!demoMode){area.innerHTML='<div class="module-notice">Mallas no tiene ítems configurados en el formulario original. No se inventan columnas.</div>';reportRows=[];return;}
+   if(c.external&&!demoMode&&!items.length){area.innerHTML='<div class="module-notice">Los ítems del Cortador provienen de un catálogo externo que no está incluido en GitHub. Importe JSON con "registros" y "catalogoItems" para obtener los nombres reales.</div>';reportRows=[];return;}
    const rows=active().filter(r=>(!y.value||period(r)[0]===Number(y.value))&&(!w.value||period(r)[1]===Number(w.value))&&
      (!search.value||norm(worker(r)+" "+(r.colaborador||r.sembrador||"")).includes(norm(search.value))));
    const res=calc(rows,c,items);
    reportHeaders=["NOMBRE DEL COLABORADOR","MUESTRAS REALES",...items.map(x=>x[1]),"CONFORMIDAD TOTAL"];
    reportRows=res.rows.map(p=>[p.name,p.samples,...items.map(([id])=>pct(p.samples-p.issues.get(id),p.samples)),pct(p.pass,p.samples)]);
    const total=res.rows.reduce((s,p)=>s+p.samples,0),passed=res.rows.reduce((s,p)=>s+p.pass,0);
+   const warning=demoMode&&(c.pending||c.external)?
+     '<div class="module-notice"><strong>Solo demostración visual:</strong> estos criterios ilustrativos no existen en el catálogo original de esta modalidad. Se reemplazarán por los oficiales cuando estén disponibles.</div>':"";
    const head=reportHeaders.map(x=>'<th>'+esc(x)+'</th>').join("");
    const table='<div class="module-tablewrap"><table class="module-table quality-table"><thead><tr>'+head+'</tr></thead><tbody>'+
      (reportRows.length?reportRows.map(row=>'<tr>'+row.map(cell=>'<td>'+esc(cell)+'</td>').join("")+'</tr>').join(""):
@@ -112,7 +165,7 @@ function render({areaId,mod,key:storageKey,panel}){
      v.n++;if(!f.failed.size)v.pass++;weeks.set(k,v);
    });
    const weekRows=[...weeks.values()].sort((a,b)=>b.yr-a.yr||b.week-a.week).slice(0,4);
-   area.innerHTML='<div class="quality-stats"><div class="module-stat"><span>Muestras reales</span><strong>'+fmt.format(total)+'</strong></div>'+
+   area.innerHTML=warning+'<div class="quality-stats"><div class="module-stat"><span>Muestras reales</span><strong>'+fmt.format(total)+'</strong></div>'+
      '<div class="module-stat"><span>Conformes</span><strong>'+fmt.format(passed)+'</strong></div>'+
      '<div class="module-stat"><span>Conformidad total</span><strong>'+pct(passed,total)+'</strong></div></div>'+
      (res.excluded?'<div class="module-notice">'+res.excluded+' muestra(s) sin correspondencia con el catálogo fueron excluidas para evitar resultados incorrectos.</div>':"")+
@@ -121,6 +174,12 @@ function render({areaId,mod,key:storageKey,panel}){
      (weekRows.length?weekRows.map(v=>'<tr><td>'+v.yr+' - '+v.week+'</td><td>'+v.n+'</td><td>'+pct(v.pass,v.n)+'</td></tr>').join(""):
       '<tr><td colspan="3">Sin datos semanales</td></tr>')+'</tbody></table></div>';
  }
+ demoToggle.addEventListener("click",()=>{
+   demoMode=!demoMode;
+   records=demoMode?demoRows:read(key(areaId,storageKey));
+   y.value="";w.value="";search.value="";
+   periods();refresh();
+ });
  g.addEventListener("change",()=>{selectedGroup=g.value;periods();refresh()});
  y.addEventListener("change",()=>{periods();refresh()});w.addEventListener("change",refresh);search.addEventListener("input",refresh);
  panel.querySelector("#qFile").addEventListener("change",async event=>{
@@ -133,8 +192,9 @@ function render({areaId,mod,key:storageKey,panel}){
      const catalog=Array.isArray(raw.catalogoItems)?raw.catalogoItems:null;
      if(catalog&&groups[selectedGroup].external){const items=catalog.map(x=>Array.isArray(x)?x:[x.id??x.idItem,x.nombre??x.name])
        .filter(x=>x?.length===2&&x[0]!=null&&x[1]);localStorage.setItem(key(areaId,mod.id+"_quality_catalog_"+selectedGroup),JSON.stringify(items));}
-     records=list.map(x=>({...x,__calidadGrupo:rowRole(x,groups)||selectedGroup}));
-     localStorage.setItem(key(areaId,storageKey),JSON.stringify(records));
+     storedRows=list.map(x=>({...x,__calidadGrupo:rowRole(x,groups)||selectedGroup}));
+     records=storedRows;demoMode=false;
+     localStorage.setItem(key(areaId,storageKey),JSON.stringify(storedRows));
      note.textContent=records.length+" evaluaciones importadas localmente. Los registros sin modalidad se asignaron a "+groups[selectedGroup].label+". Sin conexión automática a Producción.";
      periods();refresh();
    }catch(e){note.textContent="Error al importar: "+e.message;}finally{event.target.value="";}
@@ -144,10 +204,10 @@ function render({areaId,mod,key:storageKey,panel}){
    const quote=v=>'"'+String(v??"").replaceAll('"','""')+'"';
    const csv="\uFEFF"+[reportHeaders,...reportRows].map(row=>row.map(quote).join(";")).join("\r\n");
    const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
-   const a=document.createElement("a");a.href=url;a.download="calidad-"+areaId+"-"+mod.id+"-"+selectedGroup+".csv";a.click();
+   const a=document.createElement("a");a.href=url;a.download=(demoMode?"DEMO-":"")+"calidad-"+areaId+"-"+mod.id+"-"+selectedGroup+".csv";a.click();
    setTimeout(()=>URL.revokeObjectURL(url),1500);
  });
  periods();refresh();
 }
-window.QualityReports={render,calc,evaluate,config:CONFIG};
+window.QualityReports={render,calc,evaluate,config:CONFIG,sampleQualityRecords,demoItems};
 })();
