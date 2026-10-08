@@ -7,6 +7,10 @@
   <link rel="stylesheet" href="./styles.css">
   <style>
     .topbar { min-height: 135px; }
+    .home-section { margin-top:24px; padding-top:15px; border-top:1px solid var(--border); }
+    .home-section-heading { display:flex; justify-content:space-between; gap:12px; align-items:center; }
+    .home-section-heading h3 { margin:0; font-size:1.08rem; }
+    .home-area-link { color:var(--green); font-weight:700; font-size:.74rem; text-decoration:none; }
     .menu-btn { display:block; text-decoration:none; }
     .module-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(225px,1fr)); gap:14px; margin-top:20px; }
     .module-link { display:flex; align-items:center; justify-content:space-between; gap:12px; border:1px solid var(--border);
@@ -241,12 +245,19 @@
       if(!area) {
         heading.textContent="Analítica · Sede JN";
         subtitle.textContent="Seleccione un área para consultar sus módulos.";
-        app.innerHTML='<div class="page-kicker">ÁREAS DISPONIBLES</div>'+
-          '<h2 class="page-title">Seleccione un área</h2>'+
-          '<div class="module-grid">'+menuLinks.map(link=>
-            '<a class="module-link" href="'+link.getAttribute("href")+'"><strong>'+
-            esc(AREAS[link.dataset.area].label)+'</strong><span aria-hidden="true">→</span></a>'
-          ).join("")+'</div>';
+        app.innerHTML='<div class="page-kicker">FLOWERLOGIX / REPORTES</div>'+
+          '<h2 class="page-title">Módulos de análisis</h2>'+
+          '<p class="page-description">Seleccione un módulo para visualizar sus registros. También puede filtrar por área desde el menú lateral.</p>'+
+          Object.entries(AREAS).map(([key,section])=>
+            '<section class="home-section"><div class="home-section-heading"><h3>'+esc(section.label)+'</h3>'+
+            '<a class="home-area-link" href="#'+key+'">Ver área →</a></div>'+
+            (section.modules.length ? '<div class="module-grid">'+section.modules.map(item=>
+              '<a class="module-link" href="'+moduleURL(key,item.id)+'">'+
+              '<div><small>'+esc(section.label)+'</small><strong>'+esc(item.name)+'</strong></div>'+
+              '<span class="module-icon" aria-hidden="true">'+item.icon+'</span></a>'
+            ).join("")+'</div>' : '<p class="page-description">Sin módulos configurados.</p>')+
+            '</section>'
+          ).join("");
       }else if(module){renderModule(areaId,module);}
       else{renderArea(areaId);}
       document.title=(module?module.name:area?area.label:"Analítica")+" · FlowerLogix";
