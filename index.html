@@ -1,121 +1,58 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Enraizamiento · Sede JN | FlowerLogix</title><link rel="stylesheet" href="styles.css?v=20261008-menu2">
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<title>FlowerLogix · Analítica Sede JN</title>
+<link rel="stylesheet" href="./styles.css">
 <style>
-.module-shell{max-width:1500px;margin:auto}.module-header{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
-.module-grid{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:12px;margin:18px 0}
-.module-stat{border:1px solid var(--border);border-radius:14px;background:#fbfdfc;padding:17px}
-.module-stat span{display:block;color:var(--muted);font-size:.7rem}.module-stat strong{display:block;font-size:1.8rem;color:var(--green);margin-top:7px}
-.module-controls{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-top:16px}.module-controls label{font-size:.7rem;color:var(--muted);display:flex;flex-direction:column;gap:5px}
-.module-controls input,.module-controls select{padding:9px;border:1px solid var(--border);border-radius:9px;background:white}
-.module-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:17px 0}.module-tabs button{border:1px solid var(--border);padding:9px 14px;border-radius:9px;background:#f2f7f4;cursor:pointer;color:#173e2b}
-.module-tabs .selected{background:var(--green);color:#fff}.module-table{width:100%;border-collapse:collapse;font-size:.73rem;min-width:750px}
-.module-table td,.module-table th{padding:11px;text-align:left;border-bottom:1px solid var(--border)}.module-table th{background:#f2f7f4}
-.module-notice{border:1px solid var(--border);border-radius:12px;background:#fbfdfc;padding:13px;font-size:.75rem;color:#345441}
-.module-empty{padding:32px 12px;text-align:center;color:var(--muted)}.module-tablewrap{overflow:auto;border:1px solid var(--border);border-radius:12px}
-@media(max-width:850px){.module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.workspace{padding:12px}}
-</style></head>
-<body><div class="app-shell"><aside class="sidebar"><div class="brand"><div class="brand-logo">FL</div><div><strong>FlowerLogix</strong><span>Producción / Analítica</span></div></div><div class="sidebar-section">MÓDULOS</div><nav><a class="menu-btn" style="display:block;text-decoration:none" href="./area.html?area=poscosecha">Poscosecha</a><a class="menu-btn" style="display:block;text-decoration:none" href="./area.html?area=mipe">MIPE</a><a class="menu-btn" style="display:block;text-decoration:none" href="./area.html?area=mirfe">MIRFE</a></nav></aside>
-<section class="workspace"><header class="topbar"><div><div class="eyebrow">PRODUCCIÓN / SEDE JN</div><h1>Enraizamiento</h1><p>Consolidado de labores, tiempos y evaluaciones de calidad.</p></div></header>
-<main class="main-card module-shell"><div class="module-header"><div><div class="page-kicker">ANÁLISIS OPERATIVO</div><h2 class="page-title">Indicadores de enraizamiento</h2><p class="page-description">Los datos se leen desde un archivo JSON exportado del sistema de Producción.</p></div><label class="btn-primary" style="cursor:pointer">Importar JSON<input id="file" type="file" accept=".json,application/json" hidden></label></div>
-<div class="module-controls"><label>Desde<input type="date" id="from"></label><label>Hasta<input type="date" id="to"></label><label>Sembrador<input id="worker" type="search" placeholder="Nombre o código"></label><button id="reset" class="btn-secondary">Limpiar filtros</button><button id="download" class="btn-secondary">Exportar CSV filtrado</button></div>
-<div id="notice" class="module-notice" style="margin-top:16px">Sin datos importados. No hay conexión automática entre Producción y Soporte: para eso es necesario un servicio compartido.</div>
-<div class="module-grid" aria-live="polite">
-<div class="module-stat"><span>Registros de labor</span><strong id="nRecords">0</strong></div>
-<div class="module-stat"><span>Cantidad registrada</span><strong id="nAmount">0</strong></div>
-<div class="module-stat"><span>Sembradores distintos</span><strong id="nWorkers">0</strong></div>
-<div class="module-stat"><span>Tiempo real total (horas)</span><strong id="nHours">0</strong></div>
-<div class="module-stat"><span>Evaluaciones de calidad</span><strong id="nQuality">0</strong></div>
-<div class="module-stat"><span>Conformes</span><strong id="nConform">0</strong></div>
-<div class="module-stat"><span>Evaluaciones con hallazgos</span><strong id="nFindings">0</strong></div>
-<div class="module-stat"><span>Porcentaje conforme</span><strong id="nRate">—</strong></div></div>
-<div class="module-notice" style="margin-top:15px">Las horas por bloque y cama se estiman proporcionalmente según los esquejes de cada trabajador en el día. El promedio se calcula como esquejes ÷ horas estimadas; sin tiempos registrados se muestra —.</div><div class="module-tabs"><button data-tab="resumen" class="selected">Resumen por cama</button><button data-tab="labor">Rendimiento / Labor</button><button data-tab="tiempos">Tiempos</button><button data-tab="calidad">Calidad</button></div>
-<div id="tableArea"></div></main></section></div>
+.topbar{min-height:135px}
+.menu-btn{display:block;text-decoration:none}
+.area-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px}
+.area-action{border:1px solid var(--border);border-radius:14px;background:#fbfdfc;padding:22px 15px;text-align:left;cursor:pointer;color:var(--text)}
+.area-action:hover{border-color:var(--green)}
+.area-action strong{font-size:.95rem}
+@media(max-width:780px){.area-buttons{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app-shell">
+<aside class="sidebar">
+ <div class="brand"><div class="brand-logo">FL</div><div><strong>FlowerLogix</strong><span>Analítica · Sede JN</span></div></div>
+ <div class="sidebar-section">MÓDULOS</div>
+ <nav id="sidebarMenu" aria-label="Módulos"></nav>
+</aside>
+<section class="workspace">
+ <header class="topbar"><div><div class="eyebrow">FLOWERLOGIX / SEDE JN</div><h1 id="heading">Analítica</h1><p id="subtitle">Consulta y análisis de información.</p></div></header>
+ <main id="app" class="main-card"></main>
+</section>
+</div>
 <script>
-(()=>{"use strict";
-const KEY="flowerlogix_enraizamiento_jn_import_v1";
-let data={labor:[],tiempos:[],calidad:[]},tab="resumen";
-const $=id=>document.getElementById(id);
-const safe=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const arr=v=>Array.isArray(v)?v:[];
-const person=r=>String(r.sembradorNombre||r.colaboradorNombre||r.nombreColaborador||r.sembrador||r.colaborador||"");
-const date=r=>String(r.fecha||"").slice(0,10);
-const num=v=>{const n=Number(v);return Number.isFinite(n)?n:0};
-const fmt=n=>new Intl.NumberFormat("es-CO",{maximumFractionDigits:2}).format(n);
-const finding=r=>{const a=r.incumplimientos||r.hallazgos||[];return Array.isArray(a)?a.filter(x=>x!==null&&x!==""&&x!=="Conforme").length:(typeof a==="object"?Object.keys(a).length:num(a))};
-function normalize(raw){
- if(Array.isArray(raw)){
-  return {labor:raw.filter(r=>r.tipo==="labor"||r.densidad!==undefined||r.cantidad!==undefined),tiempos:raw.filter(r=>r.tipo==="tiempos"||r.tiempoRealMin!==undefined),calidad:raw.filter(r=>r.tipo==="calidad"||r.incumplimientos!==undefined)};
- }
- if(!raw||typeof raw!=="object")throw Error("El contenido debe ser un objeto o una lista JSON.");
- return {labor:arr(raw.labor||raw.registros||raw.bandejasEnraizamiento),tiempos:arr(raw.tiempos||raw.bandejasTiempos),calidad:arr(raw.calidad||raw.calidadEvaluaciones).filter(r=>!r.labor||/bandejas|enraizamiento/i.test(r.labor))};
-}
-const visible=r=>(!$("from").value||date(r)>=$("from").value)&&(!$("to").value||date(r)<=$("to").value)&&(!$("worker").value||person(r).toLowerCase().includes($("worker").value.toLowerCase()));
-const picked=k=>data[k].filter(visible);
-
-const GROUPS={"CREMON":["9551° (KOLOUSSUS)","ABRIANA","ALJONKA DARK","ANDREA CR","ARCTIC QUEEN CR","ASTROID","BACHATA","BERNAL CR","CADIZ","CHESTNUT","CONTESSA","CORAZON","COOPER","FUZZBALL","GALORE","GRAND PRESTIGE","KAMALIYA","LAMIRA","LINETTE CR","LOTSO","MAGNUM","MAISY CR","MORGAN","PETRUSKA","PRIMAVERA","PURA","RED TORNADO","ROJO","ROSSANO","ROSSETA","SOLEMIO","TUSCA CR"],"CUSHION":["ALLSTAR","ANDREA","ARCTIC QUEEN","AVILA","BERNAL","BRAZUCA","CHAMPAGNE YELLOW","CHIANTI","CORAZON","COOPER","CREME BRULEE","CRUISE","DARK COPPER","DORITO","FOGATA","FORRESTER","GRAND PRESTIGE","HERTZ","IMPULSE","LAMIRA","LEMONADA","LINETTE","LOVATO","LOVATO APRICOT","MADERA","MAISY","MAISY LIME","PRINZ","RANJA","RAPSBERRY BRULEE","REAL DEAL","ROCK","SEI RUBEUS","SKYLIE","SNOW CREST","SOLEADO","SWEET DREAMS","TESTARROSA","TRISSIA","VERITY","VERONICA","VERONICA PEACH","YOLANDA","ZUMBA"],"DAISY":["AIRBRUSH","ALMA","AMETHYST DARK","AQUAREL PINK","ATLANTIS","ATLANTIS DARK PINK","ATLANTIS ORANGE","BRAHMA","BRASSA","BRAZILIAM","CANCAN","CAÑO CRISTALES","COLORADO SPRING","DENZEL","DOREMI","FACTOR","FELINA","FIREFLY","FUNSTRIPE","KALI PROV.","KANATA","KARLO","KINTARO","LINA","MADDOX","MANAGUA ORANGE","MELINDA","MELROSE","MELROSE DARK","MORNING","PLASMA","PRADA SWEET","RANDALL","RUBLE","SPECTRA","STRIPY","SUNNY DAY","TEQUILA SUNRISE","TOP DOLLAR","UVITA","VALENTINO","VESPA SPLENDID","VITAMIN C"],"MICROPOMPON BUTTON":["CANDY CRUSH MINT","CANDY CRUSH PINK","CANDY CRUSH PURPLE","CANDY CRUSH RED","CANDY CRUSH WHITE","CANDY CRUSH YELLOW","DOTTY BRONZE","DOTTY PINK","KAROL (12038)","ORO"],"MICROPOMPON DAISY":["ESPERANZA PURA","GREICY","ILSEY","KATY","LUCY","MOLLY PURPLE","MOLLY YELLOW","PANCRAS DARK","PICANTE","REESES","SUPER B","WALLACE","YING YANG XL","YODA"],"NOVELTY":["AIPOM","ALEMANI","AMARIS","ARTIGAS","BLANCA NIEVES","BONSAI","CABARET","CHIKORITA","CRESTA PURPLE","DELIROCK","DELIROCK PINK","FLORANGE DARK","FUZZBALL","HOT ROD","HOW SWEET","LAURISSIA","LEXI","LIVY","MARK TWAIN","NIVEA","OKADA","PAINT BALL SUNNY","PASION BELEN","PILOT","PINKON","PRINCESS PEACH","ROSELLE","ROSSIA","SHORTCAKE","SHORTCAKE BRONZE","SOLAR ECLIPSE","TARAPACA","TIARA","WHATSAPP","ZIPPO"],"SPIDER":["ALIS","ANASTASIA DARK GREEN","ANASTASIA YELLOW","BAMBU","CALAFURIA","CALAFURIA SUNNY","CHISPA","ELEVEN","MARCELA","MIMOSA","SELDIS","TIANA DARK","TOPSPIN","WALHALLA"]};
-const categoryFor=r=>{
- const direct=String(r.categoria||r.categoría||r.tipoFlor||r.tipoVariedad||"").toUpperCase();
- if(/SPIDER|CREMON/.test(direct))return "Spider";
- if(/POMPON|POMPÓN|CUSHION|DAISY|NOVELTY/.test(direct))return "Pompón";
- const name=String(r.variedadNombre||r.variedad||"").trim().toUpperCase();
- const matches=Object.entries(GROUPS).filter(([,names])=>names.some(n=>n.toUpperCase()===name)).map(([type])=>type==="SPIDER"||type==="CREMON"?"Spider":"Pompón");
- return matches.length&&matches.every(c=>c===matches[0])?matches[0]:"Sin clasificar";
-};
-function summaryRows(){
- const labor=picked("labor"),times=picked("tiempos");
- const workerDay=k=>[date(k),String(k.sembrador||k.colaborador||person(k)).trim().toLowerCase()].join("|");
- const totals=new Map(),minutes=new Map();
- labor.forEach(r=>{const k=workerDay(r);totals.set(k,(totals.get(k)||0)+num(r.cantidad));});
- times.forEach(r=>{const k=workerDay(r);minutes.set(k,(minutes.get(k)||0)+num(r.tiempoRealMin));});
- const groups=new Map();
- labor.forEach(r=>{
-  const categoria=categoryFor(r),fecha=date(r),bloque=String(r.bloque||""),cama=String(r.cama||"");
-  const sembrador=person(r)||"Sin nombre", codigo=String(r.sembrador||sembrador).trim().toLowerCase();
-  const k=JSON.stringify([fecha,codigo,bloque,cama,categoria]);
-  if(!groups.has(k))groups.set(k,{fecha,sembrador,bloque,cama,categoria,esquejes:0,horas:0,tieneHoras:false});
-  const row=groups.get(k),quantity=num(r.cantidad),id=workerDay(r),total=totals.get(id)||0;
-  row.esquejes+=quantity;
-  if(total>0&&minutes.has(id)){row.horas+=minutes.get(id)/60*quantity/total;row.tieneHoras=true;}
- });
- return [...groups.values()].map(r=>({...r,horas:r.tieneHoras?r.horas:null,promedio:r.tieneHoras&&r.horas>0?r.esquejes/r.horas:null})).sort((x,y)=>y.fecha.localeCompare(x.fecha)||x.sembrador.localeCompare(y.sembrador)||x.bloque.localeCompare(y.bloque)||x.cama.localeCompare(y.cama));
-}
-
-const conform=r=>r.conforme===true||r.resultado==="Conforme"||(r.incumplimientos!==undefined&&finding(r)===0);
+"use strict";
+const areas=[
+ {id:"poscosecha",label:"Poscosecha"},
+ {id:"mipe",label:"MIPE"},
+ {id:"mirfe",label:"MIRFE"}
+];
+const nav=document.getElementById("sidebarMenu");
+const app=document.getElementById("app");
+const heading=document.getElementById("heading");
 function render(){
-const l=picked("labor"),t=picked("tiempos"),q=picked("calidad");
-$("nRecords").textContent=fmt(l.length);$("nAmount").textContent=fmt(l.reduce((s,r)=>s+num(r.cantidad),0));
-$("nWorkers").textContent=fmt(new Set([...l,...t,...q].map(person).filter(Boolean)).size);
-$("nHours").textContent=fmt(t.reduce((s,r)=>s+num(r.tiempoRealMin),0)/60);
-$("nQuality").textContent=fmt(q.length);$("nConform").textContent=fmt(q.filter(conform).length);
-$("nFindings").textContent=fmt(q.filter(r=>!conform(r)).length);
-$("nRate").textContent=q.length?fmt(100*q.filter(conform).length/q.length)+" %":"—";
-const columns={resumen:[["fecha","Fecha"],["sembrador","Nombre del sembrador"],["bloque","Bloque"],["cama","Cama"],["categoria","Categoría"],["esquejes","Total esquejes hechos"],["horas","Horas trabajadas"],["promedio","Promedio esquejes/hora"]],labor:[["fecha","Fecha"],["sembradorNombre","Sembrador"],["bloque","Bloque"],["cama","Cama"],["variedad","Variedad"],["densidad","Densidad"],["cantidad","Cantidad"],["observaciones","Observaciones"]],
-tiempos:[["fecha","Fecha"],["sembradorNombre","Sembrador"],["horasLaboralesMin","Min. laborales"],["horasExtraMin","Min. extra"],["otrasLaboresMin","Min. otras labores"],["tiempoRealMin","Min. reales"],["observaciones","Observaciones"]],
-calidad:[["fecha","Fecha"],["colaborador","Colaborador"],["revision","Revisión"],["semana","Semana"],["asegurador","Asegurador"],["resultado","Resultado"],["incumplimientos","Hallazgos"],["observaciones","Observaciones"]]}[tab];
-const rows=tab==="resumen"?summaryRows():picked(tab);const val=(r,key)=>tab==="resumen"?(r[key]===null?"—":(["horas","promedio"].includes(key)?fmt(r[key]):r[key])):key==="sembradorNombre"?person(r):key==="resultado"?(conform(r)?"Conforme":"Con hallazgos"):key==="incumplimientos"?finding(r):r[key];
-$("tableArea").innerHTML=rows.length?'<div class="module-tablewrap"><table class="module-table"><thead><tr>'+columns.map(c=>'<th>'+safe(c[1])+'</th>').join("")+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+columns.map(c=>'<td>'+safe(val(r,c[0]))+'</td>').join("")+'</tr>').join("")+'</tbody></table></div>':'<div class="module-empty">No hay registros para esta vista y los filtros seleccionados.</div>';
+ const selected=new URLSearchParams(location.search).get("area");
+ const area=areas.find(item=>item.id===selected);
+ nav.innerHTML=areas.map(item=>'<a class="menu-btn'+(selected===item.id?' active':'')+'" href="?area='+item.id+'"'+(selected===item.id?' aria-current="page"':'')+'>'+item.label+'</a>').join("");
+ if(!area){
+  heading.textContent="Analítica · Sede JN";
+  document.getElementById("subtitle").textContent="Seleccione un área del menú para consultar sus reportes.";
+  app.innerHTML='<div class="page-kicker">ÁREAS DISPONIBLES</div><h2 class="page-title">Seleccione un módulo</h2><div class="area-buttons">'+areas.map(item=>'<a class="area-action" href="?area='+item.id+'"><strong>'+item.label+'</strong></a>').join("")+'</div>';
+ }else{
+  heading.textContent=area.label;
+  document.getElementById("subtitle").textContent="Consulta y análisis de información.";
+  app.innerHTML='<div class="page-kicker">MÓDULO</div><h2 class="page-title">'+area.label+'</h2><p class="page-description">Esta sección está lista para configurar los reportes correspondientes. Todavía no hay conexión automática con el sistema de origen.</p>';
+ }
+ document.title=(area?area.label:"Analítica")+" · FlowerLogix";
 }
-$("file").addEventListener("change",async e=>{
-const f=e.target.files?.[0];if(!f)return;
-try{if(f.size>8*1024*1024)throw Error("El archivo supera el límite de 8 MB.");
-const next=normalize(JSON.parse(await f.text()));
-if(!Object.values(next).every(Array.isArray))throw Error("Formato incorrecto");
-data=next;try{localStorage.setItem(KEY,JSON.stringify(data));}catch{}
-$("notice").textContent="Datos importados: "+data.labor.length+" registros de labor, "+data.tiempos.length+" de tiempos y "+data.calidad.length+" evaluaciones. Origen: archivo local; no son datos en tiempo real.";render();
-}catch(err){$("notice").textContent="No se pudo importar: "+err.message;}finally{e.target.value="";}
-});
-["from","to","worker"].forEach(id=>$(id).addEventListener("input",render));
-$("reset").addEventListener("click",()=>{["from","to","worker"].forEach(id=>$(id).value="");render();});
-document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>{tab=b.dataset.tab;document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("selected",x===b));render();}));
-$("download").addEventListener("click",()=>{
-const rows=tab==="resumen"?summaryRows():picked(tab);if(!rows.length)return;
-const csv=Object.keys(rows.reduce((o,r)=>Object.assign(o,r),{}));
-const quote=v=>'"'+String(typeof v==="object"?JSON.stringify(v):v??"").replaceAll('"','""')+'"';
-const content="\uFEFF"+[csv.map(quote).join(";"),...rows.map(r=>csv.map(k=>quote(r[k])).join(";"))].join("\r\n");
-const a=document.createElement("a");const url=URL.createObjectURL(new Blob([content],{type:"text/csv;charset=utf-8"}));a.href=url;a.download="enraizamiento-jn-"+tab+".csv";a.click();setTimeout(()=>URL.revokeObjectURL(url),500);
-});
-try{const stored=localStorage.getItem(KEY);if(stored){data=normalize(JSON.parse(stored));$("notice").textContent="Mostrando la última importación guardada en este navegador. No existe sincronización automática con Producción.";}}catch{}
 render();
-})();
-</script></body></html>
+</script>
+</body></html>
