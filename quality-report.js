@@ -105,7 +105,7 @@ function render({areaId,mod,key:storageKey,panel}){
  if(!groupNames.length){panel.innerHTML='<div class="module-empty">No hay catálogo de calidad para este módulo.</div>';return;}
  const demoRows=sampleQualityRecords(groups,mod.id);
  let storedRows=read(key(areaId,storageKey));
- let demoMode=storedRows.length===0;
+ let demoMode=true;
  let selectedGroup=groupNames[0],records=demoMode?demoRows:storedRows,reportRows=[],reportHeaders=[];
  panel.innerHTML='<h3 class="quality-heading">Resultados de conformidad individual</h3>'+
  '<div class="quality-demo-banner" id="qDemoBanner" role="status"></div>'+
