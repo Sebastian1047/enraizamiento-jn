@@ -398,6 +398,148 @@ window.QualityReports={render,calc,evaluate,config:CONFIG,sampleQualityRecords,d
       setTimeout(()=>URL.revokeObjectURL(url),1000);
     }
 
+
+    // Tabla particular de rendimiento para Bandejas Enraizamiento.
+    // Producción registra esquejes por cama y tiempo real por sembrador/fecha.
+    function renderBandejasRendimiento(areaId,mod,panel) {
+      const fields=["Fecha","Nombre del sembrador","Bloque","Cama","Total esquejes sembrados","Horas trabajadas","Promedio de esquejes por hora"];
+      const exampleLabor=[
+        {fecha:"2026-10-08",sembrador:"DEMO01",sembradorNombre:"Sembrador de prueba 1",bloque:"B1",cama:"C1",cantidad:1200},
+        {fecha:"2026-10-08",sembrador:"DEMO01",sembradorNombre:"Sembrador de prueba 1",bloque:"B1",cama:"C2",cantidad:600},
+        {fecha:"2026-10-08",sembrador:"DEMO02",sembradorNombre:"Sembrador de prueba 2",bloque:"B2",cama:"C3",cantidad:1000},
+        {fecha:"2026-10-07",sembrador:"DEMO03",sembradorNombre:"Sembrador de prueba 3",bloque:"B3",cama:"C1",cantidad:850}
+      ];
+      const exampleTimes=[
+        {fecha:"2026-10-08",sembrador:"DEMO01",tiempoRealMin:360},
+        {fecha:"2026-10-08",sembrador:"DEMO02",tiempoRealMin:300},
+        {fecha:"2026-10-07",sembrador:"DEMO03",tiempoRealMin:255}
+      ];
+      const laborKey=dataKey(areaId,mod.id),timeKey=dataKey(areaId,mod.id+"_tiempos");
+      let labor=getRecords(areaId,mod.id),times=getRecords(areaId,mod.id+"_tiempos");
+      let demo=labor.length===0;
+      const date=r=>String(r.fecha??"").slice(0,10);
+      const workerId=r=>String(r.sembrador??r.colaborador??r.codigo??r.sembradorNombre??r.colaboradorNombre??"").trim().toLowerCase();
+      const workerName=r=>String(r.sembradorNombre??r.colaboradorNombre??r.nombre??r.sembrador??"Sin nombre");
+      const numeric=v=>v!==null&&v!==undefined&&v!==""&&Number.isFinite(Number(v))&&Number(v)>=0;
+      const qty=r=>Number(r.cantidad??r.totalEsquejes??r.totalEsquejesSembrados);
+      const dayKey=r=>JSON.stringify([date(r),workerId(r)]);
+      function calculate(labors,timeRows) {
+        const good=labors.filter(r=>r&&date(r)&&workerId(r)&&String(r.bloque??"").trim()&&
+          String(r.cama??"").trim()&&Number.isFinite(qty(r))&&qty(r)>0);
+        const totals=new Map();
+        good.forEach(r=>totals.set(dayKey(r),(totals.get(dayKey(r))||0)+qty(r)));
+        const hoursByDay=new Map();
+        timeRows.forEach(r=>{
+          if(!r||!date(r)||!workerId(r)||!numeric(r.tiempoRealMin))return;
+          hoursByDay.set(dayKey(r),(hoursByDay.get(dayKey(r))||0)+Number(r.tiempoRealMin)/60);
+        });
+        const groups=new Map();
+        good.forEach(r=>{
+          const k=JSON.stringify([date(r),workerId(r),String(r.bloque),String(r.cama)]);
+          if(!groups.has(k))groups.set(k,{fecha:date(r),sembrador:workerName(r),bloque:String(r.bloque),
+            cama:String(r.cama),esquejes:0,horas:0,conHoras:false});
+          const item=groups.get(k),dk=dayKey(r);
+          item.esquejes+=qty(r);
+          if(hoursByDay.has(dk)&&totals.get(dk)>0){
+            item.horas+=hoursByDay.get(dk)*qty(r)/totals.get(dk);
+            item.conHoras=true;
+          }else if(numeric(r.horasTrabajadas??r.horas)){
+            item.horas+=Number(r.horasTrabajadas??r.horas);
+            item.conHoras=true;
+          }
+        });
+        return [...groups.values()].map(r=>({
+          ...r,horas:r.conHoras?r.horas:null,
+          promedio:r.conHoras&&r.horas>0?r.esquejes/r.horas:null
+        })).sort((a,b)=>b.fecha.localeCompare(a.fecha)||a.sembrador.localeCompare(b.sembrador,"es")||
+          a.bloque.localeCompare(b.bloque,"es")||a.cama.localeCompare(b.cama,"es"));
+      }
+      panel.innerHTML='<div class="page-kicker">RENDIMIENTO / BANDEJAS ENRAIZAMIENTO</div>'+
+        '<h3 class="quality-heading">Rendimiento por sembrador y cama</h3>'+
+        '<div class="module-filters">'+
+        '<label>Desde<input id="eDesde" type="date"></label>'+
+        '<label>Hasta<input id="eHasta" type="date"></label>'+
+        '<label>Sembrador<input id="eSembrador" type="search" placeholder="Nombre del sembrador"></label>'+
+        '<label class="btn-primary quality-upload">Importar esquejes JSON<input id="eEsquejesArchivo" type="file" accept=".json,application/json" hidden></label>'+
+        '<label class="btn-primary quality-upload">Importar tiempos JSON<input id="eTiemposArchivo" type="file" accept=".json,application/json" hidden></label>'+
+        '<button class="btn-secondary" type="button" id="eCSV">Exportar CSV</button>'+
+        '<button class="btn-secondary" type="button" id="eLimpiar">Limpiar filtros</button>'+
+        '<button class="btn-secondary" type="button" id="eDemo">Ver datos reales</button></div>'+
+        '<div id="eDemoAviso" class="quality-demo-banner" role="status"></div>'+
+        '<div id="eAviso" class="module-notice">Las horas reales se registran por sembrador y fecha. '+
+        'Si un sembrador trabajó en varias camas, sus horas se distribuyen proporcionalmente según los esquejes de cada cama. '+
+        'Promedio = esquejes sembrados ÷ horas trabajadas. Sin tiempos, el promedio se indica con —.</div>'+
+        '<div class="module-summary analysis-metrics">'+
+        '<div class="module-stat"><span>Total esquejes sembrados</span><strong id="eTotal">0</strong></div>'+
+        '<div class="module-stat"><span>Horas trabajadas</span><strong id="eHoras">—</strong></div>'+
+        '<div class="module-stat"><span>Promedio esquejes/hora</span><strong id="ePromedio">—</strong></div>'+
+        '<div class="module-stat"><span>Sembradores</span><strong id="ePersonas">0</strong></div></div>'+
+        '<div class="module-tablewrap"><table class="module-table" style="min-width:950px"><thead><tr>'+
+        fields.map(f=>'<th>'+esc(f)+'</th>').join("")+'</tr></thead><tbody id="eFilas"></tbody></table></div>';
+      const get=id=>panel.querySelector("#"+id);
+      const desde=get("eDesde"),hasta=get("eHasta"),buscar=get("eSembrador");
+      let visible=[];
+      const format=n=>n===null?"—":fmt.format(n);
+      function refresh(){
+        visible=calculate(demo?exampleLabor:labor,demo?exampleTimes:times).filter(r=>
+          (!desde.value||r.fecha>=desde.value)&&(!hasta.value||r.fecha<=hasta.value)&&
+          (!buscar.value||r.sembrador.toLowerCase().includes(buscar.value.toLowerCase()))
+        );
+        const total=visible.reduce((v,r)=>v+r.esquejes,0);
+        const hours=visible.reduce((v,r)=>v+(r.horas??0),0);
+        const known=visible.filter(r=>r.horas!==null);
+        get("eTotal").textContent=fmt.format(total);
+        get("eHoras").textContent=known.length?fmt.format(hours):"—";
+        get("ePromedio").textContent=hours>0?fmt.format(known.reduce((v,r)=>v+r.esquejes,0)/hours):"—";
+        get("ePersonas").textContent=fmt.format(new Set(visible.map(r=>r.sembrador)).size);
+        get("eFilas").innerHTML=visible.length?visible.map(r=>
+          '<tr><td>'+esc(r.fecha)+'</td><td>'+esc(r.sembrador)+'</td><td>'+esc(r.bloque)+'</td>'+
+          '<td>'+esc(r.cama)+'</td><td>'+fmt.format(r.esquejes)+'</td><td>'+format(r.horas)+
+          '</td><td>'+format(r.promedio)+'</td></tr>').join(""):
+          '<tr><td class="module-empty" colspan="7">Sin registros para esta selección.</td></tr>';
+        get("eDemoAviso").hidden=!demo;
+        get("eDemoAviso").innerHTML=demo?'<strong>DATOS DE PRUEBA — EJEMPLO</strong>'+
+          '<span>Sembradores, fechas, cantidades, horas y promedios ficticios. No se guardan como datos reales.</span>':"";
+        get("eDemo").textContent=demo?"Ver datos reales":"Ver datos de prueba";
+      }
+      [desde,hasta,buscar].forEach(node=>node.addEventListener("input",refresh));
+      get("eLimpiar").addEventListener("click",()=>{desde.value="";hasta.value="";buscar.value="";refresh()});
+      get("eDemo").addEventListener("click",()=>{demo=!demo;refresh()});
+      async function load(event,mode){
+        const file=event.target.files[0];if(!file)return;
+        try{
+          if(file.size>5*1024*1024)throw Error("Archivo mayor de 5 MB.");
+          const content=JSON.parse(await file.text());
+          const candidates=mode==="labor"?["labor","bandejasEnraizamiento","registros"]:["tiempos","bandejasTiempos","registros"];
+          const rows=Array.isArray(content)?content:candidates.map(x=>content?.[x]).find(Array.isArray);
+          if(!Array.isArray(rows)||rows.length>20000||!rows.every(r=>r&&typeof r==="object"&&!Array.isArray(r)))
+            throw Error("Se requiere una lista JSON válida, máximo 20.000 registros.");
+          if(rows.some(r=>!date(r)||!workerId(r)||!(mode==="labor"?
+            String(r.bloque??"").trim()&&String(r.cama??"").trim()&&numeric(r.cantidad??r.totalEsquejes??r.totalEsquejesSembrados):
+            numeric(r.tiempoRealMin))))
+            throw Error("Faltan campos requeridos de "+(mode==="labor"?"esquejes":"tiempos")+".");
+          localStorage.setItem(mode==="labor"?laborKey:timeKey,JSON.stringify(rows));
+          if(mode==="labor")labor=rows;else times=rows;
+          demo=false;
+          get("eAviso").textContent="Se importaron "+rows.length+" registros de "+(mode==="labor"?"esquejes":"tiempos")+
+            " en este navegador. No existe todavía conexión automática con Producción.";
+          refresh();
+        }catch(e){get("eAviso").textContent="No se pudo importar: "+e.message;}
+        finally{event.target.value="";}
+      }
+      get("eEsquejesArchivo").addEventListener("change",e=>load(e,"labor"));
+      get("eTiemposArchivo").addEventListener("change",e=>load(e,"time"));
+      get("eCSV").addEventListener("click",()=>{
+        if(!visible.length)return;
+        const rows=visible.map(r=>Object.fromEntries(fields.map((label,i)=>[label,
+          [r.fecha,r.sembrador,r.bloque,r.cama,r.esquejes,
+           r.horas===null?"":Number(r.horas.toFixed(4)),
+           r.promedio===null?"":Number(r.promedio.toFixed(2))][i]])));
+        downloadCSV(rows,fields,"enraizamiento-rendimiento"+(demo?"-DEMO":""));
+      });
+      refresh();
+    }
+
     function renderModule(areaId,mod) {
       const area=AREAS[areaId];
       const tabs=[
@@ -448,6 +590,7 @@ window.QualityReports={render,calc,evaluate,config:CONFIG,sampleQualityRecords,d
         const key=isQuality?mod.id+"_calidad":mod.id;
         let currentRows=getRecords(areaId,key);
         if(isQuality){window.QualityReports.render({areaId,mod,key,panel});return;}
+        if(mod.id==="bandejas-enraizamiento"){renderBandejasRendimiento(areaId,mod,panel);return;}
         panel.innerHTML='<div class="page-kicker">'+title.toUpperCase()+' / '+esc(mod.name.toUpperCase())+'</div>' +
           '<p class="page-description">Registros de '+title.toLowerCase()+' de esta labor.</p>' +
           '<div class="module-filters">' +
