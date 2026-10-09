@@ -410,9 +410,9 @@ window.QualityReports={render,calc,evaluate,config:CONFIG,sampleQualityRecords,d
         {fecha:"2026-10-07",sembrador:"DEMO03",sembradorNombre:"Sembrador de prueba 3",bloque:"B3",cama:"C1",cantidad:850}
       ];
       const exampleTimes=[
-        {fecha:"2026-10-08",sembrador:"DEMO01",tiempoRealMin:360},
-        {fecha:"2026-10-08",sembrador:"DEMO02",tiempoRealMin:300},
-        {fecha:"2026-10-07",sembrador:"DEMO03",tiempoRealMin:255}
+        {fecha:"2026-10-08",sembrador:"DEMO01",horasExtraMin:30,desplazamientoMin:15,calisteniaMin:15,capacitacionMin:15,otrasLaboresMin:60},
+        {fecha:"2026-10-08",sembrador:"DEMO02",horasExtraMin:15,desplazamientoMin:15,calisteniaMin:15,capacitacionMin:15,otrasLaboresMin:45},
+        {fecha:"2026-10-07",sembrador:"DEMO03",horasExtraMin:0,desplazamientoMin:15,calisteniaMin:15,capacitacionMin:15,otrasLaboresMin:60}
       ];
       const laborKey=dataKey(areaId,mod.id),timeKey=dataKey(areaId,mod.id+"_tiempos");
       let labor=getRecords(areaId,mod.id),times=getRecords(areaId,mod.id+"_tiempos");
@@ -428,10 +428,32 @@ window.QualityReports={render,calc,evaluate,config:CONFIG,sampleQualityRecords,d
           String(r.cama??"").trim()&&Number.isFinite(qty(r))&&qty(r)>0);
         const totals=new Map();
         good.forEach(r=>totals.set(dayKey(r),(totals.get(dayKey(r))||0)+qty(r)));
+        // Jornada base: 7,25 h = 435 minutos, una sola vez por sembrador/fecha.
+        // Producción guarda "otrasLaboresMin" como suma de desplazamiento,
+        // calistenia, capacitación, PMadres y PAbuelas. Se descontará esa suma
+        // una única vez; no se deben duplicar sus componentes.
+        const BASE_MIN=435;
+        const minutes=(r,field)=>numeric(r[field])?Number(r[field]):0;
+        const workedMinutes=r=>{
+          const extra=minutes(r,"horasExtraMin")||
+            (numeric(r.horasExtra)?Number(r.horasExtra)*60:0);
+          const desplazamiento=minutes(r,"desplazamientoMin");
+          const calistenia=minutes(r,"calisteniaMin");
+          const capacitacion=minutes(r,"capacitacionMin");
+          const categorias=desplazamiento+calistenia+capacitacion;
+          const otrasAgregadas=numeric(r.otrasLaboresMin)
+            ? Number(r.otrasLaboresMin)
+            : categorias+minutes(r,"pMadresMin")+minutes(r,"pAbuelasMin");
+          // Las "otras labores" se calculan sin volver a contar las tres categorías.
+          const otrasExclusivas=Math.max(0,otrasAgregadas-categorias);
+          return Math.max(0,BASE_MIN+extra-desplazamiento-calistenia-capacitacion-otrasExclusivas);
+        };
         const hoursByDay=new Map();
         timeRows.forEach(r=>{
-          if(!r||!date(r)||!workerId(r)||!numeric(r.tiempoRealMin))return;
-          hoursByDay.set(dayKey(r),(hoursByDay.get(dayKey(r))||0)+Number(r.tiempoRealMin)/60);
+          if(!r||!date(r)||!workerId(r))return;
+          // Puede haber una corrección del registro: se utiliza la última
+          // entrada del día para no sumar otra jornada base de 7,25 horas.
+          hoursByDay.set(dayKey(r),workedMinutes(r)/60);
         });
         const groups=new Map();
         good.forEach(r=>{
@@ -442,9 +464,6 @@ window.QualityReports={render,calc,evaluate,config:CONFIG,sampleQualityRecords,d
           item.esquejes+=qty(r);
           if(hoursByDay.has(dk)&&totals.get(dk)>0){
             item.horas+=hoursByDay.get(dk)*qty(r)/totals.get(dk);
-            item.conHoras=true;
-          }else if(numeric(r.horasTrabajadas??r.horas)){
-            item.horas+=Number(r.horasTrabajadas??r.horas);
             item.conHoras=true;
           }
         });
@@ -467,8 +486,10 @@ window.QualityReports={render,calc,evaluate,config:CONFIG,sampleQualityRecords,d
         '<button class="btn-secondary" type="button" id="eDemo">Ver datos reales</button></div>'+
         '<div id="eDemoAviso" class="quality-demo-banner" role="status"></div>'+
         '<div id="eAviso" class="module-notice">Las horas reales se registran por sembrador y fecha. '+
-        'Si un sembrador trabajó en varias camas, sus horas se distribuyen proporcionalmente según los esquejes de cada cama. '+
-        'Promedio = esquejes sembrados ÷ horas trabajadas. Sin tiempos, el promedio se indica con —.</div>'+
+        'Fórmula: tiempo de labor = 7,25 horas + horas extra − desplazamiento − calistenia − capacitación − otras labores. '+
+        'En Producción, otrasLaboresMin ya incluye desplazamiento, calistenia y capacitación; se descuentan una sola vez. '+
+        'Si hay varias camas en un día, el tiempo se distribuye proporcionalmente a los esquejes. '+
+        'Promedio = esquejes sembrados ÷ horas de labor. Sin registro de tiempos, se muestra —.</div>'+
         '<div class="module-summary analysis-metrics">'+
         '<div class="module-stat"><span>Total esquejes sembrados</span><strong id="eTotal">0</strong></div>'+
         '<div class="module-stat"><span>Horas trabajadas</span><strong id="eHoras">—</strong></div>'+
@@ -516,7 +537,9 @@ window.QualityReports={render,calc,evaluate,config:CONFIG,sampleQualityRecords,d
             throw Error("Se requiere una lista JSON válida, máximo 20.000 registros.");
           if(rows.some(r=>!date(r)||!workerId(r)||!(mode==="labor"?
             String(r.bloque??"").trim()&&String(r.cama??"").trim()&&numeric(r.cantidad??r.totalEsquejes??r.totalEsquejesSembrados):
-            numeric(r.tiempoRealMin))))
+            ["horasExtraMin","horasExtra","desplazamientoMin","calisteniaMin","capacitacionMin",
+             "otrasLaboresMin","pMadresMin","pAbuelasMin","horasLaboralesMin","tiempoRealMin"]
+              .some(field=>numeric(r[field])))))
             throw Error("Faltan campos requeridos de "+(mode==="labor"?"esquejes":"tiempos")+".");
           localStorage.setItem(mode==="labor"?laborKey:timeKey,JSON.stringify(rows));
           if(mode==="labor")labor=rows;else times=rows;
