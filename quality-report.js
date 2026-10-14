@@ -102,13 +102,17 @@ function sampleQualityRecords(groups,modId){
  }
  return rows;
 }
-function render({areaId,mod,key:storageKey,panel}){
- const groups=CONFIG[mod.id]||{};const groupNames=Object.keys(groups);
+function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup=null}){
+ const groups=CONFIG[mod.id]||{};
+ const allGroups=Object.keys(groups);
+ const groupNames=Array.isArray(allowedGroups)&&allowedGroups.length?
+   allGroups.filter(id=>allowedGroups.includes(id)):allGroups;
  if(!groupNames.length){panel.innerHTML='<div class="module-empty">No hay catálogo de calidad para este módulo.</div>';return;}
  const demoRows=sampleQualityRecords(groups,mod.id);
  let storedRows=read(key(areaId,storageKey));
  let demoMode=true;
- let selectedGroup=groupNames[0],records=demoMode?demoRows:storedRows,reportRows=[],reportHeaders=[];
+ let selectedGroup=groupNames.includes(initialGroup)?initialGroup:groupNames[0],
+ records=demoMode?demoRows:storedRows,reportRows=[],reportHeaders=[];
  panel.innerHTML='<h3 class="quality-heading">Resultados de conformidad individual</h3>'+
  '<div class="quality-demo-banner" id="qDemoBanner" role="status"></div>'+
  '<div class="quality-toolbar"><label>Modalidad<select id="qGroup">'+groupNames.map(g=>'<option value="'+esc(g)+'">'+esc(groups[g].label)+'</option>').join("")+'</select></label>'+
