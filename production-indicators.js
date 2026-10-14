@@ -205,7 +205,7 @@ function failuresOf(r,group,items){
  const failed=new Set();let unknown=false;
  for(const value of raw??[]){
   if(value&&typeof value==="object"&&valid(value.cantidad)&&Number(value.cantidad)===0)continue;
-  const item=value&&typeof value==="object"?(value.idItem??value.itemId??value.id??value.item??value.nombre??value.name):value;
+  const item=value&&typeof value==="object"?(value.idItemDocumento??value.idItem??value.itemId??value.id??value.item??value.nombre??value.name):value;
   const key=String(item??"").trim();
   if(!key||group.conformIds?.includes(key)||/^(ramo\s+)?conforme$/.test(norm(key)))continue;
   const id=ids.get(key)??names.get(norm(key));
