@@ -106,9 +106,27 @@
     .q-preset-bar span {font-size:.73rem;font-weight:850;color:#2c503b;margin-right:6px;}
     .q-preset-bar button,.q-select-actions button {border:1px solid #c8dacf;background:#fff;color:#256043;cursor:pointer;padding:8px 11px;border-radius:9px;font-size:.7rem;font-weight:750;}
     .q-preset-bar button:hover,.q-select-actions button:hover {background:#e1f2e7;border-color:var(--green)}
-    .q-explore-filters {display:grid;grid-template-columns:minmax(170px,.75fr) minmax(260px,1.1fr) minmax(300px,1.9fr);gap:12px;margin:12px 0 15px;align-items:stretch;}
-    .q-explore-filters fieldset {margin:0;min-width:0;border:1px solid var(--border);border-radius:12px;padding:12px;background:#fbfdfc;}
-    .q-explore-filters legend {font-size:.74rem;font-weight:850;color:#245439;padding:0 5px}
+    .q-explore-filters {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:12px 0 15px;align-items:start;position:relative;z-index:10;}
+    .q-filter-dropdown {position:relative;min-width:0;}
+    .q-filter-dropdown[open] {z-index:15;}
+    .q-filter-trigger {min-height:58px;cursor:pointer;list-style:none;display:flex;flex-direction:column;gap:5px;justify-content:center;border:1px solid #c9dbd0;border-radius:11px;background:#fff;padding:10px 40px 10px 14px;position:relative;}
+    .q-filter-trigger::-webkit-details-marker {display:none;}
+    .q-filter-trigger::marker {content:"";}
+    .q-filter-trigger::after {content:"";position:absolute;right:17px;top:calc(50% - 4px);width:8px;height:8px;border-right:2px solid #3a6849;border-bottom:2px solid #3a6849;transform:rotate(45deg);transition:transform .15s;}
+    .q-filter-dropdown[open] .q-filter-trigger {border-color:var(--green);background:#f1faf4;border-bottom-left-radius:8px;border-bottom-right-radius:8px;}
+    .q-filter-dropdown[open] .q-filter-trigger::after {transform:rotate(225deg);}
+    .q-filter-trigger span {display:block;font-size:.69rem;color:#456853;font-weight:800;}
+    .q-filter-trigger strong {display:block;font-size:.77rem;color:#174e33;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+    .q-filter-trigger:focus-visible {outline:2px solid var(--green);outline-offset:3px;}
+    .q-filter-popup {position:absolute;top:calc(100% + 6px);left:0;z-index:30;width:max(100%,340px);max-width:min(520px,calc(100vw - 56px));max-height:310px;overflow-y:auto;border:1px solid #b9d0c0;background:#fff;border-radius:12px;padding:13px;box-shadow:0 14px 32px rgba(24,64,40,.17);}
+    .q-filter-dropdown:nth-child(2) .q-filter-popup {left:50%;transform:translateX(-50%);}
+    .q-filter-items .q-filter-popup {left:auto;right:0;width:max(100%,490px);}
+    .q-filter-popup .q-select-actions {margin-bottom:12px;}
+    .q-filter-popup .q-check-options {max-height:225px;overflow-y:auto;}
+    .q-filter-popup .q-item-options {max-height:225px;}
+    .q-filter-popup .q-choice {flex:0 1 auto;}
+    .q-filter-popup .q-item-options .q-choice {flex:1 1 195px;}
+
     .q-check-options {display:flex;gap:6px;flex-wrap:wrap;max-height:155px;overflow-y:auto;align-content:flex-start;}
     .q-item-options {max-height:185px;}
     .q-choice {display:inline-flex;align-items:center;gap:6px;max-width:100%;border:1px solid #d9e6dd;border-radius:8px;padding:7px 9px;background:#fff;color:#2b4d37;font-size:.69rem;line-height:1.4;cursor:pointer;}
@@ -133,8 +151,13 @@
     .q-explore-table th,.q-explore-table td {font-size:.71rem;white-space:nowrap;text-align:center;}
     .q-explore-table td:last-child {color:#136442;font-weight:750;}
     .q-explore-help {font-size:.69rem!important;color:var(--muted);line-height:1.65;margin:10px 1px!important;}
-    @media(max-width:1080px){.q-explore-filters{grid-template-columns:1fr 1fr}.q-items-filter{grid-column:1/-1;}}
-    @media(max-width:650px){.q-explore-primary,.q-explore-filters{grid-template-columns:1fr}.q-items-filter{grid-column:auto}.q-mode-btn{flex:1 1 auto}}
+    @media(max-width:1080px){.q-explore-filters{grid-template-columns:repeat(3,minmax(0,1fr));}}
+    @media(max-width:650px){
+      .q-explore-primary,.q-explore-filters{grid-template-columns:1fr;}
+      .q-filter-popup,.q-filter-dropdown:nth-child(2) .q-filter-popup,.q-filter-items .q-filter-popup {
+        position:static;left:auto;right:auto;transform:none;width:100%;max-width:none;max-height:310px;box-shadow:0 5px 14px rgba(24,64,40,.09);margin-top:5px;}
+      .q-mode-btn{flex:1 1 auto;}
+    }
 
     .quality-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:15px 0}
     .quality-toolbar label:not(.quality-upload){display:flex;flex-direction:column;gap:5px;font-size:.7rem;color:var(--muted)}
@@ -697,18 +720,26 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    '<button type="button" id="qLast3">Últimas 3 semanas</button>'+
    '<button type="button" id="qFirst3">Semanas 1–3 · últimos 3 años</button>'+
    '<button type="button" id="qAllDates">Todo el historial</button></div>'+
-   '<div class="q-explore-filters"><fieldset><legend>Años a comparar</legend>'+
+   '<div class="q-explore-filters">'+
+   '<details class="q-filter-dropdown" id="qXYearsDrop"><summary class="q-filter-trigger">'+
+   '<span>Años a comparar</span><strong id="qXYearsSummary">Todos los años</strong></summary>'+
+   '<div class="q-filter-popup">'+
    '<div class="q-select-actions"><button type="button" id="qXYearsAll">Todos</button>'+
    '<button type="button" id="qXYearsNone">Limpiar</button></div>'+
-   '<div id="qXYears" class="q-check-options"></div></fieldset>'+
-   '<fieldset><legend>Semanas a comparar</legend>'+
+   '<div id="qXYears" class="q-check-options"></div></div></details>'+
+   '<details class="q-filter-dropdown" id="qXWeeksDrop"><summary class="q-filter-trigger">'+
+   '<span>Semanas a comparar</span><strong id="qXWeeksSummary">Todas las semanas</strong></summary>'+
+   '<div class="q-filter-popup">'+
    '<div class="q-select-actions"><button type="button" id="qXWeeksAll">Todas</button>'+
    '<button type="button" id="qXWeeksNone">Limpiar</button></div>'+
-   '<div id="qXWeeks" class="q-check-options q-week-options"></div></fieldset>'+
-   '<fieldset class="q-items-filter"><legend>Ítems que deseas comparar</legend>'+
+   '<div id="qXWeeks" class="q-check-options q-week-options"></div></div></details>'+
+   '<details class="q-filter-dropdown q-filter-items" id="qXItemsDrop">'+
+   '<summary class="q-filter-trigger"><span>Ítems que deseas comparar</span>'+
+   '<strong id="qXItemsSummary">1 ítem seleccionado</strong></summary>'+
+   '<div class="q-filter-popup">'+
    '<div class="q-select-actions"><button type="button" id="qSelectItemsAll">Seleccionar todos</button>'+
    '<button type="button" id="qSelectItemsNone">Limpiar selección</button></div>'+
-   '<div id="qXItems" class="q-check-options q-item-options"></div></fieldset></div>'+
+   '<div id="qXItems" class="q-check-options q-item-options"></div></div></details></div>'+
    '<div class="q-explore-feedback" id="qXSelection" aria-live="polite"></div>'+
    '<div id="qXResults"></div></section>'+
  '<section id="qReportPane" hidden>'+reportMarkup+'</section>';
@@ -848,7 +879,10 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   xyears=panel.querySelector("#qXYears"),xweeks=panel.querySelector("#qXWeeks"),
   xitems=panel.querySelector("#qXItems"),xpeople=panel.querySelector("#qXPeople"),
   xresult=panel.querySelector("#qXResults"),xselection=panel.querySelector("#qXSelection"),
-  xdemo=panel.querySelector("#qExploreDemo"),xbanner=panel.querySelector("#qExploreBanner");
+  xdemo=panel.querySelector("#qExploreDemo"),xbanner=panel.querySelector("#qExploreBanner"),
+  xyearsSummary=panel.querySelector("#qXYearsSummary"),
+  xweeksSummary=panel.querySelector("#qXWeeksSummary"),
+  xitemsSummary=panel.querySelector("#qXItemsSummary");
  let selectedYears=null,selectedWeeks=null,selectedItems=new Set(),exactPeriods=null,exportComparison=null;
  function showMode(mode){
   const report=mode==="informe";
@@ -870,6 +904,30 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  }
  function weeksAvailable(){return Array.from({length:53},(_,i)=>i+1)}
  function itemsAvailable(){return cols()}
+ function updateFilterSummaries(){
+  const yearCount=yearsAvailable().length;
+  const weekCount=weeksAvailable().length;
+  const itemRows=itemsAvailable();
+  const yearSelected=selectedYears===null?yearCount:selectedYears.size;
+  const weekSelected=selectedWeeks===null?weekCount:selectedWeeks.size;
+  xyearsSummary.textContent=selectedYears===null?"Todos los años":
+    yearSelected===0?"Ningún año":yearSelected===1?"1 año":yearSelected+" años";
+  xweeksSummary.textContent=selectedWeeks===null?"Todas las semanas":
+    weekSelected===0?"Ninguna semana":weekSelected===1?"1 semana":weekSelected+" semanas";
+  if(selectedItems.size===0)xitemsSummary.textContent="Ningún ítem";
+  else if(selectedItems.size===itemRows.length)xitemsSummary.textContent="Todos los ítems ("+itemRows.length+")";
+  else if(selectedItems.size===1){
+   const selected=itemRows.find(([id])=>selectedItems.has(id));
+   xitemsSummary.textContent=selected?selected[1]:"1 ítem seleccionado";
+  }else xitemsSummary.textContent=selectedItems.size+" ítems seleccionados";
+ }
+ const dropdowns=[
+   panel.querySelector("#qXYearsDrop"),panel.querySelector("#qXWeeksDrop"),
+   panel.querySelector("#qXItemsDrop")
+ ];
+ dropdowns.forEach(menu=>menu.addEventListener("toggle",()=>{
+   if(menu.open)dropdowns.forEach(other=>{if(other!==menu)other.open=false});
+ }));
  function drawChoices(element,key,rows,sel){
   element.innerHTML=rows.map(([value,label])=>'<label class="q-choice"><input type="checkbox" data-compare="'+
    key+'" value="'+esc(value)+'"'+(sel===null||sel.has(String(value))||sel.has(Number(value))?' checked':'')+
@@ -966,6 +1024,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   setTimeout(()=>URL.revokeObjectURL(url),1000);
  });
  function exploreResult(){
+  updateFilterSummaries();
   exportComparison=null;
   const items=itemsAvailable(),c=groups[selectedGroup],
    data=analyzeComparison(base(),c,items,selectedItems,selectedYears,selectedWeeks,exactPeriods,xworker.value);
