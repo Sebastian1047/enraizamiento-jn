@@ -467,8 +467,32 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
        }
      }
      if(colored<15)throw new Error("La captura está vacía. No se descargará un PDF en blanco.");
-     await job.save();
-     status.textContent="PDF descargado correctamente.";
+     // html2pdf divide la imagen en páginas según la altura del HTML,
+     // incluso si solo faltan unos píxeles para el pie del documento.
+     // Generamos explícitamente una sola hoja A4 horizontal y ajustamos
+     // todo el lienzo sin recortar nombres, gráfico ni firmas.
+     const pdf=await job.toPdf().get("pdf");
+     if(!pdf||typeof pdf.addImage!=="function"||
+        typeof pdf.addPage!=="function"||typeof pdf.deletePage!=="function")
+       throw new Error("El motor PDF no permite ajustar la distribución.");
+     const pageWidth=pdf.internal.pageSize.getWidth();
+     const pageHeight=pdf.internal.pageSize.getHeight();
+     const margin=5;
+     const maxWidth=pageWidth-2*margin,maxHeight=pageHeight-2*margin;
+     const scale=Math.min(maxWidth/canvas.width,maxHeight/canvas.height);
+     const imageWidth=canvas.width*scale,imageHeight=canvas.height*scale;
+     const left=(pageWidth-imageWidth)/2,top=margin;
+     const pages=pdf.internal.getNumberOfPages();
+     // Se agrega una hoja vacía y se eliminan las creadas automáticamente.
+     pdf.addPage("a4","landscape");
+     for(let page=pages;page>=1;page--)pdf.deletePage(page);
+     pdf.setPage(1);
+     pdf.addImage(canvas.toDataURL("image/jpeg",.96),"JPEG",
+       left,top,imageWidth,imageHeight,undefined,"FAST");
+     if(pdf.internal.getNumberOfPages()!==1)
+       throw new Error("No fue posible generar el informe en una sola página.");
+     await pdf.save(pdfFilename);
+     status.textContent="PDF descargado en una página horizontal.";
    }catch(error){
      console.error("Error al generar informe PDF:",error);
      status.textContent="No fue posible generar un PDF válido. Usa Imprimir → Guardar como PDF.";
