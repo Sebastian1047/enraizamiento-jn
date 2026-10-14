@@ -339,18 +339,26 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    '<button type="button" id="qLast3">Últimas 3 semanas</button>'+
    '<button type="button" id="qFirst3">Semanas 1–3 · últimos 3 años</button>'+
    '<button type="button" id="qAllDates">Todo el historial</button></div>'+
-   '<div class="q-explore-filters"><fieldset><legend>Años a comparar</legend>'+
+   '<div class="q-explore-filters">'+
+   '<details class="q-filter-dropdown" id="qXYearsDrop"><summary class="q-filter-trigger">'+
+   '<span>Años a comparar</span><strong id="qXYearsSummary">Todos los años</strong></summary>'+
+   '<div class="q-filter-popup">'+
    '<div class="q-select-actions"><button type="button" id="qXYearsAll">Todos</button>'+
    '<button type="button" id="qXYearsNone">Limpiar</button></div>'+
-   '<div id="qXYears" class="q-check-options"></div></fieldset>'+
-   '<fieldset><legend>Semanas a comparar</legend>'+
+   '<div id="qXYears" class="q-check-options"></div></div></details>'+
+   '<details class="q-filter-dropdown" id="qXWeeksDrop"><summary class="q-filter-trigger">'+
+   '<span>Semanas a comparar</span><strong id="qXWeeksSummary">Todas las semanas</strong></summary>'+
+   '<div class="q-filter-popup">'+
    '<div class="q-select-actions"><button type="button" id="qXWeeksAll">Todas</button>'+
    '<button type="button" id="qXWeeksNone">Limpiar</button></div>'+
-   '<div id="qXWeeks" class="q-check-options q-week-options"></div></fieldset>'+
-   '<fieldset class="q-items-filter"><legend>Ítems que deseas comparar</legend>'+
+   '<div id="qXWeeks" class="q-check-options q-week-options"></div></div></details>'+
+   '<details class="q-filter-dropdown q-filter-items" id="qXItemsDrop">'+
+   '<summary class="q-filter-trigger"><span>Ítems que deseas comparar</span>'+
+   '<strong id="qXItemsSummary">1 ítem seleccionado</strong></summary>'+
+   '<div class="q-filter-popup">'+
    '<div class="q-select-actions"><button type="button" id="qSelectItemsAll">Seleccionar todos</button>'+
    '<button type="button" id="qSelectItemsNone">Limpiar selección</button></div>'+
-   '<div id="qXItems" class="q-check-options q-item-options"></div></fieldset></div>'+
+   '<div id="qXItems" class="q-check-options q-item-options"></div></div></details></div>'+
    '<div class="q-explore-feedback" id="qXSelection" aria-live="polite"></div>'+
    '<div id="qXResults"></div></section>'+
  '<section id="qReportPane" hidden>'+reportMarkup+'</section>';
@@ -490,7 +498,10 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   xyears=panel.querySelector("#qXYears"),xweeks=panel.querySelector("#qXWeeks"),
   xitems=panel.querySelector("#qXItems"),xpeople=panel.querySelector("#qXPeople"),
   xresult=panel.querySelector("#qXResults"),xselection=panel.querySelector("#qXSelection"),
-  xdemo=panel.querySelector("#qExploreDemo"),xbanner=panel.querySelector("#qExploreBanner");
+  xdemo=panel.querySelector("#qExploreDemo"),xbanner=panel.querySelector("#qExploreBanner"),
+  xyearsSummary=panel.querySelector("#qXYearsSummary"),
+  xweeksSummary=panel.querySelector("#qXWeeksSummary"),
+  xitemsSummary=panel.querySelector("#qXItemsSummary");
  let selectedYears=null,selectedWeeks=null,selectedItems=new Set(),exactPeriods=null,exportComparison=null;
  function showMode(mode){
   const report=mode==="informe";
@@ -512,6 +523,30 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  }
  function weeksAvailable(){return Array.from({length:53},(_,i)=>i+1)}
  function itemsAvailable(){return cols()}
+ function updateFilterSummaries(){
+  const yearCount=yearsAvailable().length;
+  const weekCount=weeksAvailable().length;
+  const itemRows=itemsAvailable();
+  const yearSelected=selectedYears===null?yearCount:selectedYears.size;
+  const weekSelected=selectedWeeks===null?weekCount:selectedWeeks.size;
+  xyearsSummary.textContent=selectedYears===null?"Todos los años":
+    yearSelected===0?"Ningún año":yearSelected===1?"1 año":yearSelected+" años";
+  xweeksSummary.textContent=selectedWeeks===null?"Todas las semanas":
+    weekSelected===0?"Ninguna semana":weekSelected===1?"1 semana":weekSelected+" semanas";
+  if(selectedItems.size===0)xitemsSummary.textContent="Ningún ítem";
+  else if(selectedItems.size===itemRows.length)xitemsSummary.textContent="Todos los ítems ("+itemRows.length+")";
+  else if(selectedItems.size===1){
+   const selected=itemRows.find(([id])=>selectedItems.has(id));
+   xitemsSummary.textContent=selected?selected[1]:"1 ítem seleccionado";
+  }else xitemsSummary.textContent=selectedItems.size+" ítems seleccionados";
+ }
+ const dropdowns=[
+   panel.querySelector("#qXYearsDrop"),panel.querySelector("#qXWeeksDrop"),
+   panel.querySelector("#qXItemsDrop")
+ ];
+ dropdowns.forEach(menu=>menu.addEventListener("toggle",()=>{
+   if(menu.open)dropdowns.forEach(other=>{if(other!==menu)other.open=false});
+ }));
  function drawChoices(element,key,rows,sel){
   element.innerHTML=rows.map(([value,label])=>'<label class="q-choice"><input type="checkbox" data-compare="'+
    key+'" value="'+esc(value)+'"'+(sel===null||sel.has(String(value))||sel.has(Number(value))?' checked':'')+
@@ -608,6 +643,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   setTimeout(()=>URL.revokeObjectURL(url),1000);
  });
  function exploreResult(){
+  updateFilterSummaries();
   exportComparison=null;
   const items=itemsAvailable(),c=groups[selectedGroup],
    data=analyzeComparison(base(),c,items,selectedItems,selectedYears,selectedWeeks,exactPeriods,xworker.value);
