@@ -354,7 +354,7 @@ function render({areaId,mod,view,panel,getRecords}){
   const note=(!demo&&!labor.length&&!unfiltered.length)?"No hay datos reales para el período o los filtros seleccionados.":"";
   msg.innerHTML=sharedNotice(demo,note);
   switcher.textContent=demo?"Ver registros reales":"Ver datos de prueba";
-  if(role)currentRole=role.value;
+  if(role&&role.value&&Object.prototype.hasOwnProperty.call(roles,role.value))currentRole=role.value;
   if(view==="rendimiento")output.innerHTML=sectionRend(mod.id,labor);
   else if(view==="calidad")output.innerHTML=sectionQuality(mod.id,quality,currentRole,from.value,to.value,worker.value);
   else output.innerHTML=summarySection(mod.id,labor,quality,currentRole,from.value,to.value,worker.value);
