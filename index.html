@@ -88,6 +88,54 @@
     .quality-demo-banner strong{font-size:.75rem;letter-spacing:.025em}
     .quality-demo-banner[hidden]{display:none}
     .quality-heading{font-size:1.02rem;margin:10px 0 14px}
+
+    .q-modebar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:14px 0 18px; border-bottom:1px solid var(--border); padding-bottom:16px; }
+    .q-mode-btn { flex:0 1 210px; border:1px solid var(--border); background:#eff6f1; color:#225039; border-radius:11px; font-weight:800; font-size:.8rem; min-height:43px; padding:10px 15px; cursor:pointer; }
+    .q-mode-btn.active {background:var(--green);color:#fff;border-color:var(--green)}
+    .q-mode-btn:focus-visible,.q-preset-bar button:focus-visible,.q-select-actions button:focus-visible {outline:2px solid var(--green);outline-offset:2px}
+    #qExplorePane[hidden],#qReportPane[hidden] {display:none !important}
+    .q-explore-pane {display:block;}
+    .q-explore-header {display:flex;align-items:start;gap:16px;justify-content:space-between;flex-wrap:wrap;margin:0 0 16px;}
+    .q-explore-header h3 {font-size:1rem;margin:0 0 6px}
+    .q-explore-header p {font-size:.72rem;color:var(--muted);margin:0;line-height:1.55}
+    .q-explore-actions {display:flex;align-items:center;flex-wrap:wrap;gap:9px;}
+    .q-explore-primary {display:grid;grid-template-columns:minmax(160px,1fr) minmax(240px,2fr);gap:12px;margin:8px 0 15px;max-width:880px;}
+    .q-explore-primary label {display:flex;flex-direction:column;gap:6px;font-size:.72rem;font-weight:750;color:#395747;}
+    .q-explore-primary input,.q-explore-primary select {width:100%;border:1px solid #c9dbd0;border-radius:10px;padding:11px 12px;background:#fff;color:var(--text);font-size:.75rem;}
+    .q-preset-bar {display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 16px;padding:12px 14px;background:#f5faf7;border:1px solid var(--border);border-radius:12px;}
+    .q-preset-bar span {font-size:.73rem;font-weight:850;color:#2c503b;margin-right:6px;}
+    .q-preset-bar button,.q-select-actions button {border:1px solid #c8dacf;background:#fff;color:#256043;cursor:pointer;padding:8px 11px;border-radius:9px;font-size:.7rem;font-weight:750;}
+    .q-preset-bar button:hover,.q-select-actions button:hover {background:#e1f2e7;border-color:var(--green)}
+    .q-explore-filters {display:grid;grid-template-columns:minmax(170px,.75fr) minmax(260px,1.1fr) minmax(300px,1.9fr);gap:12px;margin:12px 0 15px;align-items:stretch;}
+    .q-explore-filters fieldset {margin:0;min-width:0;border:1px solid var(--border);border-radius:12px;padding:12px;background:#fbfdfc;}
+    .q-explore-filters legend {font-size:.74rem;font-weight:850;color:#245439;padding:0 5px}
+    .q-check-options {display:flex;gap:6px;flex-wrap:wrap;max-height:155px;overflow-y:auto;align-content:flex-start;}
+    .q-item-options {max-height:185px;}
+    .q-choice {display:inline-flex;align-items:center;gap:6px;max-width:100%;border:1px solid #d9e6dd;border-radius:8px;padding:7px 9px;background:#fff;color:#2b4d37;font-size:.69rem;line-height:1.4;cursor:pointer;}
+    .q-choice:hover {background:#edf7ef}
+    .q-choice:has(input:checked){border-color:#76ac88;background:#eaf6ed}
+    .q-choice input {width:15px;height:15px;flex-shrink:0;accent-color:var(--green);margin:0;}
+    .q-week-options .q-choice {min-width:61px;}
+    .q-item-options .q-choice {flex:1 1 160px;}
+    .q-select-actions {display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px;}
+    .q-explore-feedback {font-size:.75rem;color:#3d5f48;line-height:1.5;margin:13px 0;padding:11px 13px;border:1px solid var(--border);background:#f6faf7;border-radius:10px;}
+    .q-explore-stats {margin:14px 0 20px}
+    .q-explore-visual {border:1px solid var(--border);background:#fff;border-radius:14px;padding:15px;margin:15px 0;}
+    .q-explore-visual h4 {font-size:.84rem;color:#214532;margin:0 0 6px}
+    .q-explore-visual p {font-size:.71rem;color:var(--muted);line-height:1.5;margin:0 0 13px}
+    .q-explore-legend {display:flex;gap:11px 15px;flex-wrap:wrap;margin:10px 0 14px;}
+    .q-explore-legend span {display:flex;align-items:center;gap:7px;font-size:.69rem;color:#304b3c;}
+    .q-explore-legend i {width:14px;height:5px;border-radius:999px;display:inline-block;flex-shrink:0;}
+    .q-explore-chart {display:block;width:100%;height:auto;max-height:340px;}
+    .q-explore-empty {padding:23px;border:1px dashed #b9d1bf;border-radius:12px;background:#fafdfa;color:#607966;font-size:.74rem;line-height:1.55;text-align:center;}
+    .q-explore-table {margin:16px 0;max-height:500px;}
+    .q-explore-table table {min-width:650px;}
+    .q-explore-table th,.q-explore-table td {font-size:.71rem;white-space:nowrap;text-align:center;}
+    .q-explore-table td:last-child {color:#136442;font-weight:750;}
+    .q-explore-help {font-size:.69rem!important;color:var(--muted);line-height:1.65;margin:10px 1px!important;}
+    @media(max-width:1080px){.q-explore-filters{grid-template-columns:1fr 1fr}.q-items-filter{grid-column:1/-1;}}
+    @media(max-width:650px){.q-explore-primary,.q-explore-filters{grid-template-columns:1fr}.q-items-filter{grid-column:auto}.q-mode-btn{flex:1 1 auto}}
+
     .quality-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:15px 0}
     .quality-toolbar label:not(.quality-upload){display:flex;flex-direction:column;gap:5px;font-size:.7rem;color:var(--muted)}
     .quality-toolbar input,.quality-toolbar select{padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff;font:inherit;max-width:220px;font-size:.75rem}
@@ -216,6 +264,73 @@ function catalogOverview(items,group){
   '<p class="quality-criteria-help">X indica marcación del incumplimiento; Número indica cantidad de fallas. '+
   'La conformidad de la tabla principal se calcula por ítem, aun cuando tenga varios subítems.</p></details>';
 }
+
+function compareSvg(series,periodLabels){
+ const active=series.filter(s=>s.values.some(v=>v!==null&&Number.isFinite(v)));
+ if(!active.length||!periodLabels.length)return '<p class="q-explore-empty">No hay suficientes evaluaciones para dibujar la comparación.</p>';
+ const w=940,h=320,left=50,right=18,top=24,bottom=58,plotW=w-left-right,plotH=h-top-bottom;
+ const sx=i=>left+(periodLabels.length===1?plotW/2:i*plotW/(periodLabels.length-1));
+ const sy=value=>top+plotH-Math.max(0,Math.min(100,value))/100*plotH;
+ const palette=["#147b4b","#3264a8","#b57122","#9a4b8c","#37868a","#6c8437"];
+ let svg=[];
+ for(let tick=0;tick<=4;tick++){
+  const value=tick*25,y=sy(value);
+  svg.push('<line x1="'+left+'" x2="'+(w-right)+'" y1="'+y+'" y2="'+y+
+    '" stroke="#dbe8df" stroke-dasharray="4 5"/>');
+  svg.push('<text x="'+(left-9)+'" y="'+(y+4)+'" text-anchor="end" font-size="13" fill="#64766b">'+value+'%</text>');
+ }
+ periodLabels.forEach((name,i)=>{
+  if(periodLabels.length>15&&i%2===1)return;
+  const x=sx(i);
+  svg.push('<text x="'+x+'" y="'+(h-20)+'" text-anchor="end" transform="rotate(-28 '+x+' '+(h-20)+
+  ')" font-size="11" fill="#556d5f">'+esc(name)+'</text>');
+ });
+ active.slice(0,5).forEach((set,index)=>{
+  const color=palette[index%palette.length],pieces=[];let points=[];
+  set.values.forEach((v,i)=>{
+   if(v===null||!Number.isFinite(v)){if(points.length)pieces.push(points);points=[];return;}
+   points.push([sx(i),sy(v)]);
+  });
+  if(points.length)pieces.push(points);
+  pieces.forEach(p=>svg.push('<polyline points="'+p.map(v=>v.join(",")).join(" ")+
+   '" stroke="'+color+'" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round"/>'));
+  set.values.forEach((v,i)=>{
+   if(v===null||!Number.isFinite(v))return;
+   const x=sx(i),y=sy(v);
+   svg.push('<circle cx="'+x+'" cy="'+y+'" r="4" fill="'+color+'"><title>'+
+     esc(set.label+' · '+periodLabels[i]+': '+Math.round(v*10)/10+'%')+'</title></circle>');
+  });
+ });
+ return '<div class="q-explore-legend">'+active.slice(0,5).map((set,i)=>
+   '<span><i style="background:'+palette[i%palette.length]+'"></i>'+esc(set.label)+'</span>').join("")+'</div>'+
+   '<svg class="q-explore-chart" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Evolución de conformidad por ítem y período">'+
+   svg.join("")+'</svg>'+
+   (active.length>5?'<p class="q-explore-help">El gráfico muestra cinco ítems como máximo; la tabla incluye todos los seleccionados.</p>':"");
+}
+function analyzeComparison(rows,group,items,selectedIds,years,weeks,exactPeriods,search){
+ const validIds=new Set(items.map(x=>x[0]));
+ const chosen=items.filter(([id])=>selectedIds.has(id)&&validIds.has(id));
+ const out=new Map(),invalid=[];
+ rows.forEach(r=>{
+  if(!real(r))return;
+  const [year,week]=period(r);
+  if(!year||!week)return;
+  const per=year+'-'+String(week).padStart(2,"0");
+  if(exactPeriods!==null&&!exactPeriods.has(per))return;
+  if(exactPeriods===null&&((years!==null&&!years.has(year))||(weeks!==null&&!weeks.has(week))))return;
+  if(search&&!norm(worker(r)+' '+(r.colaborador??r.sembrador??r.empleado??"")).includes(norm(search)))return;
+  const ev=evaluate(r,group,items);
+  if(ev.unknown){invalid.push(r);return;}
+  let row=out.get(per);
+  if(!row){row={year,week,label:year+' · S'+String(week).padStart(2,"0"),n:0,overall:0,selected:0,ids:new Map(chosen.map(([id])=>[id,0]))};out.set(per,row)}
+  row.n++;
+  if(!ev.failed.size)row.overall++;
+  if(!chosen.some(([id])=>ev.failed.has(id)))row.selected++;
+  for(const [id] of chosen)if(!ev.failed.has(id))row.ids.set(id,row.ids.get(id)+1);
+ });
+ return {periods:[...out.values()].sort((a,b)=>a.year-b.year||a.week-b.week),chosen,excluded:invalid.length};
+}
+
 function calc(records,group,items){
  const people=new Map();let excluded=0;
  for(const r of records){
@@ -263,6 +378,22 @@ function sampleQualityRecords(groups,modId){
      }
    }
  }
+ // Semanas 1-3 de tres años para probar comparaciones históricas sin importar datos reales.
+ for(const [roleIndex,[groupId,group]] of Object.entries(groups).entries()){
+  const items=demoItems(group);
+  for(let year=2024;year<=2026;year++)for(let week=1;week<=3;week++)
+   for(let personIndex=0;personIndex<DEMO_PEOPLE.length;personIndex++)
+    for(let revision=0;revision<2;revision++){
+     const [code,name]=DEMO_PEOPLE[personIndex],jan4=new Date(Date.UTC(year,0,4));
+     const monday=4-((jan4.getUTCDay()+6)%7)+7*(week-1)+revision;
+     const stamp=new Date(Date.UTC(year,0,monday)).toISOString().slice(0,10);
+     const n=(year-2020)*3+week*5+personIndex*7+revision+roleIndex*3;
+     const fails=n%5===0?[items[n%items.length][0]]:n%9===2?[items[n%items.length][0],items[(n+1)%items.length][0]]:[];
+     rows.push({id:"DEMO-HIST-"+modId+"-"+groupId+"-"+year+"-"+week+"-"+personIndex+"-"+revision,
+      __calidadGrupo:groupId,fecha:stamp,anio:year,semana:week,colaborador:code,colaboradorNombre:name,
+      revision:revision+1,incumplimientos:fails,esMuestraReal:true,__soloDemostracion:true});
+    }
+ }
  return rows;
 }
 function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup=null}){
@@ -287,6 +418,34 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  '<div class="module-notice" id="qNotice">Fórmulas: conformidad por ítem = 100 × (muestras reales − muestras con incumplimiento) / muestras reales; '+
  'conformidad total = 100 × muestras completamente conformes / muestras reales. Las muestras no realizadas se excluyen.</div>'+
  '<div id="qReport"></div>';
+ const reportMarkup=panel.innerHTML;
+ panel.innerHTML='<nav class="q-modebar" aria-label="Vista de Calidad">'+
+ '<button type="button" id="qAnalysisButton" class="q-mode-btn active" aria-pressed="true">Análisis comparativo</button>'+
+ '<button type="button" id="qReportButton" class="q-mode-btn" aria-pressed="false">Informe</button></nav>'+
+ '<section id="qExplorePane" class="q-explore-pane">'+
+   '<div class="q-explore-header"><div><h3>Comparar evaluaciones de calidad</h3>'+
+   '<p>Selecciona varios años, semanas e ítems para comparar la conformidad en distintos momentos.</p></div>'+
+   '<div class="q-explore-actions">'+
+   '<label class="btn-primary quality-upload">Importar JSON<input id="qExploreFile" type="file" accept=".json,application/json" hidden></label>'+
+   '<button type="button" class="btn-secondary" id="qExploreDemo">Ver registros reales</button></div></div>'+
+   '<div class="q-explore-primary"><label>Modalidad<select id="qXGroup">'+
+      groupNames.map(g=>'<option value="'+esc(g)+'">'+esc(groups[g].label)+'</option>').join("")+
+      '</select></label><label>Colaborador<input id="qXWorker" type="search" list="qXPeople" '+
+      'placeholder="Todos · escribir nombre o código" autocomplete="off"><datalist id="qXPeople"></datalist></label></div>'+
+   '<div class="q-preset-bar"><span>Comparaciones rápidas</span>'+
+   '<button type="button" id="qLast3">Últimas 3 semanas</button>'+
+   '<button type="button" id="qFirst3">Semanas 1–3 · últimos 3 años</button>'+
+   '<button type="button" id="qAllDates">Todo el historial</button></div>'+
+   '<div class="q-explore-filters"><fieldset><legend>Años a comparar</legend><div id="qXYears" class="q-check-options"></div></fieldset>'+
+   '<fieldset><legend>Semanas a comparar</legend><div id="qXWeeks" class="q-check-options q-week-options"></div></fieldset>'+
+   '<fieldset class="q-items-filter"><legend>Ítems que deseas comparar</legend>'+
+   '<div class="q-select-actions"><button type="button" id="qSelectItemsAll">Seleccionar todos</button>'+
+   '<button type="button" id="qSelectItemsNone">Limpiar selección</button></div>'+
+   '<div id="qXItems" class="q-check-options q-item-options"></div></fieldset></div>'+
+   '<div class="q-explore-feedback" id="qXSelection" aria-live="polite"></div>'+
+   '<div id="qXResults"></div></section>'+
+ '<section id="qReportPane" hidden>'+reportMarkup+'</section>';
+ let syncExplore=()=>{};
  const demoBanner=panel.querySelector("#qDemoBanner"),demoToggle=panel.querySelector("#qToggleDemo");
  const g=panel.querySelector("#qGroup"),y=panel.querySelector("#qYear"),w=panel.querySelector("#qWeek"),
  search=panel.querySelector("#qSearch"),area=panel.querySelector("#qReport"),note=panel.querySelector("#qNotice");
@@ -353,11 +512,11 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    demoMode=!demoMode;
    records=demoMode?demoRows:read(key(areaId,storageKey));
    y.value="";w.value="";search.value="";
-   periods();refresh();
+   periods();refresh();syncExplore(true);
  });
- g.addEventListener("change",()=>{selectedGroup=g.value;periods();refresh()});
+ g.addEventListener("change",()=>{selectedGroup=g.value;periods();refresh();syncExplore(true)});
  y.addEventListener("change",()=>{periods();refresh()});w.addEventListener("change",refresh);search.addEventListener("input",refresh);
- panel.querySelector("#qFile").addEventListener("change",async event=>{
+ async function importQualityFile(event){
    const file=event.target.files[0];if(!file)return;
    try{
      if(file.size>5*1024*1024)throw Error("Archivo superior a 5 MB.");
@@ -371,9 +530,11 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
      records=storedRows;demoMode=false;
      localStorage.setItem(key(areaId,storageKey),JSON.stringify(storedRows));
      note.textContent=records.length+" evaluaciones importadas localmente. Los registros sin modalidad se asignaron a "+groups[selectedGroup].label+". Sin conexión automática a Producción.";
-     periods();refresh();
+     periods();refresh();syncExplore(true);
    }catch(e){note.textContent="Error al importar: "+e.message;}finally{event.target.value="";}
- });
+ }
+ panel.querySelector("#qFile").addEventListener("change",importQualityFile);
+ panel.querySelector("#qExploreFile").addEventListener("change",importQualityFile);
  panel.querySelector("#qCSV").addEventListener("click",()=>{
    if(!reportRows.length)return;
    const quote=v=>'"'+String(v??"").replaceAll('"','""')+'"';
@@ -382,9 +543,146 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    const a=document.createElement("a");a.href=url;a.download=(demoMode?"DEMO-":"")+"calidad-"+areaId+"-"+mod.id+"-"+selectedGroup+".csv";a.click();
    setTimeout(()=>URL.revokeObjectURL(url),1500);
  });
- periods();refresh();
+
+ const xp=panel.querySelector("#qExplorePane"),rp=panel.querySelector("#qReportPane"),
+  xa=panel.querySelector("#qAnalysisButton"),xi=panel.querySelector("#qReportButton"),
+  xgroup=panel.querySelector("#qXGroup"),xworker=panel.querySelector("#qXWorker"),
+  xyears=panel.querySelector("#qXYears"),xweeks=panel.querySelector("#qXWeeks"),
+  xitems=panel.querySelector("#qXItems"),xpeople=panel.querySelector("#qXPeople"),
+  xresult=panel.querySelector("#qXResults"),xselection=panel.querySelector("#qXSelection"),
+  xdemo=panel.querySelector("#qExploreDemo");
+ let selectedYears=null,selectedWeeks=null,selectedItems=new Set(),exactPeriods=null;
+ function showMode(mode){
+  const report=mode==="informe";
+  xp.hidden=report;rp.hidden=!report;
+  xa.classList.toggle("active",!report);
+  xi.classList.toggle("active",report);
+  xa.setAttribute("aria-pressed",String(!report));
+  xi.setAttribute("aria-pressed",String(report));
+  if(report)refresh();else exploreResult();
+ }
+ xa.addEventListener("click",()=>showMode("analisis"));
+ xi.addEventListener("click",()=>showMode("informe"));
+ function base(){return active();}
+ function yearsAvailable(){
+  const values=new Set(base().map(r=>period(r)[0]).filter(Boolean));
+  const now=new Date().getFullYear();
+  for(let year=now-2;year<=now;year++)values.add(year);
+  return [...values].sort((a,b)=>b-a);
+ }
+ function weeksAvailable(){return Array.from({length:53},(_,i)=>i+1)}
+ function itemsAvailable(){return cols()}
+ function drawChoices(element,key,rows,sel){
+  element.innerHTML=rows.map(([value,label])=>'<label class="q-choice"><input type="checkbox" data-compare="'+
+   key+'" value="'+esc(value)+'"'+(sel===null||sel.has(String(value))||sel.has(Number(value))?' checked':'')+
+   '><span>'+esc(label)+'</span></label>').join("");
+ }
+ function renderChoices(resetItems=false){
+  const items=itemsAvailable();
+  if(resetItems||![...selectedItems].some(id=>items.some(([k])=>k===id)))
+   selectedItems=new Set(items.length?[items[0][0]]:[]);
+  xgroup.value=selectedGroup;
+  xpeople.innerHTML=[...new Set(base().map(worker).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"))
+   .map(name=>'<option value="'+esc(name)+'"></option>').join("");
+  drawChoices(xyears,"year",yearsAvailable().map(year=>[year,String(year)]),selectedYears);
+  drawChoices(xweeks,"week",weeksAvailable().map(week=>[week,"S"+String(week).padStart(2,"0")]),selectedWeeks);
+  drawChoices(xitems,"item",items,selectedItems);
+  xdemo.textContent=demoMode?"Ver registros reales":"Ver datos de prueba";
+  exploreResult();
+ }
+ function readChoices(container,kind){
+  const all=[...container.querySelectorAll('input[data-compare="'+kind+'"]')];
+  const checked=all.filter(node=>node.checked).map(node=>node.value);
+  return checked.length===all.length?null:new Set(checked.map(Number));
+ }
+ xyears.addEventListener("change",()=>{selectedYears=readChoices(xyears,"year");exactPeriods=null;exploreResult()});
+ xweeks.addEventListener("change",()=>{selectedWeeks=readChoices(xweeks,"week");exactPeriods=null;exploreResult()});
+ xitems.addEventListener("change",()=>{
+  selectedItems=new Set([...xitems.querySelectorAll('input[data-compare="item"]:checked')].map(node=>node.value));
+  exploreResult();
+ });
+ xworker.addEventListener("input",exploreResult);
+ xgroup.addEventListener("change",()=>{
+  if(!groupNames.includes(xgroup.value))return;
+  selectedGroup=xgroup.value;g.value=selectedGroup;
+  selectedYears=null;selectedWeeks=null;exactPeriods=null;
+  periods();refresh();renderChoices(true);
+ });
+ xdemo.addEventListener("click",()=>demoToggle.click());
+ panel.querySelector("#qLast3").addEventListener("click",()=>{
+  const periods=[...new Set(base().map(r=>{
+   const [year,week]=period(r);return year&&week?year+'-'+String(week).padStart(2,"0"):"";
+  }).filter(Boolean))].sort();
+  exactPeriods=new Set(periods.slice(-3));
+  selectedYears=null;selectedWeeks=null;
+  renderChoices(false);
+ });
+ panel.querySelector("#qFirst3").addEventListener("click",()=>{
+  const thisYear=new Date().getFullYear();
+  selectedYears=new Set([thisYear-2,thisYear-1,thisYear]);
+  selectedWeeks=new Set([1,2,3]);
+  exactPeriods=null;
+  renderChoices(false);
+ });
+ panel.querySelector("#qAllDates").addEventListener("click",()=>{
+  selectedYears=null;selectedWeeks=null;exactPeriods=null;
+  renderChoices(false);
+ });
+ panel.querySelector("#qSelectItemsAll").addEventListener("click",()=>{
+  selectedItems=new Set(itemsAvailable().map(row=>row[0]));renderChoices(false);
+ });
+ panel.querySelector("#qSelectItemsNone").addEventListener("click",()=>{
+  selectedItems.clear();
+  drawChoices(xitems,"item",itemsAvailable(),selectedItems);
+  exploreResult();
+ });
+ function exploreResult(){
+  const items=itemsAvailable(),c=groups[selectedGroup],
+   data=analyzeComparison(base(),c,items,selectedItems,selectedYears,selectedWeeks,exactPeriods,xworker.value);
+  const {periods,chosen,excluded}=data;
+  const total=periods.reduce((sum,r)=>sum+r.n,0);
+  const chosenOk=periods.reduce((sum,r)=>sum+r.selected,0);
+  const overall=periods.reduce((sum,r)=>sum+r.overall,0);
+  const labels=periods.map(r=>r.label);
+  const series=chosen.map(([id,name])=>({
+   label:name,values:periods.map(r=>r.n?100*r.ids.get(id)/r.n:null)
+  }));
+  const format=(ok,n)=>n?pct(ok,n):"—";
+  xselection.innerHTML='<strong>'+fmt.format(chosen.length)+'</strong> ítem(s) seleccionados · '+
+   '<strong>'+fmt.format(periods.length)+'</strong> período(s) con evaluaciones'+
+   (exactPeriods!==null?' · <strong>Últimas '+exactPeriods.size+' semanas con datos</strong>':"")+
+   (xworker.value?' · Colaborador: <strong>'+esc(xworker.value)+'</strong>':"");
+  if(!chosen.length){
+   xresult.innerHTML='<div class="q-explore-empty">Selecciona al menos un ítem para comparar sus resultados.</div>';
+   return;
+  }
+  const metrics='<div class="quality-stats q-explore-stats">'+
+   '<div class="module-stat"><span>Evaluaciones comparadas</span><strong>'+fmt.format(total)+'</strong></div>'+
+   '<div class="module-stat"><span>Conformidad de ítems seleccionados</span><strong>'+format(chosenOk,total)+'</strong></div>'+
+   '<div class="module-stat"><span>Conformidad total (todos los ítems)</span><strong>'+format(overall,total)+'</strong></div>'+
+   '</div>';
+  const th=['AÑO','SEMANA','EVALUACIONES',...chosen.map(row=>row[1]),'CONFORMIDAD SELECCIONADA'];
+  const header='<tr>'+th.map(v=>'<th>'+esc(v)+'</th>').join("")+'</tr>';
+  const cells=periods.length?periods.map(r=>'<tr><td>'+r.year+'</td><td>S'+
+    String(r.week).padStart(2,"0")+'</td><td>'+r.n+'</td>'+
+    chosen.map(([id])=>'<td>'+format(r.ids.get(id),r.n)+'</td>').join("")+
+    '<td><strong>'+format(r.selected,r.n)+'</strong></td></tr>').join(""):
+    '<tr><td colspan="'+th.length+'" class="module-empty">No hay evaluaciones para los años, semanas, ítems y colaborador seleccionados.</td></tr>';
+  xresult.innerHTML=metrics+'<div class="q-explore-visual"><h4>Evolución de conformidad por período</h4>'+
+   '<p>Cada línea representa un ítem. Los valores corresponden al porcentaje de evaluaciones sin incumplimiento del ítem.</p>'+
+   compareSvg(series,labels)+'</div>'+
+   '<div class="module-tablewrap q-explore-table"><table class="module-table"><thead>'+header+
+   '</thead><tbody>'+cells+'</tbody></table></div>'+
+   '<p class="q-explore-help">La conformidad seleccionada exige que una evaluación no presente fallas en ninguno de los ítems elegidos. '+
+   'La conformidad total considera todos los ítems del formulario, aunque solo compares uno. '+
+   'Los períodos sin evaluaciones no generan porcentajes.'+
+   (excluded?' Se excluyeron '+excluded+' evaluaciones con fallas sin identificar.':'')+'</p>';
+ }
+ syncExplore=renderChoices;
+ periods();refresh();renderChoices(true);
+
 }
-window.QualityReports={render,calc,evaluate,config:CONFIG,sampleQualityRecords,demoItems};
+window.QualityReports={render,calc,evaluate,analyzeComparison,config:CONFIG,sampleQualityRecords,demoItems};
 })();
 </script>
   <script>
