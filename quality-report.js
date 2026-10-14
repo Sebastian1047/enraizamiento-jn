@@ -204,6 +204,78 @@ function sampleQualityRecords(groups,modId){
  }
  return rows;
 }
+
+const QUALITY_BRAND={
+ logo:"https://sebastian1047.github.io/labores-jn-2/icons/jardines-san-nicolas.jpg",
+ assurance:"https://sebastian1047.github.io/labores-jn-2/icons/aseguramiento.png",
+ company:"JARDINES DE SAN NICOLÁS S.A.S."
+};
+function qualityWeeklyGraph(weeks){
+ if(!weeks.length)return '<div class="quality-paper-nochart">Sin evaluaciones semanales para graficar.</div>';
+ const W=610,H=224,L=50,R=16,T=25,B=47,plotH=H-T-B,plotW=W-L-R;
+ const y=v=>T+plotH*(1-v/100);
+ const lines=[];
+ for(let mark=0;mark<=100;mark+=25){
+  const height=y(mark);
+  lines.push('<line x1="'+L+'" x2="'+(W-R)+'" y1="'+height+'" y2="'+height+
+   '" stroke="#d7ded8" stroke-width=".85" stroke-dasharray="4 4"/>'+
+   '<text x="'+(L-9)+'" y="'+(height+4)+'" font-size="11" text-anchor="end" fill="#4b6253">'+mark+'%</text>');
+ }
+ weeks.forEach((row,i)=>{
+  const share=plotW/weeks.length,x=L+i*share+share*.25,width=Math.min(75,share*.5);
+  const level=row.n?100*row.pass/row.n:0,barY=y(level);
+  lines.push('<rect x="'+x+'" y="'+barY+'" width="'+width+'" height="'+Math.max(0,T+plotH-barY)+
+   '" fill="#658074" stroke="#51685c" stroke-width=".8"/>'+
+   '<text x="'+(x+width/2)+'" y="'+Math.max(12,barY-7)+'" font-size="12" text-anchor="middle" font-weight="700" fill="#344b3c">'+pct(row.pass,row.n)+'</text>'+
+   '<text x="'+(x+width/2)+'" y="'+(H-21)+'" font-size="11" text-anchor="middle" fill="#4c5e53">SEMANA '+row.week+'</text>'+
+   '<text x="'+(x+width/2)+'" y="'+(H-7)+'" font-size="10" text-anchor="middle" fill="#758176">'+row.yr+'</text>');
+ });
+ return '<svg class="quality-paper-chart" role="img" aria-label="Gráfica de conformidad grupal semanal" viewBox="0 0 '+W+' '+H+'">'+
+  lines.join("")+'</svg>';
+}
+function qualityPaperReport({moduleId,group,items,rows,weekRows,current,excluded,isDemo}){
+ const currentPeriod=current?('SEMANA '+current.week+' · '+current.yr):'SIN EVALUACIONES';
+ const head=items.map(([,name])=>'<th scope="col">'+esc(name)+'</th>').join("");
+ const first=rows.map(r=>'<tr><th scope="row" class="quality-paper-worker" title="'+esc(r.name)+'">'+esc(r.name)+'</th>'+
+   items.map(([id])=>'<td>'+pct(r.samples-(r.issues.get(id)||0),r.samples)+'</td>').join("")+
+   '<td class="quality-paper-total">'+pct(r.pass,r.samples)+'</td></tr>').join("");
+ const details=weekRows.map(row=>'<tr><th scope="row">SEMANA '+row.week+' · '+row.yr+'</th>'+
+  '<td>'+pct(row.pass,row.n)+'</td></tr>').join("");
+ const areaName=moduleId==="siembra-campo"?"SIEMBRA EN CAMPO":group.label.toUpperCase();
+ const responsible=moduleId==="siembra-campo"?"ERASMO GOMEZ":"—";
+ const indicator=moduleId==="siembra-campo"?"METEORO":"CALIDAD DE LA LABOR";
+ const signing=moduleId==="siembra-campo"?
+  ["JEFE PRODUCCIÓN","SUPERVISOR (J)","SUPERVISOR (M)","JEFE SAVIA - METEORO"]:
+  ["JEFE DE ÁREA","SUPERVISOR (J)","SUPERVISOR (M)","ASEGURAMIENTO"];
+ return '<article class="quality-paper-report">'+
+  '<header class="quality-paper-head">'+
+   '<div class="quality-paper-logo"><img src="'+esc(QUALITY_BRAND.logo)+'" alt="Jardines de San Nicolás"></div>'+
+   '<div class="quality-paper-route">RUTA DE<br>APRENDIZAJE</div>'+
+   '<div class="quality-paper-assurance"><img src="'+esc(QUALITY_BRAND.assurance)+'" alt="Aseguramiento"></div>'+
+   '<div class="quality-paper-company">'+esc(QUALITY_BRAND.company)+'</div>'+
+   '<div class="quality-paper-meta"><div>INDICADOR</div><div>'+esc(indicator)+'</div>'+
+    '<div>ÁREA</div><div>'+esc(areaName)+'</div>'+
+    '<div>RESPONSABLE</div><div>'+esc(responsible)+'</div></div>'+
+  '</header>'+
+  (isDemo?'<div class="quality-paper-demowarning">DATOS DE PRUEBA — INFORME DEMOSTRATIVO, NO VÁLIDO COMO EVALUACIÓN REAL</div>':'')+
+  '<h3 class="quality-paper-title">RESULTADOS CONFORMIDAD INDIVIDUAL '+esc(currentPeriod)+'</h3>'+
+  '<div class="quality-paper-table-scroll"><table class="quality-paper-main-table'+
+    (items.length>12?' quality-paper-many-cols':'')+'"><thead><tr><th scope="col">NOMBRE DEL COLABORADOR</th>'+
+    head+'<th scope="col">Conformidad Total</th></tr></thead><tbody>'+
+    (first||'<tr><td colspan="'+(items.length+2)+'" class="quality-paper-empty">No hay evaluaciones para este período.</td></tr>')+
+   '</tbody></table></div>'+
+  '<section class="quality-paper-bottom">'+
+   '<div class="quality-paper-weeks"><table><thead><tr><th>SEMANAS</th><th>CONFORMIDAD GRUPAL</th></tr></thead><tbody>'+
+    (details||'<tr><td colspan="2">Sin evaluaciones semanales</td></tr>')+
+   '</tbody></table></div>'+
+   '<div class="quality-paper-chart-wrap"><h4>'+esc(indicator)+' · CONFORMIDAD GRUPAL (SEMANAL)</h4>'+
+    qualityWeeklyGraph(weekRows)+'</div>'+
+  '</section>'+
+  (excluded?'<p class="quality-paper-excluded">'+fmt.format(excluded)+' muestra(s) sin correspondencia con el catálogo excluidas del cálculo.</p>':'')+
+  '<footer class="quality-paper-signatures">'+signing.map(n=>'<div>'+esc(n)+'</div>').join("")+'</footer>'+
+  '</article>';
+}
+
 function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup=null}){
  const groups=CONFIG[mod.id]||{};
  const allGroups=Object.keys(groups);
@@ -224,8 +296,8 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  '<input id="qFile" type="file" accept=".json,application/json">'+
  '<button type="button" id="qCSV">Exportar CSV</button>'+
  '<button type="button" id="qToggleDemo">Ver registros reales</button></div>'+
- '<div class="module-notice" id="qNotice">Fórmulas: conformidad por ítem = 100 × (muestras reales − muestras con incumplimiento) / muestras reales; '+
- 'conformidad total = 100 × muestras completamente conformes / muestras reales. Las muestras no realizadas se excluyen.</div>'+
+ '<div class="module-notice" id="qNotice" hidden style="display:none"></div>'+
+ '<div class="quality-report-actions"><button type="button" class="btn-secondary" id="qPrintReport">Imprimir / Guardar PDF</button></div>'+
  '<div id="qReport"></div>';
  const reportMarkup=panel.innerHTML;
  panel.innerHTML='<nav class="q-modebar" aria-label="Vista de Calidad">'+
@@ -291,41 +363,33 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  function refresh(){
    const c=groups[selectedGroup],items=cols();
    setViewNotice();
-   if(c.pending&&!demoMode){area.innerHTML='<div class="module-notice">Mallas no tiene ítems configurados en el formulario original. No se inventan columnas.</div>';reportRows=[];return;}
-   if(c.external&&!demoMode&&!items.length){area.innerHTML='<div class="module-notice">Los ítems del Cortador provienen de un catálogo externo que no está incluido en GitHub. Importe JSON con "registros" y "catalogoItems" para obtener los nombres reales.</div>';reportRows=[];return;}
-   const rows=active().filter(r=>(!y.value||period(r)[0]===Number(y.value))&&(!w.value||period(r)[1]===Number(w.value))&&
-     (!search.value||norm(worker(r)+" "+(r.colaborador||r.sembrador||"")).includes(norm(search.value))));
-   const res=calc(rows,c,items);
+   const all=active();
+   const periodsOfRows=new Map();
+   for(const row of all){
+     const [yr,week]=period(row);
+     if(!yr||!week)continue;
+     const k=yr+'-'+String(week).padStart(2,"0");
+     if(!periodsOfRows.has(k))periodsOfRows.set(k,{yr,week,records:[]});
+     periodsOfRows.get(k).records.push(row);
+   }
+   const chronological=[...periodsOfRows.values()].sort((a,b)=>a.yr-b.yr||a.week-b.week);
+   const latest=chronological.at(-1)??null;
+   const weekRecords=latest?latest.records:[];
+   const res=calc(weekRecords,c,items);
    reportHeaders=["NOMBRE DEL COLABORADOR","MUESTRAS REALES",...items.map(x=>x[1]),"CONFORMIDAD TOTAL"];
-   reportRows=res.rows.map(p=>[p.name,p.samples,...items.map(([id])=>pct(p.samples-p.issues.get(id),p.samples)),pct(p.pass,p.samples)]);
-   const total=res.rows.reduce((s,p)=>s+p.samples,0),passed=res.rows.reduce((s,p)=>s+p.pass,0);
-   const warning=demoMode&&(c.pending||c.external)?
-     '<div class="module-notice"><strong>Solo demostración visual:</strong> estos criterios ilustrativos no existen en el catálogo original de esta modalidad. Se reemplazarán por los oficiales cuando estén disponibles.</div>':"";
-   const head=reportHeaders.map((x,i)=>{
-     const entry=i>=2&&i<items.length+2?c.meta?.[items[i-2][0]]:null;
-     const details=entry?.subitems?.length?"Subítems: "+entry.subitems.join("; "):"";
-     const tooltip=[details,entry?.nota||""].filter(Boolean).join(". ");
-     return '<th'+(tooltip?' title="'+esc(tooltip)+'"':"")+'>'+esc(x)+
-       (entry?'<small class="quality-criterion-kind">'+esc(entry.tipo||"")+'</small>':"")+'</th>';
-   }).join("");
-   const table='<div class="module-tablewrap"><table class="module-table quality-table"><thead><tr>'+head+'</tr></thead><tbody>'+
-     (reportRows.length?reportRows.map(row=>'<tr>'+row.map(cell=>'<td>'+esc(cell)+'</td>').join("")+'</tr>').join(""):
-     '<tr><td colspan="'+reportHeaders.length+'" class="module-empty">Sin evaluaciones reales para esta selección.</td></tr>')+'</tbody></table></div>';
-   const weeks=new Map();
-   active().filter(r=>!y.value||period(r)[0]===Number(y.value)).forEach(r=>{const [yr,week]=period(r);if(!yr||!week)return;
-     const f=evaluate(r,c,items);if(f.unknown)return;const k=yr+"-"+week,v=weeks.get(k)||{yr,week,n:0,pass:0};
-     v.n++;if(!f.failed.size)v.pass++;weeks.set(k,v);
+   reportRows=res.rows.map(p=>[p.name,p.samples,...items.map(([id])=>pct(p.samples-(p.issues.get(id)||0),p.samples)),pct(p.pass,p.samples)]);
+   const weeks=chronological.slice(-4).map(p=>{
+     const result=calc(p.records,c,items);
+     return {yr:p.yr,week:p.week,
+      n:result.rows.reduce((sum,r)=>sum+r.samples,0),
+      pass:result.rows.reduce((sum,r)=>sum+r.pass,0)};
    });
-   const weekRows=[...weeks.values()].sort((a,b)=>b.yr-a.yr||b.week-a.week).slice(0,4);
-   area.innerHTML=warning+'<div class="quality-stats"><div class="module-stat"><span>Muestras reales</span><strong>'+fmt.format(total)+'</strong></div>'+
-     '<div class="module-stat"><span>Conformes</span><strong>'+fmt.format(passed)+'</strong></div>'+
-     '<div class="module-stat"><span>Conformidad total</span><strong>'+pct(passed,total)+'</strong></div></div>'+
-     (res.excluded?'<div class="module-notice">'+res.excluded+' muestra(s) sin correspondencia con el catálogo fueron excluidas para evitar resultados incorrectos.</div>':"")+
-     table+'<div class="quality-week-table"><h4>Conformidad grupal · últimas 4 semanas con evaluaciones</h4>'+
-     '<table class="module-table"><thead><tr><th>SEMANA</th><th>MUESTRAS</th><th>CONFORMIDAD GRUPAL</th></tr></thead><tbody>'+
-     (weekRows.length?weekRows.map(v=>'<tr><td>'+v.yr+' - '+v.week+'</td><td>'+v.n+'</td><td>'+pct(v.pass,v.n)+'</td></tr>').join(""):
-      '<tr><td colspan="3">Sin datos semanales</td></tr>')+'</tbody></table></div>';
+   area.innerHTML=qualityPaperReport({
+     moduleId:mod.id,group:c,items,rows:res.rows,weekRows:weeks,
+     current:latest,excluded:res.excluded,isDemo:demoMode
+   });
  }
+ panel.querySelector("#qPrintReport").addEventListener("click",()=>window.print());
  demoToggle.addEventListener("click",()=>{
    demoMode=!demoMode;
    records=demoMode?demoRows:read(key(areaId,storageKey));
