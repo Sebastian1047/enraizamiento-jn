@@ -335,10 +335,6 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
       groupNames.map(g=>'<option value="'+esc(g)+'">'+esc(groups[g].label)+'</option>').join("")+
       '</select></label><label>Colaborador<input id="qXWorker" type="search" list="qXPeople" '+
       'placeholder="Todos · escribir nombre o código" autocomplete="off"><datalist id="qXPeople"></datalist></label></div>'+
-   '<div class="q-preset-bar"><span>Comparaciones rápidas</span>'+
-   '<button type="button" id="qLast3">Últimas 3 semanas</button>'+
-   '<button type="button" id="qFirst3">Semanas 1–3 · últimos 3 años</button>'+
-   '<button type="button" id="qAllDates">Todo el historial</button></div>'+
    '<div class="q-explore-filters">'+
    '<details class="q-filter-dropdown" id="qXYearsDrop"><summary class="q-filter-trigger">'+
    '<span>Años a comparar</span><strong id="qXYearsSummary">Todos los años</strong></summary>'+
@@ -598,28 +594,6 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   periods();refresh();renderChoices(true);
  });
  xdemo.addEventListener("click",()=>demoToggle.click());
- panel.querySelector("#qLast3").addEventListener("click",()=>{
-  const periods=[...new Set(base().filter(r=>!xworker.value||norm(worker(r)+' '+
-   (r.colaborador??r.sembrador??r.empleado??"")).includes(norm(xworker.value))).map(r=>{
-   const [year,week]=period(r);return year&&week?year+'-'+String(week).padStart(2,"0"):"";
-  }).filter(Boolean))].sort();
-  const latest=periods.slice(-3);
-  exactPeriods=new Set(latest);
-  selectedYears=new Set(latest.map(p=>Number(p.slice(0,4))));
-  selectedWeeks=new Set(latest.map(p=>Number(p.slice(5))));
-  renderChoices(false);
- });
- panel.querySelector("#qFirst3").addEventListener("click",()=>{
-  const thisYear=new Date().getFullYear();
-  selectedYears=new Set([thisYear-2,thisYear-1,thisYear]);
-  selectedWeeks=new Set([1,2,3]);
-  exactPeriods=null;
-  renderChoices(false);
- });
- panel.querySelector("#qAllDates").addEventListener("click",()=>{
-  selectedYears=null;selectedWeeks=null;exactPeriods=null;
-  renderChoices(false);
- });
  panel.querySelector("#qSelectItemsAll").addEventListener("click",()=>{
   selectedItems=new Set(itemsAvailable().map(row=>row[0]));renderChoices(false);
  });
