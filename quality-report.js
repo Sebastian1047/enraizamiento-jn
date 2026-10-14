@@ -328,10 +328,12 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    '<p>Selecciona varios años, semanas e ítems para comparar la conformidad en distintos momentos.</p></div>'+
    '</div>'+
    '<div class="quality-demo-banner" id="qExploreBanner" role="status"></div>'+
-   '<div class="q-explore-primary"><label>Modalidad<select id="qXGroup">'+
-      groupNames.map(g=>'<option value="'+esc(g)+'">'+esc(groups[g].label)+'</option>').join("")+
-      '</select></label><label>Colaborador<input id="qXWorker" type="search" list="qXPeople" '+
-      'placeholder="Todos · escribir nombre o código" autocomplete="off"><datalist id="qXPeople"></datalist></label></div>'+
+   '<div class="q-explore-primary"><label>Colaborador<input id="qXWorker" type="search" list="qXPeople" '+
+      'placeholder="Todos · escribir nombre o código" autocomplete="off"><datalist id="qXPeople"></datalist></label>'+
+      (groupNames.length>1?'<div class="q-explore-variants" role="group" aria-label="Tipo de corte">'+
+         groupNames.map(id=>'<button type="button" class="q-variant-btn" data-quality-variant="'+esc(id)+
+           '" aria-pressed="'+String(id===selectedGroup)+'">'+esc(groups[id].label)+'</button>').join("")+
+       '</div>':'')+'</div>'+
    '<div class="q-explore-filters">'+
    '<details class="q-filter-dropdown" id="qXYearsDrop"><summary class="q-filter-trigger">'+
    '<span>Años a comparar</span><strong id="qXYearsSummary">Todos los años</strong></summary>'+
@@ -486,7 +488,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
 
  const xp=panel.querySelector("#qExplorePane"),rp=panel.querySelector("#qReportPane"),
   xa=panel.querySelector("#qAnalysisButton"),xi=panel.querySelector("#qReportButton"),
-  xgroup=panel.querySelector("#qXGroup"),xworker=panel.querySelector("#qXWorker"),
+  xworker=panel.querySelector("#qXWorker"),
   xyears=panel.querySelector("#qXYears"),xweeks=panel.querySelector("#qXWeeks"),
   xitems=panel.querySelector("#qXItems"),xpeople=panel.querySelector("#qXPeople"),
   xresult=panel.querySelector("#qXResults"),xselection=panel.querySelector("#qXSelection"),
@@ -494,6 +496,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   xyearsSummary=panel.querySelector("#qXYearsSummary"),
   xweeksSummary=panel.querySelector("#qXWeeksSummary"),
   xitemsSummary=panel.querySelector("#qXItemsSummary");
+ const variantButtons=[...panel.querySelectorAll("[data-quality-variant]")];
  let selectedYears=null,selectedWeeks=null,selectedItems=new Set(),exactPeriods=null;
  function showMode(mode){
   const report=mode==="informe";
@@ -548,7 +551,11 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   const items=itemsAvailable();
   if(resetItems||![...selectedItems].some(id=>items.some(([k])=>k===id)))
    selectedItems=new Set(items.length?[items[0][0]]:[]);
-  xgroup.value=selectedGroup;
+  variantButtons.forEach(button=>{
+    const active=button.dataset.qualityVariant===selectedGroup;
+    button.classList.toggle("active",active);
+    button.setAttribute("aria-pressed",String(active));
+  });
   xpeople.innerHTML=[...new Set(base().map(worker).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"))
    .map(name=>'<option value="'+esc(name)+'"></option>').join("");
   drawChoices(xyears,"year",yearsAvailable().map(year=>[year,String(year)]),selectedYears);
@@ -582,12 +589,13 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    exactPeriods=null;renderChoices(false);
   });
  }
- xgroup.addEventListener("change",()=>{
-  if(!groupNames.includes(xgroup.value))return;
-  selectedGroup=xgroup.value;g.value=selectedGroup;
+ variantButtons.forEach(button=>button.addEventListener("click",()=>{
+  const group=button.dataset.qualityVariant;
+  if(!groupNames.includes(group)||group===selectedGroup)return;
+  selectedGroup=group;g.value=selectedGroup;
   selectedYears=null;selectedWeeks=null;exactPeriods=null;
   periods();refresh();renderChoices(true);
- });
+ }));
  panel.querySelector("#qSelectItemsAll").addEventListener("click",()=>{
   selectedItems=new Set(itemsAvailable().map(row=>row[0]));renderChoices(false);
  });
