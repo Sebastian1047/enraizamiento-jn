@@ -24,6 +24,11 @@
     .analysis-tab:hover { border-color:var(--green); }
     .analysis-tab.active { background:var(--green); color:#fff; border-color:var(--green); }
     .analysis-tab:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
+    .indicator-subtabs { display:flex; flex-wrap:wrap; gap:10px; margin:12px 0 18px; }
+    .indicator-subtab { border:1px solid var(--border); border-radius:11px; background:#f3f8f5; color:#274637; padding:10px 20px; min-width:145px; font:inherit; font-size:.77rem; font-weight:800; cursor:pointer; }
+    .indicator-subtab:hover { border-color:var(--green); }
+    .indicator-subtab.active { background:var(--green); color:#fff; border-color:var(--green); }
+    .indicator-subtab:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
     .analysis-metrics { grid-template-columns:repeat(4,minmax(0,1fr)); }
     @media(max-width:880px) { .analysis-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } }
     @media(max-width:480px) { .analysis-tab { min-width:0; flex:1 1 auto; padding:10px; } }
@@ -587,24 +592,45 @@ window.QualityReports={render,calc,evaluate,config:CONFIG,sampleQualityRecords,d
       const tabButtons=[...app.querySelectorAll("[data-tab]")];
 
       function renderIndicators() {
-        const rendimiento=getRecords(areaId,mod.id);
-        const calidad=getRecords(areaId,mod.id+"_calidad");
-        const todos=[...rendimiento,...calidad];
-        const workers=new Set(todos.map(getPerson).filter(Boolean));
-        const days=new Set(todos.map(getDate).filter(Boolean));
-        const metrics=[
-          ["Registros de rendimiento",rendimiento.length],
-          ["Evaluaciones de calidad",calidad.length],
-          ["Colaboradores registrados",workers.size],
-          ["Días con registros",days.size]
+        const sections=[
+          {id:"rendimiento",label:"Rendimiento"},
+          {id:"calidad",label:"Calidad"}
         ];
-        panel.innerHTML='<div class="page-kicker">INDICADORES / '+esc(mod.name.toUpperCase())+'</div>' +
-          '<p class="page-description">Resumen de la información importada en Rendimiento y Calidad para esta labor.</p>' +
-          '<div class="module-summary analysis-metrics">'+metrics.map(([label,value])=>
-            '<div class="module-stat"><span>'+esc(label)+'</span><strong>'+fmt.format(value)+'</strong></div>'
-          ).join("")+'</div>' +
-          '<div class="module-notice">Los indicadores se calculan exclusivamente con los registros cargados en este navegador. '+
-          'No existe todavía una conexión automática con la aplicación de origen.</div>';
+        panel.innerHTML='<div class="page-kicker">INDICADORES / '+esc(mod.name.toUpperCase())+'</div>'+
+          '<h3 class="quality-heading">Indicadores de '+esc(mod.name)+'</h3>'+
+          '<nav class="indicator-subtabs" aria-label="Tipos de indicadores">'+
+          sections.map(section=>'<button type="button" class="indicator-subtab" data-indicator="'+section.id+
+            '" aria-pressed="false">'+section.label+'</button>').join("")+'</nav>'+
+          '<section id="indicatorContent" aria-live="polite"></section>';
+        const buttons=[...panel.querySelectorAll("[data-indicator]")];
+        const content=panel.querySelector("#indicatorContent");
+        function selectIndicators(view) {
+          if(!sections.some(section=>section.id===view))return;
+          buttons.forEach(button=>{
+            const active=button.dataset.indicator===view;
+            button.classList.toggle("active",active);
+            button.setAttribute("aria-pressed",String(active));
+          });
+          const records=getRecords(areaId,view==="rendimiento"?mod.id:mod.id+"_calidad");
+          const people=new Set(records.map(getPerson).filter(Boolean));
+          const days=new Set(records.map(getDate).filter(Boolean));
+          const title=view==="rendimiento"?"Rendimiento":"Calidad";
+          const metrics=[
+            [view==="rendimiento"?"Registros de rendimiento":"Evaluaciones de calidad",records.length],
+            ["Colaboradores distintos",people.size],
+            ["Días con registros",days.size]
+          ];
+          content.innerHTML='<p class="page-description">Indicadores de '+title.toLowerCase()+
+            ' de esta labor, calculados por separado.</p>'+
+            '<div class="module-summary analysis-metrics">'+metrics.map(([label,value])=>
+              '<div class="module-stat"><span>'+esc(label)+'</span><strong>'+
+              fmt.format(value)+'</strong></div>').join("")+'</div>'+
+            '<div class="module-notice">Los indicadores utilizan los datos reales importados en esta sección de '+
+            title.toLowerCase()+'. Los registros de prueba no se incluyen en estos totales. '+
+            'No hay sincronización automática con la aplicación de Producción.</div>';
+        }
+        buttons.forEach(button=>button.addEventListener("click",()=>selectIndicators(button.dataset.indicator)));
+        selectIndicators("rendimiento");
       }
 
       function renderRecordsView(mode) {
