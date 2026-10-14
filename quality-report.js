@@ -319,25 +319,41 @@ function qualityPDFReport(pdf,payload,logos={}){
  const xs=[margin];for(const w of colWidths)xs.push(xs[xs.length-1]+w);
  const available=177-y,preferred=rows.length<=12?7.2:5.2;
  const rowHeight=Math.max(3.1,Math.min(preferred,Math.max(3.1,(available-19)/Math.max(rows.length,1))));
- const headHeight=items.length>=15?20:18;
+ // Reserva altura suficiente para nombres de ítems en varias líneas.
+ const headHeight=items.length>=15?27:25;
  const needed=headHeight+Math.max(1,rows.length)*rowHeight;
  const chartStart=Math.min(150,Math.max(122,y+needed+6));
  const footerY=188;
  let rowH=rowHeight;
  if(y+headHeight+Math.max(1,rows.length)*rowH+4>chartStart)
   rowH=Math.max(2.9,(chartStart-y-headHeight-4)/Math.max(1,rows.length));
- pdf.setFillColor(240,246,242);
+ // Encabezados claros y texto oscuro. Restablecer el color para CADA
+ // celda evita que jsPDF herede el color de otros elementos del informe.
  for(let i=0;i<n;i++){
+  pdf.setFillColor(247,250,248);
+  pdf.setDrawColor(157,177,162);
+  pdf.setLineWidth(.18);
   pdf.rect(xs[i],y,colWidths[i],headHeight,"FD");
   const name=i===0?"NOMBRE DEL COLABORADOR":i===n-1?"CONFORMIDAD TOTAL":items[i-1][1];
-  const fsize=i===0?6.6:items.length>=15?5.1:5.8;
-  pdf.setFontSize(fsize);pdf.setFont("helvetica","bold");
-  const maxLines=i===0?3:4;
-  const lines=pdf.splitTextToSize(String(name),colWidths[i]-2).slice(0,maxLines);
-  const lineHeight=fsize*.37;
-  const initial=y+headHeight/2-(lines.length-1)*lineHeight/2+1;
-  lines.forEach((line,j)=>qualityPDFText(pdf,line,i===0?xs[i]+1.5:xs[i]+colWidths[i]/2,
-    initial+j*lineHeight,{align:i===0?"left":"center"}));
+  const cellWidth=colWidths[i],maxTextWidth=Math.max(5,cellWidth-2.2);
+  let fontSize=i===0?7.2:items.length>=15?6.2:7.0,lines=[];
+  pdf.setFont("helvetica","bold");
+  // Reducir el tamaño solo si hace falta; jamás suprimir el nombre
+  // mediante slice, como hacía la versión anterior.
+  do{
+   pdf.setFontSize(fontSize);
+   lines=pdf.splitTextToSize(String(name),maxTextWidth);
+   if(lines.length*fontSize*.39<=headHeight-3.1)break;
+   fontSize-=.25;
+  }while(fontSize>=4.4);
+  const lineHeight=fontSize*.39;
+  const firstLineY=y+(headHeight-(lines.length-1)*lineHeight)/2+fontSize*.12;
+  pdf.setTextColor(22,47,34);
+  lines.forEach((line,j)=>{
+   qualityPDFText(pdf,line,
+    i===0?xs[i]+1.3:xs[i]+cellWidth/2,
+    firstLineY+j*lineHeight,{align:i===0?"left":"center"});
+  });
  }
  y+=headHeight;
  const body=rows.length?rows:[{name:"Sin evaluaciones",samples:0,pass:0,issues:new Map()}];
