@@ -428,6 +428,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    '<div class="q-explore-actions">'+
    '<label class="btn-primary quality-upload">Importar JSON<input id="qExploreFile" type="file" accept=".json,application/json" hidden></label>'+
    '<button type="button" class="btn-secondary" id="qExploreDemo">Ver registros reales</button></div></div>'+
+   '<div class="quality-demo-banner" id="qExploreBanner" role="status"></div>'+
    '<div class="q-explore-primary"><label>Modalidad<select id="qXGroup">'+
       groupNames.map(g=>'<option value="'+esc(g)+'">'+esc(groups[g].label)+'</option>').join("")+
       '</select></label><label>Colaborador<input id="qXWorker" type="search" list="qXPeople" '+
@@ -449,6 +450,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  const demoBanner=panel.querySelector("#qDemoBanner"),demoToggle=panel.querySelector("#qToggleDemo");
  const g=panel.querySelector("#qGroup"),y=panel.querySelector("#qYear"),w=panel.querySelector("#qWeek"),
  search=panel.querySelector("#qSearch"),area=panel.querySelector("#qReport"),note=panel.querySelector("#qNotice");
+ g.value=selectedGroup;
  function setViewNotice(){
    demoBanner.hidden=!demoMode;
    demoBanner.innerHTML=demoMode?
@@ -550,7 +552,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   xyears=panel.querySelector("#qXYears"),xweeks=panel.querySelector("#qXWeeks"),
   xitems=panel.querySelector("#qXItems"),xpeople=panel.querySelector("#qXPeople"),
   xresult=panel.querySelector("#qXResults"),xselection=panel.querySelector("#qXSelection"),
-  xdemo=panel.querySelector("#qExploreDemo");
+  xdemo=panel.querySelector("#qExploreDemo"),xbanner=panel.querySelector("#qExploreBanner");
  let selectedYears=null,selectedWeeks=null,selectedItems=new Set(),exactPeriods=null;
  function showMode(mode){
   const report=mode==="informe";
@@ -588,6 +590,10 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   drawChoices(xweeks,"week",weeksAvailable().map(week=>[week,"S"+String(week).padStart(2,"0")]),selectedWeeks);
   drawChoices(xitems,"item",items,selectedItems);
   xdemo.textContent=demoMode?"Ver registros reales":"Ver datos de prueba";
+  xbanner.hidden=!demoMode;
+  xbanner.innerHTML=demoMode?
+   '<strong>DATOS DE PRUEBA — COMPARACIÓN DEMOSTRATIVA</strong>'+
+   '<span>Los registros históricos, nombres y porcentajes son ficticios y no se almacenan.</span>':"";
   exploreResult();
  }
  function readChoices(container,kind){
