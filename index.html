@@ -140,6 +140,134 @@
     .quality-toolbar label:not(.quality-upload){display:flex;flex-direction:column;gap:5px;font-size:.7rem;color:var(--muted)}
     .quality-toolbar input,.quality-toolbar select{padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff;font:inherit;max-width:220px;font-size:.75rem}
     .quality-upload{display:inline-flex;align-items:center;cursor:pointer;font-size:.72rem}
+
+    /* Informe institucional de Calidad — formato horizontal tipo A4 */
+    .quality-report-actions { display:flex;justify-content:flex-end;margin:9px 0 13px; }
+    .quality-report-actions button { font-weight:800; }
+    .quality-paper-report {
+      background:#fff;color:#28332a;border:1px solid #b9c4ba;padding:12px;
+      border-radius:4px;box-shadow:0 4px 20px rgba(30,60,40,.055);
+      font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.25;
+    }
+    .quality-paper-head {
+      display:grid;grid-template-columns:1fr 1.13fr 1fr;grid-template-rows:92px 30px 76px;
+      border:1px solid #8b9a8e;background:#fff;
+    }
+    .quality-paper-head > div { min-width:0; }
+    .quality-paper-logo {
+      grid-column:1;grid-row:1;border-right:1px solid #9baa9d;
+      display:flex;justify-content:center;align-items:center;padding:8px;
+    }
+    .quality-paper-logo img {width:100%;max-width:188px;height:72px;object-fit:contain;}
+    .quality-paper-route {
+      grid-column:2;grid-row:1;text-align:center;display:flex;align-items:center;justify-content:center;
+      font-weight:800;letter-spacing:.09em;line-height:1.5;font-size:12px;padding:8px;
+    }
+    .quality-paper-assurance {
+      grid-column:3;grid-row:1 / span 3;border-left:1px solid #9baa9d;
+      display:flex;justify-content:center;align-items:center;padding:7px;
+    }
+    .quality-paper-assurance img {width:100%;max-width:172px;max-height:178px;object-fit:contain;}
+    .quality-paper-company {
+      grid-column:1 / span 2;grid-row:2;text-align:center;border-top:1px solid #9baa9d;
+      border-bottom:1px solid #9baa9d;display:flex;align-items:center;justify-content:center;
+      font-size:12px;font-weight:800;letter-spacing:.025em;padding:3px;
+    }
+    .quality-paper-meta { grid-column:1 / span 2;grid-row:3;display:grid;grid-template-columns:1fr 1.13fr;grid-template-rows:repeat(3,1fr); }
+    .quality-paper-meta > div { padding:3px 7px;display:flex;align-items:center;justify-content:center;text-align:center;border-bottom:1px solid #bdc6bc;min-width:0; }
+    .quality-paper-meta > div:nth-child(odd) {border-right:1px solid #9baa9d;font-weight:800;font-size:10px;}
+    .quality-paper-meta > div:nth-child(even) {font-size:10px;}
+    .quality-paper-meta > div:nth-last-child(-n+2) {border-bottom:0;}
+    .quality-paper-demowarning { margin:10px 0 -3px;padding:6px 9px;text-align:center;font-size:10px;
+      font-weight:850;letter-spacing:.08em;color:#7d4d0a;background:#fff1d0;border:1px solid #dbb875;}
+    .quality-paper-title {margin:12px 0 0;text-align:center;border:1px solid #95a398;
+      border-bottom:0;padding:8px 6px;font-size:12px;letter-spacing:.025em;font-weight:800;}
+    .quality-paper-table-scroll {overflow-x:auto;max-width:100%;}
+    .quality-paper-main-table {width:100%;min-width:760px;table-layout:fixed;border-collapse:collapse;margin:0;}
+    .quality-paper-main-table.quality-paper-many-cols {min-width:1100px;}
+    .quality-paper-main-table th,.quality-paper-main-table td {
+      border:1px solid #aebbb0;text-align:center;padding:5px 3px;color:#27382c;
+      vertical-align:middle;line-height:1.22;overflow-wrap:anywhere;font-family:Arial,Helvetica,sans-serif;
+    }
+    .quality-paper-main-table thead th {height:56px;font-size:9px;font-weight:800;background:#f1f5f2;}
+    .quality-paper-main-table thead th:first-child {width:21%;text-align:left;padding-left:7px;}
+    .quality-paper-main-table thead th:last-child {font-weight:800;background:#eaf0ec;}
+    .quality-paper-main-table tbody th {font-size:9px;font-weight:500;text-align:left;padding-left:7px;}
+    .quality-paper-main-table tbody td {font-size:10px;white-space:nowrap;}
+    .quality-paper-main-table tbody td.quality-paper-total {background:#edf4ef;font-weight:800;}
+    .quality-paper-empty {padding:16px;text-align:center;font-size:10px;}
+    .quality-paper-bottom {display:grid;grid-template-columns:minmax(200px,.42fr) minmax(400px,1fr);gap:20px;align-items:end;margin:17px 0;}
+    .quality-paper-weeks table {width:100%;border-collapse:collapse;}
+    .quality-paper-weeks th,.quality-paper-weeks td {border:1px solid #aebbb0;padding:6px 8px;font-size:10px;text-align:left;}
+    .quality-paper-weeks thead th {font-size:9px;text-align:center;font-weight:800;background:#f1f5f2;}
+    .quality-paper-weeks tbody td {text-align:center;font-size:11px;font-weight:700;}
+    .quality-paper-chart-wrap {min-width:0;text-align:center;}
+    .quality-paper-chart-wrap h4 {font-size:11px;color:#354839;font-weight:800;letter-spacing:.02em;margin:0 0 5px;}
+    .quality-paper-chart {width:100%;height:auto;max-height:218px;display:block;}
+    .quality-paper-nochart {padding:25px 12px;text-align:center;color:#6b7e70;font-size:11px;}
+    .quality-paper-excluded {font-size:9px;color:#7a5e3a;margin:8px 2px;}
+    .quality-paper-signatures {border:1px solid #92a097;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(2,34px);margin-top:18px;}
+    .quality-paper-signatures > div {font-size:10px;border-right:1px solid #92a097;border-bottom:1px solid #92a097;padding:5px 8px;}
+    .quality-paper-signatures > div:nth-child(2n) {border-right:0}
+    .quality-paper-signatures > div:nth-last-child(-n+2) {border-bottom:0}
+    @media (max-width:800px) {
+      .quality-paper-report {padding:8px;}
+      .quality-paper-head {grid-template-columns:1fr 1fr 1fr;}
+      .quality-paper-bottom {grid-template-columns:1fr;gap:12px;}
+      .quality-paper-weeks {max-width:420px;}
+    }
+    @media print {
+      @page {size:A4 landscape; margin:7mm;}
+      body:has(.quality-paper-report) {margin:0!important;padding:0!important;background:white!important;}
+      body:has(.quality-paper-report) .sidebar,
+      body:has(.quality-paper-report) .topbar,
+      body:has(.quality-paper-report) .module-heading,
+      body:has(.quality-paper-report) .operation-tabs,
+      body:has(.quality-paper-report) .analysis-tabs,
+      body:has(.quality-paper-report) .q-modebar,
+      body:has(.quality-paper-report) .quality-demo-banner,
+      body:has(.quality-paper-report) .quality-report-actions,
+      body:has(.quality-paper-report) .quality-internal-controls,
+      body:has(.quality-paper-report) #qNotice {display:none!important;}
+      body:has(.quality-paper-report) .app-shell,
+      body:has(.quality-paper-report) .workspace,
+      body:has(.quality-paper-report) .main-card,
+      body:has(.quality-paper-report) #app,
+      body:has(.quality-paper-report) #moduleTabPanel,
+      body:has(.quality-paper-report) #qReportPane,
+      body:has(.quality-paper-report) #qReport {
+        display:block!important;width:100%!important;max-width:none!important;min-height:0!important;
+        margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;
+      }
+      body:has(.quality-paper-report) #qExplorePane {display:none!important;}
+      body:has(.quality-paper-report) .quality-paper-report {
+        border:0!important;padding:0!important;box-shadow:none!important;background:white!important;
+        break-inside:avoid;page-break-inside:avoid;
+      }
+      .quality-paper-head {grid-template-columns:1fr 1.13fr 1fr!important;grid-template-rows:58px 23px 58px!important;}
+      .quality-paper-logo img {height:50px!important;max-width:155px!important;}
+      .quality-paper-assurance img {max-height:126px!important;max-width:120px!important;}
+      .quality-paper-route {font-size:10px!important;}
+      .quality-paper-company {font-size:10px!important;}
+      .quality-paper-meta > div {font-size:8px!important;padding:2px 5px!important;}
+      .quality-paper-title {margin-top:9px!important;padding:5px!important;font-size:10px!important;}
+      .quality-paper-table-scroll {overflow:visible!important;}
+      .quality-paper-main-table,
+      .quality-paper-main-table.quality-paper-many-cols {min-width:0!important;width:100%!important;table-layout:fixed!important;}
+      .quality-paper-main-table thead th:first-child {width:22%!important;}
+      .quality-paper-main-table thead th {font-size:7px!important;height:43px!important;padding:2px!important;word-break:normal!important;}
+      .quality-paper-main-table.quality-paper-many-cols thead th {font-size:6px!important;}
+      .quality-paper-main-table tbody th {font-size:7.5px!important;padding:2px 3px!important;}
+      .quality-paper-main-table tbody td {font-size:8px!important;padding:2px 1px!important;}
+      .quality-paper-bottom {display:grid!important;grid-template-columns:205px 1fr!important;gap:18px!important;margin:11px 0!important;break-inside:avoid;}
+      .quality-paper-weeks th,.quality-paper-weeks td {font-size:8px!important;padding:4px!important;}
+      .quality-paper-chart-wrap h4 {font-size:9px!important;}
+      .quality-paper-chart {max-height:155px!important;}
+      .quality-paper-signatures {grid-template-columns:1fr 1fr!important;grid-template-rows:repeat(2,27px)!important;margin-top:10px!important;break-inside:avoid;}
+      .quality-paper-signatures > div {font-size:8px!important;padding:4px!important;}
+      .quality-paper-report, .quality-paper-report * {-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    }
+
     .quality-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}
     .quality-table{min-width:900px}
     .quality-table th{font-size:.66rem;min-width:105px;text-align:center;white-space:normal}
@@ -396,6 +524,78 @@ function sampleQualityRecords(groups,modId){
  }
  return rows;
 }
+
+const QUALITY_BRAND={
+ logo:"https://sebastian1047.github.io/labores-jn-2/icons/jardines-san-nicolas.jpg",
+ assurance:"https://sebastian1047.github.io/labores-jn-2/icons/aseguramiento.png",
+ company:"JARDINES DE SAN NICOLÁS S.A.S."
+};
+function qualityWeeklyGraph(weeks){
+ if(!weeks.length)return '<div class="quality-paper-nochart">Sin evaluaciones semanales para graficar.</div>';
+ const W=610,H=224,L=50,R=16,T=25,B=47,plotH=H-T-B,plotW=W-L-R;
+ const y=v=>T+plotH*(1-v/100);
+ const lines=[];
+ for(let mark=0;mark<=100;mark+=25){
+  const height=y(mark);
+  lines.push('<line x1="'+L+'" x2="'+(W-R)+'" y1="'+height+'" y2="'+height+
+   '" stroke="#d7ded8" stroke-width=".85" stroke-dasharray="4 4"/>'+
+   '<text x="'+(L-9)+'" y="'+(height+4)+'" font-size="11" text-anchor="end" fill="#4b6253">'+mark+'%</text>');
+ }
+ weeks.forEach((row,i)=>{
+  const share=plotW/weeks.length,x=L+i*share+share*.25,width=Math.min(75,share*.5);
+  const level=row.n?100*row.pass/row.n:0,barY=y(level);
+  lines.push('<rect x="'+x+'" y="'+barY+'" width="'+width+'" height="'+Math.max(0,T+plotH-barY)+
+   '" fill="#658074" stroke="#51685c" stroke-width=".8"/>'+
+   '<text x="'+(x+width/2)+'" y="'+Math.max(12,barY-7)+'" font-size="12" text-anchor="middle" font-weight="700" fill="#344b3c">'+pct(row.pass,row.n)+'</text>'+
+   '<text x="'+(x+width/2)+'" y="'+(H-21)+'" font-size="11" text-anchor="middle" fill="#4c5e53">SEMANA '+row.week+'</text>'+
+   '<text x="'+(x+width/2)+'" y="'+(H-7)+'" font-size="10" text-anchor="middle" fill="#758176">'+row.yr+'</text>');
+ });
+ return '<svg class="quality-paper-chart" role="img" aria-label="Gráfica de conformidad grupal semanal" viewBox="0 0 '+W+' '+H+'">'+
+  lines.join("")+'</svg>';
+}
+function qualityPaperReport({moduleId,group,items,rows,weekRows,current,excluded,isDemo}){
+ const currentPeriod=current?('SEMANA '+current.week+' · '+current.yr):'SIN EVALUACIONES';
+ const head=items.map(([,name])=>'<th scope="col">'+esc(name)+'</th>').join("");
+ const first=rows.map(r=>'<tr><th scope="row" class="quality-paper-worker" title="'+esc(r.name)+'">'+esc(r.name)+'</th>'+
+   items.map(([id])=>'<td>'+pct(r.samples-(r.issues.get(id)||0),r.samples)+'</td>').join("")+
+   '<td class="quality-paper-total">'+pct(r.pass,r.samples)+'</td></tr>').join("");
+ const details=weekRows.map(row=>'<tr><th scope="row">SEMANA '+row.week+' · '+row.yr+'</th>'+
+  '<td>'+pct(row.pass,row.n)+'</td></tr>').join("");
+ const areaName=moduleId==="siembra-campo"?"SIEMBRA EN CAMPO":group.label.toUpperCase();
+ const responsible=moduleId==="siembra-campo"?"ERASMO GOMEZ":"—";
+ const indicator=moduleId==="siembra-campo"?"METEORO":"CALIDAD DE LA LABOR";
+ const signing=moduleId==="siembra-campo"?
+  ["JEFE PRODUCCIÓN","SUPERVISOR (J)","SUPERVISOR (M)","JEFE SAVIA - METEORO"]:
+  ["JEFE DE ÁREA","SUPERVISOR (J)","SUPERVISOR (M)","ASEGURAMIENTO"];
+ return '<article class="quality-paper-report">'+
+  '<header class="quality-paper-head">'+
+   '<div class="quality-paper-logo"><img src="'+esc(QUALITY_BRAND.logo)+'" alt="Jardines de San Nicolás"></div>'+
+   '<div class="quality-paper-route">RUTA DE<br>APRENDIZAJE</div>'+
+   '<div class="quality-paper-assurance"><img src="'+esc(QUALITY_BRAND.assurance)+'" alt="Aseguramiento"></div>'+
+   '<div class="quality-paper-company">'+esc(QUALITY_BRAND.company)+'</div>'+
+   '<div class="quality-paper-meta"><div>INDICADOR</div><div>'+esc(indicator)+'</div>'+
+    '<div>ÁREA</div><div>'+esc(areaName)+'</div>'+
+    '<div>RESPONSABLE</div><div>'+esc(responsible)+'</div></div>'+
+  '</header>'+
+  (isDemo?'<div class="quality-paper-demowarning">DATOS DE PRUEBA — INFORME DEMOSTRATIVO, NO VÁLIDO COMO EVALUACIÓN REAL</div>':'')+
+  '<h3 class="quality-paper-title">RESULTADOS CONFORMIDAD INDIVIDUAL '+esc(currentPeriod)+'</h3>'+
+  '<div class="quality-paper-table-scroll"><table class="quality-paper-main-table'+
+    (items.length>12?' quality-paper-many-cols':'')+'"><thead><tr><th scope="col">NOMBRE DEL COLABORADOR</th>'+
+    head+'<th scope="col">Conformidad Total</th></tr></thead><tbody>'+
+    (first||'<tr><td colspan="'+(items.length+2)+'" class="quality-paper-empty">No hay evaluaciones para este período.</td></tr>')+
+   '</tbody></table></div>'+
+  '<section class="quality-paper-bottom">'+
+   '<div class="quality-paper-weeks"><table><thead><tr><th>SEMANAS</th><th>CONFORMIDAD GRUPAL</th></tr></thead><tbody>'+
+    (details||'<tr><td colspan="2">Sin evaluaciones semanales</td></tr>')+
+   '</tbody></table></div>'+
+   '<div class="quality-paper-chart-wrap"><h4>'+esc(indicator)+' · CONFORMIDAD GRUPAL (SEMANAL)</h4>'+
+    qualityWeeklyGraph(weekRows)+'</div>'+
+  '</section>'+
+  (excluded?'<p class="quality-paper-excluded">'+fmt.format(excluded)+' muestra(s) sin correspondencia con el catálogo excluidas del cálculo.</p>':'')+
+  '<footer class="quality-paper-signatures">'+signing.map(n=>'<div>'+esc(n)+'</div>').join("")+'</footer>'+
+  '</article>';
+}
+
 function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup=null}){
  const groups=CONFIG[mod.id]||{};
  const allGroups=Object.keys(groups);
@@ -416,8 +616,8 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  '<input id="qFile" type="file" accept=".json,application/json">'+
  '<button type="button" id="qCSV">Exportar CSV</button>'+
  '<button type="button" id="qToggleDemo">Ver registros reales</button></div>'+
- '<div class="module-notice" id="qNotice">Fórmulas: conformidad por ítem = 100 × (muestras reales − muestras con incumplimiento) / muestras reales; '+
- 'conformidad total = 100 × muestras completamente conformes / muestras reales. Las muestras no realizadas se excluyen.</div>'+
+ '<div class="module-notice" id="qNotice" hidden style="display:none"></div>'+
+ '<div class="quality-report-actions"><button type="button" class="btn-secondary" id="qPrintReport">Imprimir / Guardar PDF</button></div>'+
  '<div id="qReport"></div>';
  const reportMarkup=panel.innerHTML;
  panel.innerHTML='<nav class="q-modebar" aria-label="Vista de Calidad">'+
@@ -483,41 +683,33 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  function refresh(){
    const c=groups[selectedGroup],items=cols();
    setViewNotice();
-   if(c.pending&&!demoMode){area.innerHTML='<div class="module-notice">Mallas no tiene ítems configurados en el formulario original. No se inventan columnas.</div>';reportRows=[];return;}
-   if(c.external&&!demoMode&&!items.length){area.innerHTML='<div class="module-notice">Los ítems del Cortador provienen de un catálogo externo que no está incluido en GitHub. Importe JSON con "registros" y "catalogoItems" para obtener los nombres reales.</div>';reportRows=[];return;}
-   const rows=active().filter(r=>(!y.value||period(r)[0]===Number(y.value))&&(!w.value||period(r)[1]===Number(w.value))&&
-     (!search.value||norm(worker(r)+" "+(r.colaborador||r.sembrador||"")).includes(norm(search.value))));
-   const res=calc(rows,c,items);
+   const all=active();
+   const periodsOfRows=new Map();
+   for(const row of all){
+     const [yr,week]=period(row);
+     if(!yr||!week)continue;
+     const k=yr+'-'+String(week).padStart(2,"0");
+     if(!periodsOfRows.has(k))periodsOfRows.set(k,{yr,week,records:[]});
+     periodsOfRows.get(k).records.push(row);
+   }
+   const chronological=[...periodsOfRows.values()].sort((a,b)=>a.yr-b.yr||a.week-b.week);
+   const latest=chronological.at(-1)??null;
+   const weekRecords=latest?latest.records:[];
+   const res=calc(weekRecords,c,items);
    reportHeaders=["NOMBRE DEL COLABORADOR","MUESTRAS REALES",...items.map(x=>x[1]),"CONFORMIDAD TOTAL"];
-   reportRows=res.rows.map(p=>[p.name,p.samples,...items.map(([id])=>pct(p.samples-p.issues.get(id),p.samples)),pct(p.pass,p.samples)]);
-   const total=res.rows.reduce((s,p)=>s+p.samples,0),passed=res.rows.reduce((s,p)=>s+p.pass,0);
-   const warning=demoMode&&(c.pending||c.external)?
-     '<div class="module-notice"><strong>Solo demostración visual:</strong> estos criterios ilustrativos no existen en el catálogo original de esta modalidad. Se reemplazarán por los oficiales cuando estén disponibles.</div>':"";
-   const head=reportHeaders.map((x,i)=>{
-     const entry=i>=2&&i<items.length+2?c.meta?.[items[i-2][0]]:null;
-     const details=entry?.subitems?.length?"Subítems: "+entry.subitems.join("; "):"";
-     const tooltip=[details,entry?.nota||""].filter(Boolean).join(". ");
-     return '<th'+(tooltip?' title="'+esc(tooltip)+'"':"")+'>'+esc(x)+
-       (entry?'<small class="quality-criterion-kind">'+esc(entry.tipo||"")+'</small>':"")+'</th>';
-   }).join("");
-   const table='<div class="module-tablewrap"><table class="module-table quality-table"><thead><tr>'+head+'</tr></thead><tbody>'+
-     (reportRows.length?reportRows.map(row=>'<tr>'+row.map(cell=>'<td>'+esc(cell)+'</td>').join("")+'</tr>').join(""):
-     '<tr><td colspan="'+reportHeaders.length+'" class="module-empty">Sin evaluaciones reales para esta selección.</td></tr>')+'</tbody></table></div>';
-   const weeks=new Map();
-   active().filter(r=>!y.value||period(r)[0]===Number(y.value)).forEach(r=>{const [yr,week]=period(r);if(!yr||!week)return;
-     const f=evaluate(r,c,items);if(f.unknown)return;const k=yr+"-"+week,v=weeks.get(k)||{yr,week,n:0,pass:0};
-     v.n++;if(!f.failed.size)v.pass++;weeks.set(k,v);
+   reportRows=res.rows.map(p=>[p.name,p.samples,...items.map(([id])=>pct(p.samples-(p.issues.get(id)||0),p.samples)),pct(p.pass,p.samples)]);
+   const weeks=chronological.slice(-4).map(p=>{
+     const result=calc(p.records,c,items);
+     return {yr:p.yr,week:p.week,
+      n:result.rows.reduce((sum,r)=>sum+r.samples,0),
+      pass:result.rows.reduce((sum,r)=>sum+r.pass,0)};
    });
-   const weekRows=[...weeks.values()].sort((a,b)=>b.yr-a.yr||b.week-a.week).slice(0,4);
-   area.innerHTML=warning+'<div class="quality-stats"><div class="module-stat"><span>Muestras reales</span><strong>'+fmt.format(total)+'</strong></div>'+
-     '<div class="module-stat"><span>Conformes</span><strong>'+fmt.format(passed)+'</strong></div>'+
-     '<div class="module-stat"><span>Conformidad total</span><strong>'+pct(passed,total)+'</strong></div></div>'+
-     (res.excluded?'<div class="module-notice">'+res.excluded+' muestra(s) sin correspondencia con el catálogo fueron excluidas para evitar resultados incorrectos.</div>':"")+
-     table+'<div class="quality-week-table"><h4>Conformidad grupal · últimas 4 semanas con evaluaciones</h4>'+
-     '<table class="module-table"><thead><tr><th>SEMANA</th><th>MUESTRAS</th><th>CONFORMIDAD GRUPAL</th></tr></thead><tbody>'+
-     (weekRows.length?weekRows.map(v=>'<tr><td>'+v.yr+' - '+v.week+'</td><td>'+v.n+'</td><td>'+pct(v.pass,v.n)+'</td></tr>').join(""):
-      '<tr><td colspan="3">Sin datos semanales</td></tr>')+'</tbody></table></div>';
+   area.innerHTML=qualityPaperReport({
+     moduleId:mod.id,group:c,items,rows:res.rows,weekRows:weeks,
+     current:latest,excluded:res.excluded,isDemo:demoMode
+   });
  }
+ panel.querySelector("#qPrintReport").addEventListener("click",()=>window.print());
  demoToggle.addEventListener("click",()=>{
    demoMode=!demoMode;
    records=demoMode?demoRows:read(key(areaId,storageKey));
