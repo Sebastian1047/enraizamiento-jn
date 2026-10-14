@@ -445,8 +445,10 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    (r.colaborador??r.sembrador??r.empleado??"")).includes(norm(xworker.value))).map(r=>{
    const [year,week]=period(r);return year&&week?year+'-'+String(week).padStart(2,"0"):"";
   }).filter(Boolean))].sort();
-  exactPeriods=new Set(periods.slice(-3));
-  selectedYears=null;selectedWeeks=null;
+  const latest=periods.slice(-3);
+  exactPeriods=new Set(latest);
+  selectedYears=new Set(latest.map(p=>Number(p.slice(0,4))));
+  selectedWeeks=new Set(latest.map(p=>Number(p.slice(5))));
   renderChoices(false);
  });
  panel.querySelector("#qFirst3").addEventListener("click",()=>{
