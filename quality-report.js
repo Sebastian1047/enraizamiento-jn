@@ -234,7 +234,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    '<div class="q-explore-header"><div><h3>Comparar evaluaciones de calidad</h3>'+
    '<p>Selecciona varios años, semanas e ítems para comparar la conformidad en distintos momentos.</p></div>'+
    '<div class="q-explore-actions">'+
-   '<label class="btn-primary quality-upload" for="qFile">Importar JSON</label>'+
+   '<label class="btn-primary quality-upload">Importar JSON<input id="qExploreFile" type="file" accept=".json,application/json" hidden></label>'+
    '<button type="button" class="btn-secondary" id="qExploreDemo">Ver registros reales</button></div></div>'+
    '<div class="q-explore-primary"><label>Modalidad<select id="qXGroup">'+
       groupNames.map(g=>'<option value="'+esc(g)+'">'+esc(groups[g].label)+'</option>').join("")+
@@ -324,7 +324,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  });
  g.addEventListener("change",()=>{selectedGroup=g.value;periods();refresh();syncExplore(true)});
  y.addEventListener("change",()=>{periods();refresh()});w.addEventListener("change",refresh);search.addEventListener("input",refresh);
- panel.querySelector("#qFile").addEventListener("change",async event=>{
+ async function importQualityFile(event){
    const file=event.target.files[0];if(!file)return;
    try{
      if(file.size>5*1024*1024)throw Error("Archivo superior a 5 MB.");
@@ -340,7 +340,9 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
      note.textContent=records.length+" evaluaciones importadas localmente. Los registros sin modalidad se asignaron a "+groups[selectedGroup].label+". Sin conexión automática a Producción.";
      periods();refresh();syncExplore(true);
    }catch(e){note.textContent="Error al importar: "+e.message;}finally{event.target.value="";}
- });
+ }
+ panel.querySelector("#qFile").addEventListener("change",importQualityFile);
+ panel.querySelector("#qExploreFile").addEventListener("change",importQualityFile);
  panel.querySelector("#qCSV").addEventListener("click",()=>{
    if(!reportRows.length)return;
    const quote=v=>'"'+String(v??"").replaceAll('"','""')+'"';
