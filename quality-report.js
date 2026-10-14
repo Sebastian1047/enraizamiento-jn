@@ -210,6 +210,23 @@ const QUALITY_BRAND={
  assurance:"https://sebastian1047.github.io/labores-jn-2/icons/aseguramiento.png",
  company:"JARDINES DE SAN NICOLÁS S.A.S."
 };
+let qualityPdfLibraryPromise=null;
+function loadQualityPdfLibrary(){
+ if(typeof window.html2pdf==="function")return Promise.resolve();
+ if(qualityPdfLibraryPromise)return qualityPdfLibraryPromise;
+ qualityPdfLibraryPromise=new Promise((resolve,reject)=>{
+   const script=document.createElement("script");
+   script.src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+   script.integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==";
+   script.crossOrigin="anonymous";
+   script.async=true;
+   script.onload=()=>typeof window.html2pdf==="function"?
+     resolve():reject(new Error("La herramienta de PDF no se pudo iniciar."));
+   script.onerror=()=>reject(new Error("No fue posible cargar el generador de PDF. Revisa la conexión."));
+   document.head.appendChild(script);
+ }).catch(error=>{qualityPdfLibraryPromise=null;throw error;});
+ return qualityPdfLibraryPromise;
+}
 function qualityWeeklyGraph(weeks){
  if(!weeks.length)return '<div class="quality-paper-nochart">Sin evaluaciones semanales para graficar.</div>';
  const W=610,H=224,L=50,R=16,T=25,B=47,plotH=H-T-B,plotW=W-L-R;
@@ -286,7 +303,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  let storedRows=read(key(areaId,storageKey));
  let demoMode=true;
  let selectedGroup=groupNames.includes(initialGroup)?initialGroup:groupNames[0],
- records=demoMode?demoRows:storedRows,reportRows=[],reportHeaders=[];
+ records=demoMode?demoRows:storedRows,reportRows=[],reportHeaders=[],pdfFilename="informe-calidad.pdf";
  panel.innerHTML='<h3 class="quality-heading">Resultados de conformidad individual</h3>'+
  '<div class="quality-demo-banner" id="qDemoBanner" role="status"></div>'+
  '<div class="quality-internal-controls" hidden style="display:none" aria-hidden="true">'+
@@ -297,7 +314,10 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  '<button type="button" id="qCSV">Exportar CSV</button>'+
  '<button type="button" id="qToggleDemo">Ver registros reales</button></div>'+
  '<div class="module-notice" id="qNotice" hidden style="display:none"></div>'+
- '<div class="quality-report-actions"><button type="button" class="btn-secondary" id="qPrintReport">Imprimir / Guardar PDF</button></div>'+
+ '<div class="quality-report-actions">'+
+ '<button type="button" class="btn-primary" id="qDownloadReport">Descargar</button>'+
+ '<button type="button" class="btn-secondary" id="qPrintReport">Imprimir</button>'+
+ '<span id="qPdfStatus" class="quality-pdf-status" role="status" aria-live="polite"></span></div>'+
  '<div id="qReport"></div>';
  const reportMarkup=panel.innerHTML;
  panel.innerHTML='<nav class="q-modebar" aria-label="Vista de Calidad">'+
@@ -374,6 +394,9 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    }
    const chronological=[...periodsOfRows.values()].sort((a,b)=>a.yr-b.yr||a.week-b.week);
    const latest=chronological.at(-1)??null;
+   pdfFilename="informe-calidad-"+mod.id+"-"+selectedGroup+
+     (latest?"-"+latest.yr+"-semana-"+String(latest.week).padStart(2,"0"):"")+
+     (demoMode?"-DEMO":"")+".pdf";
    const weekRecords=latest?latest.records:[];
    const res=calc(weekRecords,c,items);
    reportHeaders=["NOMBRE DEL COLABORADOR","MUESTRAS REALES",...items.map(x=>x[1]),"CONFORMIDAD TOTAL"];
@@ -390,6 +413,41 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    });
  }
  panel.querySelector("#qPrintReport").addEventListener("click",()=>window.print());
+ panel.querySelector("#qDownloadReport").addEventListener("click",async()=>{
+   const button=panel.querySelector("#qDownloadReport");
+   const status=panel.querySelector("#qPdfStatus");
+   const original=area.querySelector(".quality-paper-report");
+   if(button.disabled||!original)return;
+   button.disabled=true;
+   button.textContent="Generando PDF…";
+   status.textContent="";
+   let stage=null;
+   try{
+     await loadQualityPdfLibrary();
+     stage=document.createElement("div");
+     stage.className="quality-pdf-export-stage";
+     const copy=original.cloneNode(true);
+     copy.classList.add("quality-paper-export");
+     stage.appendChild(copy);
+     document.body.appendChild(stage);
+     await window.html2pdf().set({
+       filename:pdfFilename,
+       margin:[5,5,5,5],
+       image:{type:"jpeg",quality:.97},
+       html2canvas:{scale:1.5,useCORS:true,backgroundColor:"#ffffff",scrollY:0},
+       jsPDF:{unit:"mm",format:"a4",orientation:"landscape"},
+       pagebreak:{mode:["css","legacy"],avoid:".quality-paper-head"}
+     }).from(stage).save();
+     status.textContent="PDF descargado.";
+   }catch(error){
+     status.textContent="No se pudo descargar el PDF. Puedes usar Imprimir y elegir «Guardar como PDF».";
+   }finally{
+     if(stage)stage.remove();
+     button.disabled=false;
+     button.textContent="Descargar";
+   }
+ });
+
  demoToggle.addEventListener("click",()=>{
    demoMode=!demoMode;
    records=demoMode?demoRows:read(key(areaId,storageKey));
