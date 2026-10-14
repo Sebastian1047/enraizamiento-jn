@@ -19,6 +19,11 @@
     .module-link strong { font-size:.86rem; }
     .module-link small { display:block; color:var(--muted); font-size:.65rem; margin-bottom:7px; }
     .module-icon { display:grid; place-items:center; min-width:36px; height:36px; border-radius:11px; background:var(--green-soft); font-size:1.15rem; }
+    .operation-tabs { display:flex; gap:10px; flex-wrap:wrap; padding:14px; margin:20px 0 8px; border:1px solid var(--border); border-radius:13px; background:#f5faf7; }
+    .operation-tab { flex:1 1 160px; min-height:46px; border:1px solid #c6dccd; border-radius:11px; background:#fff; font:inherit; color:#215037; font-size:.79rem; font-weight:800; cursor:pointer; padding:11px 15px; }
+    .operation-tab:hover { border-color:var(--green); }
+    .operation-tab.active { background:var(--green); color:#fff; border-color:var(--green); box-shadow:0 5px 12px rgba(20,100,58,.13); }
+    .operation-tab:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
     .analysis-tabs { display:flex; flex-wrap:wrap; gap:8px; padding:10px 0 13px; margin-top:18px; margin-bottom:16px; border-bottom:1px solid var(--border); }
     .analysis-tab { padding:10px 20px; min-width:130px; border-radius:11px; border:1px solid var(--border); background:#f3f8f5; color:#274637; font:inherit; font-size:.77rem; font-weight:800; cursor:pointer; }
     .analysis-tab:hover { border-color:var(--green); }
@@ -232,13 +237,17 @@ function sampleQualityRecords(groups,modId){
  }
  return rows;
 }
-function render({areaId,mod,key:storageKey,panel}){
- const groups=CONFIG[mod.id]||{};const groupNames=Object.keys(groups);
+function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup=null}){
+ const groups=CONFIG[mod.id]||{};
+ const allGroups=Object.keys(groups);
+ const groupNames=Array.isArray(allowedGroups)&&allowedGroups.length?
+   allGroups.filter(id=>allowedGroups.includes(id)):allGroups;
  if(!groupNames.length){panel.innerHTML='<div class="module-empty">No hay catálogo de calidad para este módulo.</div>';return;}
  const demoRows=sampleQualityRecords(groups,mod.id);
  let storedRows=read(key(areaId,storageKey));
  let demoMode=true;
- let selectedGroup=groupNames[0],records=demoMode?demoRows:storedRows,reportRows=[],reportHeaders=[];
+ let selectedGroup=groupNames.includes(initialGroup)?initialGroup:groupNames[0],
+ records=demoMode?demoRows:storedRows,reportRows=[],reportHeaders=[];
  panel.innerHTML='<h3 class="quality-heading">Resultados de conformidad individual</h3>'+
  '<div class="quality-demo-banner" id="qDemoBanner" role="status"></div>'+
  '<div class="quality-toolbar"><label>Modalidad<select id="qGroup">'+groupNames.map(g=>'<option value="'+esc(g)+'">'+esc(groups[g].label)+'</option>').join("")+'</select></label>'+
@@ -385,7 +394,10 @@ function sampleLabor(modId){
    bloque:"B"+(i%3+1),cama:"C"+(i+1),horasTrabajadas:Number(h.toFixed(2)),
    tiempoRealMin:Math.round(h*60),__soloDemostracion:true};
   if(modId==="siembra-campo"){row.lineas=5+w+i;row.densidad=[117,130,112,170][i]}
-  if(modId==="desbotonado-mallas"){row.tallos=960+w*115+i*90;row.mediosCuadros=3+w%3}
+  if(modId==="desbotonado-mallas"){
+   row.tallos=960+w*115+i*90;row.mediosCuadros=3+w%3;
+   row.tipoLabor=["Desbotón Pompón","Desbotón Spider","Malla","Desbotón Pompón"][i];
+  }
   if(modId==="bandejas-enraizamiento"){row.cantidad=950+w*120+i*75}
   if(modId==="corte"){row.rol=["cortador","transportador","recogedor","cortador"][i]}
   rows.push(row);
@@ -674,19 +686,40 @@ function summarySection(modId,labor,quality,role,from,to,search){
     nf.format(qual.total)+" evaluaciones. ":"No hay evaluaciones clasificables para establecer la conformidad. ")+
    'Las comparaciones entre productividad y calidad por persona requieren identificadores coincidentes.</p></div>';
 }
-function render({areaId,mod,view,panel,getRecords}){
+
+function matchLaborVariant(modId,r,variant){
+ if(!variant||!["desbotonado-mallas","corte"].includes(modId))return true;
+ const raw=norm(r.__laborGrupo??r.tipoLabor??r.tipoLaborNombre??r.rol??r.rolNombre??r.tipoRol??"");
+ if(!raw)return false;
+ if(modId==="desbotonado-mallas"){
+  if(variant==="pompon")return raw.includes("pompon");
+  if(variant==="spider")return raw.includes("spider")||raw.includes("cremon");
+  if(variant==="mallas")return raw.includes("malla");
+ }
+ if(modId==="corte"){
+  if(variant==="cortador")return raw.includes("cortador")||raw==="corte";
+  if(variant==="garruchero")return raw.includes("garruchero")||raw.includes("transportador");
+  if(variant==="recogedor")return raw.includes("recogedor");
+ }
+ return false;
+}
+function render({areaId,mod,view,panel,getRecords,selectedVariant=null,allowedGroups=null}){
  if(areaId!=="produccion"||!TYPES[mod.id])return false;
- const roles=sourceQuality(mod.id),roleIDs=Object.keys(roles);
- const realLabor=getRecords(areaId,mod.id),realQuality=getRecords(areaId,mod.id+"_calidad"),
-  realTimes=getRecords(areaId,mod.id+"_tiempos");
- const fakeLabor=sampleLabor(mod.id),fakeQuality=sampleQuality(mod.id),fakeTimes=sampleTimes(mod.id);
+ const roles=sourceQuality(mod.id);
+ const roleIDs=Array.isArray(allowedGroups)&&allowedGroups.length?
+   Object.keys(roles).filter(id=>allowedGroups.includes(id)):Object.keys(roles);
+ const realLabor=getRecords(areaId,mod.id).filter(r=>matchLaborVariant(mod.id,r,selectedVariant));
+ const realQuality=getRecords(areaId,mod.id+"_calidad");
+ const realTimes=getRecords(areaId,mod.id+"_tiempos");
+ const fakeLabor=sampleLabor(mod.id).filter(r=>matchLaborVariant(mod.id,r,selectedVariant));
+ const fakeQuality=sampleQuality(mod.id),fakeTimes=sampleTimes(mod.id);
  let demo=view==="rendimiento"?!realLabor.length:view==="calidad"?!realQuality.length:
   !realLabor.length&&!realQuality.length;
  let currentRole=roleIDs[0]??"";
  panel.innerHTML='<div class="dash-controlbar"><div class="dash-controlgroup">'+
    '<label>Desde<input type="date" id="dashFrom"></label><label>Hasta<input type="date" id="dashTo"></label>'+
    '<label>Colaborador<input type="search" id="dashWorker" placeholder="Nombre o código"></label>'+
-   (view==="rendimiento"||!roleIDs.length?"":'<label>Modalidad<select id="dashRole">'+roleIDs.map(id=>
+   (view==="rendimiento"||roleIDs.length<=1?"":'<label>Modalidad<select id="dashRole">'+roleIDs.map(id=>
     '<option value="'+clean(id)+'">'+clean(roles[id].label)+'</option>').join("")+'</select></label>')+
    '</div><button type="button" class="btn-secondary" id="dashDemoButton">Ver registros reales</button></div>'+
    '<div id="dashFeedback"></div><div id="dashContents"></div>';
@@ -712,7 +745,7 @@ function render({areaId,mod,view,panel,getRecords}){
  renderNow();return true;
 }
 window.ProductionIndicators={render,isoWeek,qualityRole,failuresOf,bandejasTimeHours,qualityData,
- sampleLabor,sampleQuality,sourceQuality,enrichedLabor};
+ sampleLabor,sampleQuality,sourceQuality,enrichedLabor,matchLaborVariant};
 })();
 </script>
   <script>
@@ -975,12 +1008,29 @@ window.ProductionIndicators={render,isoWeek,qualityRole,failuresOf,bandejasTimeH
 
     function renderModule(areaId,mod) {
       const area=AREAS[areaId];
+      const operationMenus={
+        "desbotonado-mallas":[
+          {id:"pompon",label:"Desbotón Pompón",qualityGroups:["pompon"]},
+          {id:"spider",label:"Desbotón Spider",qualityGroups:["spider"]},
+          {id:"mallas",label:"Malla",qualityGroups:["mallas"]}
+        ],
+        "corte":[
+          {id:"cortador",label:"Corte",qualityGroups:["cortador-pompon","cortador-spider"]},
+          {id:"garruchero",label:"Transportador",qualityGroups:["garruchero"]},
+          {id:"recogedor",label:"Recogedor",qualityGroups:["recogedor"]}
+        ]
+      };
+      const operationOptions=areaId==="produccion"?(operationMenus[mod.id]||[]):[];
+      let selectedOperation=operationOptions[0]?.id??null;
+      const selectedQualityGroups=()=>operationOptions.find(v=>v.id===selectedOperation)?.qualityGroups||null;
+      const matchOperation=r=>!selectedOperation||window.ProductionIndicators.matchLaborVariant(mod.id,r,selectedOperation);
       const tabs=[
         {id:"rendimiento",label:"Rendimiento"},
         {id:"calidad",label:"Calidad"},
         {id:"indicadores",label:"Indicadores"}
       ];
       let activeTab="rendimiento";
+      let activeIndicator="rendimiento";
       heading.textContent=mod.name;
       subtitle.textContent=area.label+" / Consulta de información";
       app.innerHTML='<div class="module-heading"><div>' +
@@ -988,6 +1038,12 @@ window.ProductionIndicators={render,isoWeek,qualityRole,failuresOf,bandejasTimeH
         '<h2 class="page-title">'+esc(mod.name)+'</h2>' +
         '<p class="page-description">Seleccione la vista de rendimiento, calidad o indicadores de esta labor.</p></div>' +
         '<a class="btn-secondary back-link" href="#'+areaId+'">← Volver a '+esc(area.label)+'</a></div>' +
+        (operationOptions.length?
+          '<nav class="operation-tabs" aria-label="Labores de '+esc(mod.name)+'">'+
+          operationOptions.map(item=>'<button type="button" class="operation-tab'+
+            (item.id===selectedOperation?' active':'')+'" data-operation="'+item.id+
+            '" aria-pressed="'+(item.id===selectedOperation?'true':'false')+'">'+esc(item.label)+'</button>').join("")+
+          '</nav>':'')+
         '<div class="analysis-tabs" role="tablist" aria-label="Vistas de '+esc(mod.name)+'">' +
         tabs.map(tab=>'<button type="button" role="tab" class="analysis-tab'+
           (tab.id===activeTab?' active':'')+'" data-tab="'+tab.id+'" aria-selected="'+
@@ -995,6 +1051,7 @@ window.ProductionIndicators={render,isoWeek,qualityRole,failuresOf,bandejasTimeH
         '</div><section id="moduleTabPanel" role="tabpanel" aria-live="polite"></section>';
       const panel=document.getElementById("moduleTabPanel");
       const tabButtons=[...app.querySelectorAll("[data-tab]")];
+      const operationButtons=[...app.querySelectorAll("[data-operation]")];
 
       function renderIndicators() {
         const sections=[
@@ -1098,7 +1155,9 @@ window.ProductionIndicators={render,isoWeek,qualityRole,failuresOf,bandejasTimeH
             button.setAttribute("aria-pressed",String(active));
           });
           if(areaId==="produccion" && window.ProductionIndicators) {
-            window.ProductionIndicators.render({areaId,mod,view,panel:content,getRecords});
+            activeIndicator=view;
+            window.ProductionIndicators.render({areaId,mod,view,panel:content,getRecords,
+              selectedVariant:selectedOperation,allowedGroups:selectedQualityGroups()});
             return;
           }
           if(view==="resumen"){renderExecutiveSummary();return;}
@@ -1121,7 +1180,7 @@ window.ProductionIndicators={render,isoWeek,qualityRole,failuresOf,bandejasTimeH
             'No hay sincronización automática con la aplicación de Producción.</div>';
         }
         buttons.forEach(button=>button.addEventListener("click",()=>selectIndicators(button.dataset.indicator)));
-        selectIndicators("rendimiento");
+        selectIndicators(activeIndicator);
       }
 
       function renderRecordsView(mode) {
@@ -1129,7 +1188,8 @@ window.ProductionIndicators={render,isoWeek,qualityRole,failuresOf,bandejasTimeH
         const title=isQuality?"Calidad":"Rendimiento";
         const key=isQuality?mod.id+"_calidad":mod.id;
         let currentRows=getRecords(areaId,key);
-        if(isQuality){window.QualityReports.render({areaId,mod,key,panel});return;}
+        if(isQuality){window.QualityReports.render({areaId,mod,key,panel,
+          allowedGroups:selectedQualityGroups(),initialGroup:selectedQualityGroups()?.[0]});return;}
         if(mod.id==="bandejas-enraizamiento"){renderBandejasRendimiento(areaId,mod,panel);return;}
         panel.innerHTML='<div class="page-kicker">'+title.toUpperCase()+' / '+esc(mod.name.toUpperCase())+'</div>' +
           '<p class="page-description">Registros de '+title.toLowerCase()+' de esta labor.</p>' +
@@ -1151,6 +1211,7 @@ window.ProductionIndicators={render,isoWeek,qualityRole,failuresOf,bandejasTimeH
         const to=document.getElementById("filterTo");
         const worker=document.getElementById("filterWorker");
         const selected=()=>currentRows.filter(r=>
+          matchOperation(r) &&
           (!from.value || getDate(r)>=from.value) &&
           (!to.value || getDate(r)<=to.value) &&
           (!worker.value || getPerson(r).toLowerCase().includes(worker.value.toLowerCase()))
@@ -1184,10 +1245,24 @@ window.ProductionIndicators={render,isoWeek,qualityRole,failuresOf,bandejasTimeH
             if(!list||!list.every(r=>r&&typeof r==="object"&&!Array.isArray(r)))
               throw Error('Se necesita un arreglo JSON de registros, o un objeto con la propiedad "registros".');
             if(list.length>20000)throw Error("El archivo supera 20.000 registros.");
-            localStorage.setItem(dataKey(areaId,key),JSON.stringify(list));
-            currentRows=list;
-            notice.textContent=list.length+" registros de "+title.toLowerCase()+
-              " importados para "+mod.name+". No son datos en tiempo real.";
+            let incoming=list;
+            if(operationOptions.length){
+              incoming=list.map(r=>{
+                const hasGroup=r.__laborGrupo||r.tipoLabor||r.tipoLaborNombre||r.rol||r.rolNombre||r.tipoRol;
+                return hasGroup?r:{...r,__laborGrupo:selectedOperation};
+              });
+              const affected=operationOptions.filter(option=>incoming.some(r=>
+                window.ProductionIndicators.matchLaborVariant(mod.id,r,option.id))).map(option=>option.id);
+              currentRows=[
+                ...currentRows.filter(r=>!affected.some(id=>
+                  window.ProductionIndicators.matchLaborVariant(mod.id,r,id))),
+                ...incoming
+              ];
+            }else currentRows=incoming;
+            localStorage.setItem(dataKey(areaId,key),JSON.stringify(currentRows));
+            notice.textContent=incoming.length+" registros de "+title.toLowerCase()+
+              " importados para "+(operationOptions.find(x=>x.id===selectedOperation)?.label||mod.name)+
+              ". Se conservaron los registros de las otras labores. No son datos en tiempo real.";
             refresh();
           }catch(error){notice.textContent="No se pudo importar: "+error.message;}
           finally{event.target.value="";}
@@ -1213,6 +1288,17 @@ window.ProductionIndicators={render,isoWeek,qualityRole,failuresOf,bandejasTimeH
         else renderRecordsView(tabId);
       }
       tabButtons.forEach(button=>button.addEventListener("click",()=>selectTab(button.dataset.tab)));
+      operationButtons.forEach(button=>button.addEventListener("click",()=>{
+        const target=button.dataset.operation;
+        if(!operationOptions.some(option=>option.id===target)||target===selectedOperation)return;
+        selectedOperation=target;
+        operationButtons.forEach(el=>{
+          const active=el.dataset.operation===target;
+          el.classList.toggle("active",active);
+          el.setAttribute("aria-pressed",String(active));
+        });
+        selectTab(activeTab);
+      }));
       selectTab(activeTab);
     }
 
