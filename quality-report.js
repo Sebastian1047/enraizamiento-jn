@@ -427,23 +427,51 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    let stage=null;
    try{
      await loadQualityPdfLibrary();
+     // El contenedor anterior tenía z-index:-1 y html2pdf lo clonaba
+     // completo: en Chrome podía producir una hoja blanca.
+     // Capturamos solo el informe, visible mientras se genera.
      stage=document.createElement("div");
      stage.className="quality-pdf-export-stage";
      const copy=original.cloneNode(true);
      copy.classList.add("quality-paper-export");
      stage.appendChild(copy);
      document.body.appendChild(stage);
-     await window.html2pdf().set({
+     await Promise.all([...copy.querySelectorAll("img")].map(img=>
+       typeof img.decode==="function"?img.decode().catch(()=>{}):Promise.resolve()
+     ));
+     await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+     const job=window.html2pdf().set({
        filename:pdfFilename,
        margin:[5,5,5,5],
        image:{type:"jpeg",quality:.97},
-       html2canvas:{scale:1.5,useCORS:true,backgroundColor:"#ffffff",scrollY:0},
+       html2canvas:{scale:1.75,useCORS:true,allowTaint:false,
+         backgroundColor:"#ffffff",scrollX:0,scrollY:0,
+         windowWidth:1150,logging:false},
        jsPDF:{unit:"mm",format:"a4",orientation:"landscape"},
        pagebreak:{mode:["css","legacy"],avoid:".quality-paper-head"}
-     }).from(stage).save();
-     status.textContent="PDF descargado.";
+     }).from(copy);
+     await job.toCanvas();
+     const canvas=await job.get("canvas");
+     if(!canvas||!canvas.width||!canvas.height)
+       throw new Error("No se pudo capturar el informe.");
+     const context=canvas.getContext("2d",{willReadFrequently:true});
+     if(!context)throw new Error("No se pudo verificar el contenido.");
+     const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
+     const stride=Math.max(1,Math.floor(canvas.width*canvas.height/18000));
+     let colored=0;
+     for(let i=0;i<canvas.width*canvas.height;i+=stride){
+       const j=i*4;
+       if(pixels[j+3]>80&&(pixels[j]<190||pixels[j+1]<190||pixels[j+2]<190)){
+         colored++;
+         if(colored>=15)break;
+       }
+     }
+     if(colored<15)throw new Error("La captura está vacía. No se descargará un PDF en blanco.");
+     await job.save();
+     status.textContent="PDF descargado correctamente.";
    }catch(error){
-     status.textContent="No se pudo descargar el PDF. Puedes usar Imprimir y elegir «Guardar como PDF».";
+     console.error("Error al generar informe PDF:",error);
+     status.textContent="No fue posible generar un PDF válido. Usa Imprimir → Guardar como PDF.";
    }finally{
      if(stage)stage.remove();
      button.disabled=false;
