@@ -427,6 +427,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    '<p>Selecciona varios años, semanas e ítems para comparar la conformidad en distintos momentos.</p></div>'+
    '<div class="q-explore-actions">'+
    '<label class="btn-primary quality-upload">Importar JSON<input id="qExploreFile" type="file" accept=".json,application/json" hidden></label>'+
+   '<button type="button" class="btn-secondary" id="qXExport">Exportar comparación</button>'+
    '<button type="button" class="btn-secondary" id="qExploreDemo">Ver registros reales</button></div></div>'+
    '<div class="quality-demo-banner" id="qExploreBanner" role="status"></div>'+
    '<div class="q-explore-primary"><label>Modalidad<select id="qXGroup">'+
@@ -437,8 +438,14 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    '<button type="button" id="qLast3">Últimas 3 semanas</button>'+
    '<button type="button" id="qFirst3">Semanas 1–3 · últimos 3 años</button>'+
    '<button type="button" id="qAllDates">Todo el historial</button></div>'+
-   '<div class="q-explore-filters"><fieldset><legend>Años a comparar</legend><div id="qXYears" class="q-check-options"></div></fieldset>'+
-   '<fieldset><legend>Semanas a comparar</legend><div id="qXWeeks" class="q-check-options q-week-options"></div></fieldset>'+
+   '<div class="q-explore-filters"><fieldset><legend>Años a comparar</legend>'+
+   '<div class="q-select-actions"><button type="button" id="qXYearsAll">Todos</button>'+
+   '<button type="button" id="qXYearsNone">Limpiar</button></div>'+
+   '<div id="qXYears" class="q-check-options"></div></fieldset>'+
+   '<fieldset><legend>Semanas a comparar</legend>'+
+   '<div class="q-select-actions"><button type="button" id="qXWeeksAll">Todas</button>'+
+   '<button type="button" id="qXWeeksNone">Limpiar</button></div>'+
+   '<div id="qXWeeks" class="q-check-options q-week-options"></div></fieldset>'+
    '<fieldset class="q-items-filter"><legend>Ítems que deseas comparar</legend>'+
    '<div class="q-select-actions"><button type="button" id="qSelectItemsAll">Seleccionar todos</button>'+
    '<button type="button" id="qSelectItemsNone">Limpiar selección</button></div>'+
@@ -553,7 +560,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   xitems=panel.querySelector("#qXItems"),xpeople=panel.querySelector("#qXPeople"),
   xresult=panel.querySelector("#qXResults"),xselection=panel.querySelector("#qXSelection"),
   xdemo=panel.querySelector("#qExploreDemo"),xbanner=panel.querySelector("#qExploreBanner");
- let selectedYears=null,selectedWeeks=null,selectedItems=new Set(),exactPeriods=null;
+ let selectedYears=null,selectedWeeks=null,selectedItems=new Set(),exactPeriods=null,exportComparison=null;
  function showMode(mode){
   const report=mode==="informe";
   xp.hidden=report;rp.hidden=!report;
@@ -608,6 +615,16 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   exploreResult();
  });
  xworker.addEventListener("input",exploreResult);
+ for(const [id,kind,value] of [
+  ["qXYearsAll","year",null],["qXYearsNone","year",new Set()],
+  ["qXWeeksAll","week",null],["qXWeeksNone","week",new Set()]
+ ]){
+  panel.querySelector("#"+id).addEventListener("click",()=>{
+   if(kind==="year")selectedYears=value===null?null:new Set();
+   else selectedWeeks=value===null?null:new Set();
+   exactPeriods=null;renderChoices(false);
+  });
+ }
  xgroup.addEventListener("change",()=>{
   if(!groupNames.includes(xgroup.value))return;
   selectedGroup=xgroup.value;g.value=selectedGroup;
@@ -616,11 +633,14 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  });
  xdemo.addEventListener("click",()=>demoToggle.click());
  panel.querySelector("#qLast3").addEventListener("click",()=>{
-  const periods=[...new Set(base().map(r=>{
+  const periods=[...new Set(base().filter(r=>!xworker.value||norm(worker(r)+' '+
+   (r.colaborador??r.sembrador??r.empleado??"")).includes(norm(xworker.value))).map(r=>{
    const [year,week]=period(r);return year&&week?year+'-'+String(week).padStart(2,"0"):"";
   }).filter(Boolean))].sort();
-  exactPeriods=new Set(periods.slice(-3));
-  selectedYears=null;selectedWeeks=null;
+  const latest=periods.slice(-3);
+  exactPeriods=new Set(latest);
+  selectedYears=new Set(latest.map(p=>Number(p.slice(0,4))));
+  selectedWeeks=new Set(latest.map(p=>Number(p.slice(5))));
   renderChoices(false);
  });
  panel.querySelector("#qFirst3").addEventListener("click",()=>{
@@ -642,7 +662,22 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   drawChoices(xitems,"item",itemsAvailable(),selectedItems);
   exploreResult();
  });
+ panel.querySelector("#qXExport").addEventListener("click",()=>{
+  if(!exportComparison||!exportComparison.rows.length)return;
+  const quote=v=>{
+   const str=String(v??"");
+   const safe=/^[=+\-@]/.test(str)?"'"+str:str;
+   return '"'+safe.replaceAll('"','""')+'"';
+  };
+  const csv="\uFEFF"+[exportComparison.headers,...exportComparison.rows]
+   .map(row=>row.map(quote).join(";")).join("\r\n");
+  const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  const link=document.createElement("a");
+  link.href=url;link.download=(demoMode?"DEMO-":"")+"comparacion-calidad-"+mod.id+"-"+selectedGroup+".csv";link.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+ });
  function exploreResult(){
+  exportComparison=null;
   const items=itemsAvailable(),c=groups[selectedGroup],
    data=analyzeComparison(base(),c,items,selectedItems,selectedYears,selectedWeeks,exactPeriods,xworker.value);
   const {periods,chosen,excluded}=data;
@@ -669,6 +704,10 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    '</div>';
   const th=['AÑO','SEMANA','EVALUACIONES',...chosen.map(row=>row[1]),'CONFORMIDAD SELECCIONADA'];
   const header='<tr>'+th.map(v=>'<th>'+esc(v)+'</th>').join("")+'</tr>';
+  exportComparison={headers:th,rows:periods.map(r=>[
+   String(r.year),"S"+String(r.week).padStart(2,"0"),String(r.n),
+   ...chosen.map(([id])=>format(r.ids.get(id),r.n)),format(r.selected,r.n)
+  ])};
   const cells=periods.length?periods.map(r=>'<tr><td>'+r.year+'</td><td>S'+
     String(r.week).padStart(2,"0")+'</td><td>'+r.n+'</td>'+
     chosen.map(([id])=>'<td>'+format(r.ids.get(id),r.n)+'</td>').join("")+
