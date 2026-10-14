@@ -409,12 +409,13 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  records=demoMode?demoRows:storedRows,reportRows=[],reportHeaders=[];
  panel.innerHTML='<h3 class="quality-heading">Resultados de conformidad individual</h3>'+
  '<div class="quality-demo-banner" id="qDemoBanner" role="status"></div>'+
- '<div class="quality-toolbar"><label>Modalidad<select id="qGroup">'+groupNames.map(g=>'<option value="'+esc(g)+'">'+esc(groups[g].label)+'</option>').join("")+'</select></label>'+
- '<label>Año<select id="qYear"></select></label><label>Semana<select id="qWeek"></select></label>'+
- '<label>Colaborador<input id="qSearch" type="search" placeholder="Nombre o código"></label>'+
- '<label class="btn-primary quality-upload">Importar JSON<input type="file" id="qFile" accept=".json,application/json" hidden></label>'+
- '<button type="button" class="btn-secondary" id="qCSV">Exportar CSV</button>'+
- '<button type="button" class="btn-secondary" id="qToggleDemo">Ver registros reales</button></div>'+
+ '<div class="quality-internal-controls" hidden style="display:none" aria-hidden="true">'+
+ '<select id="qGroup">'+groupNames.map(g=>'<option value="'+esc(g)+'">'+esc(groups[g].label)+'</option>').join("")+'</select>'+
+ '<select id="qYear"></select><select id="qWeek"></select>'+
+ '<input id="qSearch" type="search" value="">'+
+ '<input id="qFile" type="file" accept=".json,application/json">'+
+ '<button type="button" id="qCSV">Exportar CSV</button>'+
+ '<button type="button" id="qToggleDemo">Ver registros reales</button></div>'+
  '<div class="module-notice" id="qNotice">Fórmulas: conformidad por ítem = 100 × (muestras reales − muestras con incumplimiento) / muestras reales; '+
  'conformidad total = 100 × muestras completamente conformes / muestras reales. Las muestras no realizadas se excluyen.</div>'+
  '<div id="qReport"></div>';
