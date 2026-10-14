@@ -224,10 +224,28 @@ function loadQualityPdfLibrary(){
  }).catch(error=>{qualityPdfLibraryPromise=null;throw error});
  return qualityPdfLibraryPromise;
 }
+function qualityPDFLogo(url){
+ if(typeof Image==="undefined")return Promise.resolve(null);
+ return new Promise(resolve=>{
+  const image=new Image();
+  image.crossOrigin="anonymous";
+  image.onload=()=>{
+   try{
+    const canvas=document.createElement("canvas");
+    canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;
+    if(!canvas.width||!canvas.height)throw Error("Logo vacío");
+    canvas.getContext("2d").drawImage(image,0,0);
+    resolve({data:canvas.toDataURL("image/png"),ratio:canvas.width/canvas.height});
+   }catch{resolve(null)}
+  };
+  image.onerror=()=>resolve(null);
+  image.src=url;
+ });
+}
 function qualityPDFText(pdf,value,x,y,options={}){
  pdf.text(String(value??""),x,y,options);
 }
-function qualityPDFHeader(pdf,payload){
+function qualityPDFHeader(pdf,payload,logos={}){
  const green=[29,93,61],border=[160,178,164];
  const moduleId=payload.moduleId;
  const areaName=moduleId==="siembra-campo"?"SIEMBRA EN CAMPO":payload.group.label.toUpperCase();
@@ -250,6 +268,19 @@ function qualityPDFHeader(pdf,payload){
  qualityPDFText(pdf,"ASEGURAMIENTO",(x3+289)/2,28,{align:"center"});
  pdf.setFontSize(5.8);pdf.setFont("helvetica","normal");
  qualityPDFText(pdf,"CONTROL DE CALIDAD",(x3+289)/2,33,{align:"center"});
+ if(logos.logo){
+  const aw=70,ah=19,ratio=logos.logo.ratio;
+  const w=Math.min(aw,ah*ratio),h=w/ratio;
+  pdf.setFillColor(255,255,255);pdf.rect(9,9,74,20,"F");
+  pdf.addImage(logos.logo.data,"PNG",11+(aw-w)/2,9+(ah-h)/2,w,h);
+ }
+ if(logos.assurance){
+  const aw=65,ah=37,ratio=logos.assurance.ratio;
+  const w=Math.min(aw,ah*ratio),h=w/ratio;
+  pdf.setFillColor(255,255,255);pdf.rect(200,9,81,37,"F");
+  pdf.addImage(logos.assurance.data,"PNG",208+(aw-w)/2,10+(ah-h)/2,w,h);
+ }
+
  pdf.setFontSize(7.2);
  const labels=[["INDICADOR",indicator],["ÁREA",areaName],["RESPONSABLE",responsible]];
  for(let i=0;i<3;i++){
@@ -263,10 +294,10 @@ function qualityPDFHeader(pdf,payload){
  }
  return {indicator,areaName};
 }
-function qualityPDFReport(pdf,payload){
+function qualityPDFReport(pdf,payload,logos={}){
  const pageWidth=297,pageHeight=210,margin=8,right=289,width=281;
  const items=payload.items,rows=payload.rows,weeks=payload.weekRows;
- const {indicator}=qualityPDFHeader(pdf,payload);
+ const {indicator}=qualityPDFHeader(pdf,payload,logos);
  pdf.setDrawColor(154,174,158);pdf.setLineWidth(.17);
  let y=56;
  if(payload.isDemo){
@@ -290,7 +321,7 @@ function qualityPDFReport(pdf,payload){
  const rowHeight=Math.max(3.1,Math.min(preferred,Math.max(3.1,(available-19)/Math.max(rows.length,1))));
  const headHeight=items.length>=15?20:18;
  const needed=headHeight+Math.max(1,rows.length)*rowHeight;
- const chartStart=Math.min(165,Math.max(122,y+needed+6));
+ const chartStart=Math.min(150,Math.max(122,y+needed+6));
  const footerY=188;
  let rowH=rowHeight;
  if(y+headHeight+Math.max(1,rows.length)*rowH+4>chartStart)
@@ -592,7 +623,10 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    try{
      await loadQualityPdfLibrary();
      const pdf=new window.jspdf.jsPDF({unit:"mm",format:"a4",orientation:"landscape",compress:true});
-     const result=qualityPDFReport(pdf,reportPayload);
+     const [logo,assurance]=await Promise.all([
+       qualityPDFLogo(QUALITY_BRAND.logo),qualityPDFLogo(QUALITY_BRAND.assurance)
+     ]);
+     const result=qualityPDFReport(pdf,reportPayload,{logo,assurance});
      if(!result.names.length&&!reportPayload.isDemo){
        status.textContent="No hay evaluaciones reales para esta modalidad; se descargará el informe sin resultados.";
      }
