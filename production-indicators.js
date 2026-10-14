@@ -357,8 +357,9 @@ function render({areaId,mod,view,panel,getRecords,selectedVariant=null,allowedGr
  const realTimes=getRecords(areaId,mod.id+"_tiempos");
  const fakeLabor=sampleLabor(mod.id).filter(r=>matchLaborVariant(mod.id,r,selectedVariant));
  const fakeQuality=sampleQuality(mod.id),fakeTimes=sampleTimes(mod.id);
- let demo=view==="rendimiento"?!realLabor.length:view==="calidad"?!realQuality.length:
-  !realLabor.length&&!realQuality.length;
+ const currentQuality=realQuality.filter(r=>roleIDs.includes(qualityRole(r,roles)));
+ let demo=view==="rendimiento"?!realLabor.length:view==="calidad"?!currentQuality.length:
+  !realLabor.length&&!currentQuality.length;
  let currentRole=roleIDs[0]??"";
  panel.innerHTML='<div class="dash-controlbar"><div class="dash-controlgroup">'+
    '<label>Desde<input type="date" id="dashFrom"></label><label>Hasta<input type="date" id="dashTo"></label>'+
