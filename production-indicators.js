@@ -38,7 +38,10 @@ function sampleLabor(modId){
    bloque:"B"+(i%3+1),cama:"C"+(i+1),horasTrabajadas:Number(h.toFixed(2)),
    tiempoRealMin:Math.round(h*60),__soloDemostracion:true};
   if(modId==="siembra-campo"){row.lineas=5+w+i;row.densidad=[117,130,112,170][i]}
-  if(modId==="desbotonado-mallas"){row.tallos=960+w*115+i*90;row.mediosCuadros=3+w%3}
+  if(modId==="desbotonado-mallas"){
+   row.tallos=960+w*115+i*90;row.mediosCuadros=3+w%3;
+   row.tipoLabor=["Desbotón Pompón","Desbotón Spider","Malla","Desbotón Pompón"][i];
+  }
   if(modId==="bandejas-enraizamiento"){row.cantidad=950+w*120+i*75}
   if(modId==="corte"){row.rol=["cortador","transportador","recogedor","cortador"][i]}
   rows.push(row);
@@ -327,19 +330,40 @@ function summarySection(modId,labor,quality,role,from,to,search){
     nf.format(qual.total)+" evaluaciones. ":"No hay evaluaciones clasificables para establecer la conformidad. ")+
    'Las comparaciones entre productividad y calidad por persona requieren identificadores coincidentes.</p></div>';
 }
-function render({areaId,mod,view,panel,getRecords}){
+
+function matchLaborVariant(modId,r,variant){
+ if(!variant||!["desbotonado-mallas","corte"].includes(modId))return true;
+ const raw=norm(r.__laborGrupo??r.tipoLabor??r.tipoLaborNombre??r.rol??r.rolNombre??r.tipoRol??"");
+ if(!raw)return false;
+ if(modId==="desbotonado-mallas"){
+  if(variant==="pompon")return raw.includes("pompon");
+  if(variant==="spider")return raw.includes("spider")||raw.includes("cremon");
+  if(variant==="mallas")return raw.includes("malla");
+ }
+ if(modId==="corte"){
+  if(variant==="cortador")return raw.includes("cortador")||raw==="corte";
+  if(variant==="garruchero")return raw.includes("garruchero")||raw.includes("transportador");
+  if(variant==="recogedor")return raw.includes("recogedor");
+ }
+ return false;
+}
+function render({areaId,mod,view,panel,getRecords,selectedVariant=null,allowedGroups=null}){
  if(areaId!=="produccion"||!TYPES[mod.id])return false;
- const roles=sourceQuality(mod.id),roleIDs=Object.keys(roles);
- const realLabor=getRecords(areaId,mod.id),realQuality=getRecords(areaId,mod.id+"_calidad"),
-  realTimes=getRecords(areaId,mod.id+"_tiempos");
- const fakeLabor=sampleLabor(mod.id),fakeQuality=sampleQuality(mod.id),fakeTimes=sampleTimes(mod.id);
+ const roles=sourceQuality(mod.id);
+ const roleIDs=Array.isArray(allowedGroups)&&allowedGroups.length?
+   Object.keys(roles).filter(id=>allowedGroups.includes(id)):Object.keys(roles);
+ const realLabor=getRecords(areaId,mod.id).filter(r=>matchLaborVariant(mod.id,r,selectedVariant));
+ const realQuality=getRecords(areaId,mod.id+"_calidad");
+ const realTimes=getRecords(areaId,mod.id+"_tiempos");
+ const fakeLabor=sampleLabor(mod.id).filter(r=>matchLaborVariant(mod.id,r,selectedVariant));
+ const fakeQuality=sampleQuality(mod.id),fakeTimes=sampleTimes(mod.id);
  let demo=view==="rendimiento"?!realLabor.length:view==="calidad"?!realQuality.length:
   !realLabor.length&&!realQuality.length;
  let currentRole=roleIDs[0]??"";
  panel.innerHTML='<div class="dash-controlbar"><div class="dash-controlgroup">'+
    '<label>Desde<input type="date" id="dashFrom"></label><label>Hasta<input type="date" id="dashTo"></label>'+
    '<label>Colaborador<input type="search" id="dashWorker" placeholder="Nombre o código"></label>'+
-   (view==="rendimiento"||!roleIDs.length?"":'<label>Modalidad<select id="dashRole">'+roleIDs.map(id=>
+   (view==="rendimiento"||roleIDs.length<=1?"":'<label>Modalidad<select id="dashRole">'+roleIDs.map(id=>
     '<option value="'+clean(id)+'">'+clean(roles[id].label)+'</option>').join("")+'</select></label>')+
    '</div><button type="button" class="btn-secondary" id="dashDemoButton">Ver registros reales</button></div>'+
    '<div id="dashFeedback"></div><div id="dashContents"></div>';
@@ -365,5 +389,5 @@ function render({areaId,mod,view,panel,getRecords}){
  renderNow();return true;
 }
 window.ProductionIndicators={render,isoWeek,qualityRole,failuresOf,bandejasTimeHours,qualityData,
- sampleLabor,sampleQuality,sourceQuality,enrichedLabor};
+ sampleLabor,sampleQuality,sourceQuality,enrichedLabor,matchLaborVariant};
 })();
