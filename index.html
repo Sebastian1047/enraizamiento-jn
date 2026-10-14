@@ -98,7 +98,6 @@
     .q-explore-header {display:flex;align-items:start;gap:16px;justify-content:space-between;flex-wrap:wrap;margin:0 0 16px;}
     .q-explore-header h3 {font-size:1rem;margin:0 0 6px}
     .q-explore-header p {font-size:.72rem;color:var(--muted);margin:0;line-height:1.55}
-    .q-explore-actions {display:flex;align-items:center;flex-wrap:wrap;gap:9px;}
     .q-explore-primary {display:grid;grid-template-columns:minmax(160px,1fr) minmax(240px,2fr);gap:12px;margin:8px 0 15px;max-width:880px;}
     .q-explore-primary label {display:flex;flex-direction:column;gap:6px;font-size:.72rem;font-weight:750;color:#395747;}
     .q-explore-primary input,.q-explore-primary select {width:100%;border:1px solid #c9dbd0;border-radius:10px;padding:11px 12px;background:#fff;color:var(--text);font-size:.75rem;}
@@ -680,7 +679,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  if(!groupNames.length){panel.innerHTML='<div class="module-empty">No hay catálogo de calidad para este módulo.</div>';return;}
  const demoRows=sampleQualityRecords(groups,mod.id);
  let storedRows=read(key(areaId,storageKey));
- let demoMode=true;
+ let demoMode=storedRows.length===0;
  let selectedGroup=groupNames.includes(initialGroup)?initialGroup:groupNames[0],
  records=demoMode?demoRows:storedRows,reportRows=[],reportHeaders=[],pdfFilename="informe-calidad.pdf";
  panel.innerHTML='<h3 class="quality-heading">Resultados de conformidad individual</h3>'+
@@ -705,10 +704,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  '<section id="qExplorePane" class="q-explore-pane">'+
    '<div class="q-explore-header"><div><h3>Comparar evaluaciones de calidad</h3>'+
    '<p>Selecciona varios años, semanas e ítems para comparar la conformidad en distintos momentos.</p></div>'+
-   '<div class="q-explore-actions">'+
-   '<label class="btn-primary quality-upload">Importar JSON<input id="qExploreFile" type="file" accept=".json,application/json" hidden></label>'+
-   '<button type="button" class="btn-secondary" id="qXExport">Exportar comparación</button>'+
-   '<button type="button" class="btn-secondary" id="qExploreDemo">Ver registros reales</button></div></div>'+
+   '</div>'+
    '<div class="quality-demo-banner" id="qExploreBanner" role="status"></div>'+
    '<div class="q-explore-primary"><label>Modalidad<select id="qXGroup">'+
       groupNames.map(g=>'<option value="'+esc(g)+'">'+esc(groups[g].label)+'</option>').join("")+
@@ -857,7 +853,6 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    }catch(e){note.textContent="Error al importar: "+e.message;}finally{event.target.value="";}
  }
  panel.querySelector("#qFile").addEventListener("change",importQualityFile);
- panel.querySelector("#qExploreFile").addEventListener("change",importQualityFile);
  panel.querySelector("#qCSV").addEventListener("click",()=>{
    if(!reportRows.length)return;
    const quote=v=>'"'+String(v??"").replaceAll('"','""')+'"';
@@ -873,11 +868,11 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   xyears=panel.querySelector("#qXYears"),xweeks=panel.querySelector("#qXWeeks"),
   xitems=panel.querySelector("#qXItems"),xpeople=panel.querySelector("#qXPeople"),
   xresult=panel.querySelector("#qXResults"),xselection=panel.querySelector("#qXSelection"),
-  xdemo=panel.querySelector("#qExploreDemo"),xbanner=panel.querySelector("#qExploreBanner"),
+  xbanner=panel.querySelector("#qExploreBanner"),
   xyearsSummary=panel.querySelector("#qXYearsSummary"),
   xweeksSummary=panel.querySelector("#qXWeeksSummary"),
   xitemsSummary=panel.querySelector("#qXItemsSummary");
- let selectedYears=null,selectedWeeks=null,selectedItems=new Set(),exactPeriods=null,exportComparison=null;
+ let selectedYears=null,selectedWeeks=null,selectedItems=new Set(),exactPeriods=null;
  function showMode(mode){
   const report=mode==="informe";
   xp.hidden=report;rp.hidden=!report;
@@ -937,7 +932,6 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   drawChoices(xyears,"year",yearsAvailable().map(year=>[year,String(year)]),selectedYears);
   drawChoices(xweeks,"week",weeksAvailable().map(week=>[week,"S"+String(week).padStart(2,"0")]),selectedWeeks);
   drawChoices(xitems,"item",items,selectedItems);
-  xdemo.textContent=demoMode?"Ver registros reales":"Ver datos de prueba";
   xbanner.hidden=!demoMode;
   xbanner.innerHTML=demoMode?
    '<strong>DATOS DE PRUEBA — COMPARACIÓN DEMOSTRATIVA</strong>'+
@@ -972,7 +966,6 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   selectedYears=null;selectedWeeks=null;exactPeriods=null;
   periods();refresh();renderChoices(true);
  });
- xdemo.addEventListener("click",()=>demoToggle.click());
  panel.querySelector("#qSelectItemsAll").addEventListener("click",()=>{
   selectedItems=new Set(itemsAvailable().map(row=>row[0]));renderChoices(false);
  });
@@ -981,23 +974,8 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   drawChoices(xitems,"item",itemsAvailable(),selectedItems);
   exploreResult();
  });
- panel.querySelector("#qXExport").addEventListener("click",()=>{
-  if(!exportComparison||!exportComparison.rows.length)return;
-  const quote=v=>{
-   const str=String(v??"");
-   const safe=/^[=+\-@]/.test(str)?"'"+str:str;
-   return '"'+safe.replaceAll('"','""')+'"';
-  };
-  const csv="\uFEFF"+[exportComparison.headers,...exportComparison.rows]
-   .map(row=>row.map(quote).join(";")).join("\r\n");
-  const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
-  const link=document.createElement("a");
-  link.href=url;link.download=(demoMode?"DEMO-":"")+"comparacion-calidad-"+mod.id+"-"+selectedGroup+".csv";link.click();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
- });
  function exploreResult(){
   updateFilterSummaries();
-  exportComparison=null;
   const items=itemsAvailable(),c=groups[selectedGroup],
    data=analyzeComparison(base(),c,items,selectedItems,selectedYears,selectedWeeks,exactPeriods,xworker.value);
   const {periods,chosen,excluded}=data;
@@ -1024,10 +1002,6 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    '</div>';
   const th=['AÑO','SEMANA','EVALUACIONES',...chosen.map(row=>row[1]),'CONFORMIDAD SELECCIONADA'];
   const header='<tr>'+th.map(v=>'<th>'+esc(v)+'</th>').join("")+'</tr>';
-  exportComparison={headers:th,rows:periods.map(r=>[
-   String(r.year),"S"+String(r.week).padStart(2,"0"),String(r.n),
-   ...chosen.map(([id])=>format(r.ids.get(id),r.n)),format(r.selected,r.n)
-  ])};
   const cells=periods.length?periods.map(r=>'<tr><td>'+r.year+'</td><td>S'+
     String(r.week).padStart(2,"0")+'</td><td>'+r.n+'</td>'+
     chosen.map(([id])=>'<td>'+format(r.ids.get(id),r.n)+'</td>').join("")+
