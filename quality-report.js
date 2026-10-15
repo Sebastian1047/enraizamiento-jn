@@ -529,9 +529,10 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  '<button type="button" id="qToggleDemo">Ver registros reales</button></div>'+
  '<div class="module-notice" id="qNotice" hidden style="display:none"></div>'+
  '<div class="quality-report-actions">'+
+ '<div class="quality-report-period-group"><span class="quality-report-period-caption">PERÍODO DEL INFORME</span>'+
  '<div class="quality-report-period-filters">'+
  '<label for="qReportYear">Año<select id="qReportYear" aria-label="Año del informe"></select></label>'+
- '<label for="qReportWeek">Semana<select id="qReportWeek" aria-label="Semana del informe"></select></label></div>'+
+ '<label for="qReportWeek">Semana<select id="qReportWeek" aria-label="Semana del informe"></select></label></div></div>'+
  '<div class="quality-report-action-buttons">'+
  '<button type="button" class="btn-primary" id="qDownloadReport">Descargar</button>'+
  '<button type="button" class="btn-secondary" id="qPrintReport">Imprimir</button></div>'+
@@ -546,6 +547,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    '<p>Selecciona varios años, semanas e ítems para comparar la conformidad en distintos momentos.</p></div>'+
    '</div>'+
    '<div class="quality-demo-banner" id="qExploreBanner" role="status"></div>'+
+   '<div class="q-explore-controls"><span class="q-explore-filter-caption">FILTROS DE COMPARACIÓN</span>'+
    '<div class="q-explore-primary"><label>Colaborador<input id="qXWorker" type="search" list="qXPeople" '+
       'placeholder="Todos · escribir nombre o código" autocomplete="off"><datalist id="qXPeople"></datalist></label>'+
       (groupNames.length>1?'<div class="q-explore-variants" role="group" aria-label="Tipo de corte">'+
@@ -572,6 +574,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    '<div class="q-select-actions"><button type="button" id="qSelectItemsAll">Seleccionar todos</button>'+
    '<button type="button" id="qSelectItemsNone">Limpiar selección</button></div>'+
    '<div id="qXItems" class="q-check-options q-item-options"></div></div></details></div>'+
+   '</div>'+
    '<div class="q-explore-feedback" id="qXSelection" aria-live="polite"></div>'+
    '<div id="qXResults"></div></section>'+
  '<section id="qReportPane" hidden>'+reportMarkup+'</section>';
