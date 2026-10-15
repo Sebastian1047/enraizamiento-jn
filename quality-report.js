@@ -955,8 +955,25 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   }));
   const format=(ok,n)=>n?pct(ok,n):"—";
   const who=personMode==="grupal"?"Todas las personas":searched?"Persona: "+searched:"Selecciona una persona";
-  const descriptions=[who,xyearsSummary.textContent,xweeksSummary.textContent,
-   xdaysSummary.textContent,xitemsSummary.textContent];
+  // Mostrar los valores reales elegidos, no solo la cantidad de filtros marcados.
+  const displayedYears=(selectedYears===null?yearsAvailable():[...selectedYears]).sort((a,b)=>a-b);
+  const displayedWeeks=(selectedWeeks===null?weeksAvailable():[...selectedWeeks]).sort((a,b)=>a-b);
+  const yearInfo=displayedYears.length?
+   "Años: "+displayedYears.join(", "):"Ningún año";
+  const weekInfo=displayedWeeks.length?
+   displayedWeeks.map(week=>"Semana "+String(week).padStart(2,"0")).join(", "):"Ninguna semana";
+  const activeItemNames=items.filter(([id])=>selectedItems.has(id)).map(([,label])=>label);
+  const itemInfo=activeItemNames.length?
+   "Ítems: "+activeItemNames.join(", "):"Ningún ítem";
+  const descriptions=[who,yearInfo,weekInfo];
+  // Día no se menciona si el usuario eligió más de un año o más de una semana.
+  if(canSelectDays()){
+   const activeDays=dayOptions().filter(([index])=>selectedDays===null||selectedDays.has(index))
+    .map(([,label])=>label);
+   descriptions.push(selectedDays===null?"Todos los días":
+    activeDays.length?"Días: "+activeDays.join(", "):"Ningún día");
+  }
+  descriptions.push(itemInfo);
   xselection.innerHTML='<span class="performance-selection-caption">CONSULTA ACTUAL</span>'+
    '<span class="performance-selection-detail">'+descriptions.map(v=>'<span>'+esc(v)+'</span>')
     .join('<span class="performance-selection-separator" aria-hidden="true">·</span>')+

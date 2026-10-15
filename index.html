@@ -200,6 +200,10 @@
     .q-compare-selection .performance-selection-total{white-space:nowrap}
     @media(max-width:960px){.q-compare-filter-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:600px){.q-compare-heading{align-items:stretch}.q-compare-person-switch{width:100%}.q-compare-person-switch button{flex:1}.q-compare-filter-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.q-compare-filter-fields label:first-child{grid-column:1/-1}.q-compare-secondary>.q-filter-items{width:100%}.q-compare-advanced{flex-basis:100%}.q-compare-advanced-panel .q-explore-filters{grid-template-columns:1fr}.q-compare-selection .performance-selection-total{width:100%;margin-left:0}.q-compare-controls{padding:13px}.q-compare-controls .q-filter-popup{position:static;left:auto;right:auto;transform:none;width:100%;max-width:none;box-shadow:0 5px 14px rgba(24,64,40,.09);margin-top:5px}}
+    /* Listas completas de años, semanas e ítems sin desbordarse en móvil. */
+    .q-compare-controls .q-compare-selection .performance-selection-detail{min-width:0;flex:1 1 440px;flex-wrap:wrap;overflow-wrap:anywhere;line-height:1.65}
+    .q-compare-controls .q-compare-selection .performance-selection-detail>span:not(.performance-selection-separator){white-space:normal;min-width:0}
+    .q-compare-controls .q-compare-selection .performance-selection-total{align-self:flex-start}
     /* Día disponible únicamente con un año y una semana seleccionados. */
     .q-compare-filter-fields .q-compare-choice.is-disabled{opacity:.58;cursor:not-allowed}
     .q-compare-filter-fields .q-compare-choice.is-disabled .q-filter-trigger{background:#f0f3f1;color:#829389;border-color:#d6dfd9;cursor:not-allowed}
@@ -1480,8 +1484,25 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   }));
   const format=(ok,n)=>n?pct(ok,n):"—";
   const who=personMode==="grupal"?"Todas las personas":searched?"Persona: "+searched:"Selecciona una persona";
-  const descriptions=[who,xyearsSummary.textContent,xweeksSummary.textContent,
-   xdaysSummary.textContent,xitemsSummary.textContent];
+  // Mostrar los valores reales elegidos, no solo la cantidad de filtros marcados.
+  const displayedYears=(selectedYears===null?yearsAvailable():[...selectedYears]).sort((a,b)=>a-b);
+  const displayedWeeks=(selectedWeeks===null?weeksAvailable():[...selectedWeeks]).sort((a,b)=>a-b);
+  const yearInfo=displayedYears.length?
+   "Años: "+displayedYears.join(", "):"Ningún año";
+  const weekInfo=displayedWeeks.length?
+   displayedWeeks.map(week=>"Semana "+String(week).padStart(2,"0")).join(", "):"Ninguna semana";
+  const activeItemNames=items.filter(([id])=>selectedItems.has(id)).map(([,label])=>label);
+  const itemInfo=activeItemNames.length?
+   "Ítems: "+activeItemNames.join(", "):"Ningún ítem";
+  const descriptions=[who,yearInfo,weekInfo];
+  // Día no se menciona si el usuario eligió más de un año o más de una semana.
+  if(canSelectDays()){
+   const activeDays=dayOptions().filter(([index])=>selectedDays===null||selectedDays.has(index))
+    .map(([,label])=>label);
+   descriptions.push(selectedDays===null?"Todos los días":
+    activeDays.length?"Días: "+activeDays.join(", "):"Ningún día");
+  }
+  descriptions.push(itemInfo);
   xselection.innerHTML='<span class="performance-selection-caption">CONSULTA ACTUAL</span>'+
    '<span class="performance-selection-detail">'+descriptions.map(v=>'<span>'+esc(v)+'</span>')
     .join('<span class="performance-selection-separator" aria-hidden="true">·</span>')+
