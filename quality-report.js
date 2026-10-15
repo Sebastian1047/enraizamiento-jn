@@ -32,6 +32,17 @@ function compareWeekDays(value){
  });
  return period({fecha:days[0]}).join("-")===year+"-"+week?days:[];
 }
+function comparisonDropdown(name,title){
+ return '<div class="q-compare-select-field">'+
+ '<span class="q-compare-field-label">'+title+'</span>'+
+ '<details class="q-filter-dropdown q-compare-choice" id="qX'+name+'Drop">'+
+ '<summary class="q-filter-trigger">'+
+ '<strong id="qX'+name+'Summary">Todos</strong></summary>'+
+ '<div class="q-filter-popup"><div class="q-select-actions">'+
+ '<button type="button" id="qX'+name+'All">Todos</button>'+
+ '<button type="button" id="qX'+name+'None">Limpiar</button></div>'+
+ '<div id="qX'+name+'" class="q-check-options"></div></div></details></div>';
+}
 function real(r){const s=norm(r.tipo||r.estadoMuestra||r.resolucion||"");
  return r&&r.esMuestraReal!==false&&!r.noRealizarMuestra&&!/no.?realizar.?muestra|no.?evaluada|sin.?muestra/.test(s);
 }
@@ -128,7 +139,7 @@ function compareSvg(series,periodLabels){
    svg.join("")+'</svg>'+
    (active.length>5?'<p class="q-explore-help">El gráfico muestra cinco ítems como máximo; la tabla incluye todos los seleccionados.</p>':"");
 }
-function analyzeComparison(rows,group,items,selectedIds,years,weeks,exactPeriods,search,selectedDay=""){
+function analyzeComparison(rows,group,items,selectedIds,years,weeks,exactPeriods,search,selectedDays=null){
  const validIds=new Set(items.map(x=>x[0]));
  const chosen=items.filter(([id])=>selectedIds.has(id)&&validIds.has(id));
  const out=new Map(),invalid=[];
@@ -140,7 +151,15 @@ function analyzeComparison(rows,group,items,selectedIds,years,weeks,exactPeriods
   if(exactPeriods!==null&&!exactPeriods.has(per))return;
   if(exactPeriods===null&&((years!==null&&!years.has(year))||(weeks!==null&&!weeks.has(week))))return;
   if(search&&!norm(worker(r)+' '+(r.colaborador??r.sembrador??r.empleado??"")).includes(norm(search)))return;
-  if(selectedDay&&date(r)!==selectedDay)return;
+  if(selectedDays!==null&&selectedDays!==""){
+   const stamp=date(r);
+   if(typeof selectedDays==="string"){if(stamp!==selectedDays)return;}
+   else{
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(stamp))return;
+    const d=new Date(stamp+"T12:00:00Z");
+    if(!Number.isFinite(d.getTime())||!selectedDays.has((d.getUTCDay()+6)%7))return;
+   }
+  }
   const ev=evaluate(r,group,items);
   if(ev.unknown){invalid.push(r);return;}
   let row=out.get(per);
@@ -568,38 +587,20 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
      '<button type="button" id="qXPersonGroup" class="active" aria-pressed="true">Todas las personas</button>'+
      '<button type="button" id="qXPersonOne" aria-pressed="false">Una persona</button></div></div>'+
    '<div class="q-compare-filter-fields">'+
-    '<label>Colaborador<input id="qXWorker" type="search" list="qXPeople" disabled '+
-     'placeholder="Todas las personas de esta labor" autocomplete="off"><datalist id="qXPeople"></datalist></label>'+
-    '<label>Año<select id="qXYear" aria-label="Año de consulta"></select></label>'+
-    '<label>Semana<select id="qXWeek" aria-label="Semana de consulta"></select></label>'+
-    '<label>Día<select id="qXDay" aria-label="Día de consulta"></select></label></div>'+
-   '<div class="q-compare-secondary">'+
-    '<details class="q-filter-dropdown q-filter-items" id="qXItemsDrop">'+
-     '<summary class="q-filter-trigger"><span>Ítems que deseas comparar</span>'+
-      '<strong id="qXItemsSummary">1 ítem seleccionado</strong></summary>'+
-     '<div class="q-filter-popup"><div class="q-select-actions">'+
-      '<button type="button" id="qSelectItemsAll">Seleccionar todos</button>'+
-      '<button type="button" id="qSelectItemsNone">Limpiar selección</button></div>'+
-      '<div id="qXItems" class="q-check-options q-item-options"></div></div></details>'+
-    '<details class="q-compare-advanced" id="qXAdvanced">'+
-     '<summary>Comparar varios años y semanas</summary>'+
-     '<div class="q-compare-advanced-panel"><p>Selecciona varios períodos para comparaciones históricas.</p>'+
-      '<div class="q-explore-filters">'+
-       '<details class="q-filter-dropdown" id="qXYearsDrop"><summary class="q-filter-trigger">'+
-        '<span>Años a comparar</span><strong id="qXYearsSummary">Todos los años</strong></summary>'+
-        '<div class="q-filter-popup"><div class="q-select-actions">'+
-         '<button type="button" id="qXYearsAll">Todos</button>'+
-         '<button type="button" id="qXYearsNone">Limpiar</button></div>'+
-         '<div id="qXYears" class="q-check-options"></div></div></details>'+
-       '<details class="q-filter-dropdown" id="qXWeeksDrop"><summary class="q-filter-trigger">'+
-        '<span>Semanas a comparar</span><strong id="qXWeeksSummary">Todas las semanas</strong></summary>'+
-        '<div class="q-filter-popup"><div class="q-select-actions">'+
-         '<button type="button" id="qXWeeksAll">Todas</button>'+
-         '<button type="button" id="qXWeeksNone">Limpiar</button></div>'+
-         '<div id="qXWeeks" class="q-check-options q-week-options"></div></div></details></div>'+
-      '<button type="button" id="qXBackSimple" class="q-compare-back">Volver a Año, Semana y Día</button>'+
-     '</div></details></div>'+
-   '<div class="q-explore-feedback q-compare-selection" id="qXSelection" role="status" aria-live="polite" aria-atomic="true"></div>'+
+ '<label>Colaborador<input id="qXWorker" type="search" list="qXPeople" disabled '+
+ 'placeholder="Todas las personas de esta labor" autocomplete="off"><datalist id="qXPeople"></datalist></label>'+
+ comparisonDropdown("Years","Año")+
+ comparisonDropdown("Weeks","Semana")+
+ comparisonDropdown("Days","Día")+'</div>'+
+ '<div class="q-compare-secondary">'+
+ '<details class="q-filter-dropdown q-filter-items" id="qXItemsDrop">'+
+ '<summary class="q-filter-trigger"><span>Ítems que deseas comparar</span>'+
+ '<strong id="qXItemsSummary">1 ítem seleccionado</strong></summary>'+
+ '<div class="q-filter-popup"><div class="q-select-actions">'+
+ '<button type="button" id="qSelectItemsAll">Seleccionar todos</button>'+
+ '<button type="button" id="qSelectItemsNone">Limpiar selección</button></div>'+
+ '<div id="qXItems" class="q-check-options q-item-options"></div></div></details></div>'+
+ '<div class="q-explore-feedback q-compare-selection" id="qXSelection" role="status" aria-live="polite" aria-atomic="true"></div>'+
    '</div>'+
    '<div id="qXResults"></div></section>'+
  '<section id="qReportPane" hidden>'+reportMarkup+'</section>';
@@ -719,7 +720,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    demoMode=!demoMode;
    records=demoMode?demoRows:read(key(areaId,storageKey));
    y.value="";w.value="";search.value="";
-   periods();refresh();syncExplore(true);
+   periods();refresh();syncExplore(true,true);
  });
  g.addEventListener("change",()=>{selectedGroup=g.value;periods();refresh();syncExplore(true)});
  y.addEventListener("change",()=>{periods();refresh()});w.addEventListener("change",refresh);search.addEventListener("input",refresh);
@@ -737,7 +738,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
      records=storedRows;demoMode=false;
      localStorage.setItem(key(areaId,storageKey),JSON.stringify(storedRows));
      note.textContent=records.length+" evaluaciones importadas localmente. Los registros sin modalidad se asignaron a "+groups[selectedGroup].label+". Sin conexión automática a Producción.";
-     periods();refresh();syncExplore(true);
+     periods();refresh();syncExplore(true,true);
    }catch(e){note.textContent="Error al importar: "+e.message;}finally{event.target.value="";}
  }
  panel.querySelector("#qFile").addEventListener("change",importQualityFile);
@@ -753,19 +754,18 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  const xp=panel.querySelector("#qExplorePane"),rp=panel.querySelector("#qReportPane"),
   xa=panel.querySelector("#qAnalysisButton"),xi=panel.querySelector("#qReportButton"),
   xworker=panel.querySelector("#qXWorker"),
-  xyear=panel.querySelector("#qXYear"),xweek=panel.querySelector("#qXWeek"),
-  xday=panel.querySelector("#qXDay"),xadvanced=panel.querySelector("#qXAdvanced"),
-  xgroup=panel.querySelector("#qXPersonGroup"),xone=panel.querySelector("#qXPersonOne"),
   xyears=panel.querySelector("#qXYears"),xweeks=panel.querySelector("#qXWeeks"),
+  xdays=panel.querySelector("#qXDays"),
   xitems=panel.querySelector("#qXItems"),xpeople=panel.querySelector("#qXPeople"),
   xresult=panel.querySelector("#qXResults"),xselection=panel.querySelector("#qXSelection"),
   xbanner=panel.querySelector("#qExploreBanner"),
   xyearsSummary=panel.querySelector("#qXYearsSummary"),
   xweeksSummary=panel.querySelector("#qXWeeksSummary"),
+  xdaysSummary=panel.querySelector("#qXDaysSummary"),
   xitemsSummary=panel.querySelector("#qXItemsSummary");
  const variantButtons=[...panel.querySelectorAll("[data-quality-variant]")];
- let selectedYears=null,selectedWeeks=null,selectedItems=new Set(),exactPeriods=null;
- let singleYear=null,singleWeek=null,singleDay="",multiPeriod=false,personMode="grupal";
+ let selectedYears=undefined,selectedWeeks=undefined,selectedDays=null,
+  selectedItems=new Set(),personMode="grupal";
  function showMode(mode){
   const report=mode==="informe";
   xp.hidden=report;rp.hidden=!report;
@@ -784,83 +784,80 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   for(let year=now-2;year<=now;year++)values.add(year);
   return [...values].sort((a,b)=>b-a);
  }
- function weeksAvailable(){return Array.from({length:53},(_,i)=>i+1)}
+ function weeksAvailable(){
+  return [...new Set(base().filter(r=>selectedYears==null||
+   selectedYears.has(period(r)[0])).map(r=>period(r)[1]).filter(Boolean))]
+   .sort((a,b)=>a-b);
+ }
  function itemsAvailable(){return cols()}
- function syncComparisonPeriod(){
-  const available=[...new Set(base().map(r=>{
-   const [year,week]=period(r);
-   return year&&week?year+"-S"+String(week).padStart(2,"0"):"";
-  }).filter(Boolean))].sort();
-  const withData=[...new Set(available.map(value=>Number(value.slice(0,4))))].sort((a,b)=>b-a);
+ const dayNames=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
+ function dayOptions(){
+  const years=selectedYears!=null?[...selectedYears]:[];
+  const weeks=selectedWeeks!=null?[...selectedWeeks]:[];
+  const dates=years.length===1&&weeks.length===1?
+   compareWeekDays(years[0]+"-S"+String(weeks[0]).padStart(2,"0")):[];
+  return dayNames.map((name,i)=>[i,name+(dates[i]?" "+dates[i].slice(8,10)+"/"+dates[i].slice(5,7):"")]);
+ }
+ function syncComparisonPeriod(reset=false){
   const years=yearsAvailable();
-  if(singleYear===null||(singleYear!==""&&!years.includes(Number(singleYear))))
-   singleYear=String(withData[0]??years[0]??new Date().getFullYear());
-  xyear.innerHTML='<option value="">Todos los años</option>'+
-   years.map(year=>'<option value="'+year+'">'+year+'</option>').join("");
-  xyear.value=singleYear;
-  const weeks=available.filter(value=>!singleYear||value.startsWith(singleYear+"-"));
-  if(singleWeek===null)singleWeek=weeks.at(-1)??"";
-  else if(singleWeek!==""&&!weeks.includes(singleWeek))singleWeek="";
-  xweek.innerHTML='<option value="">Todas las semanas</option>'+
-   weeks.map(value=>'<option value="'+value+'">Semana '+value.slice(-2)+
-    (!singleYear?' · '+value.slice(0,4):"")+'</option>').join("");
-  xweek.value=singleWeek;
-  const days=singleWeek?compareWeekDays(singleWeek):[];
-  if(!days.includes(singleDay))singleDay="";
-  const names=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
-  xday.innerHTML='<option value="">Todos los días</option>'+
-   days.map((value,i)=>'<option value="'+value+'">'+names[i]+' '+
-    value.slice(8,10)+'/'+value.slice(5,7)+'</option>').join("");
-  xday.value=singleDay;
-  xyear.disabled=multiPeriod;
-  xweek.disabled=multiPeriod;
-  xday.disabled=multiPeriod||!singleWeek;
-  xadvanced.classList.toggle("is-active",multiPeriod);
+  const withData=[...new Set(base().map(r=>period(r)[0]).filter(Boolean))].sort((a,b)=>b-a);
+  if(reset||selectedYears===undefined)
+   selectedYears=new Set([withData[0]??years[0]??new Date().getFullYear()]);
+  else if(selectedYears!==null)selectedYears=new Set([...selectedYears].filter(y=>years.includes(y)));
+  drawChoices(xyears,"year",years.map(y=>[y,String(y)]),selectedYears);
+  const weeks=weeksAvailable();
+  if(reset||selectedWeeks===undefined)selectedWeeks=new Set(weeks.length?[weeks[weeks.length-1]]:[]);
+  else if(selectedWeeks!==null&&selectedWeeks.size){
+   selectedWeeks=new Set([...selectedWeeks].filter(w=>weeks.includes(w)));
+   if(!selectedWeeks.size&&weeks.length)selectedWeeks=new Set([weeks[weeks.length-1]]);
+  }
+  drawChoices(xweeks,"week",weeks.map(w=>[w,"Semana "+String(w).padStart(2,"0")]),selectedWeeks);
+  drawChoices(xdays,"day",dayOptions(),selectedDays);
  }
  function updateFilterSummaries(){
-  const yearCount=yearsAvailable().length;
-  const weekCount=weeksAvailable().length;
-  const itemRows=itemsAvailable();
-  const yearSelected=selectedYears===null?yearCount:selectedYears.size;
-  const weekSelected=selectedWeeks===null?weekCount:selectedWeeks.size;
+  const items=itemsAvailable(),days=dayOptions();
   xyearsSummary.textContent=selectedYears===null?"Todos los años":
-    yearSelected===0?"Ningún año":yearSelected===1?"1 año":yearSelected+" años";
+   !selectedYears?.size?"Ningún año":
+   selectedYears.size===1?String([...selectedYears][0]):selectedYears.size+" años";
   xweeksSummary.textContent=selectedWeeks===null?"Todas las semanas":
-    weekSelected===0?"Ninguna semana":weekSelected===1?"1 semana":weekSelected+" semanas";
-  if(selectedItems.size===0)xitemsSummary.textContent="Ningún ítem";
-  else if(selectedItems.size===itemRows.length)xitemsSummary.textContent="Todos los ítems ("+itemRows.length+")";
-  else if(selectedItems.size===1){
-   const selected=itemRows.find(([id])=>selectedItems.has(id));
-   xitemsSummary.textContent=selected?selected[1]:"1 ítem seleccionado";
-  }else xitemsSummary.textContent=selectedItems.size+" ítems seleccionados";
+   !selectedWeeks?.size?"Ninguna semana":
+   selectedWeeks.size===1?"Semana "+String([...selectedWeeks][0]).padStart(2,"0"):selectedWeeks.size+" semanas";
+  xdaysSummary.textContent=selectedDays===null?"Todos los días":
+   !selectedDays.size?"Ningún día":
+   selectedDays.size===1?(days.find(row=>row[0]===[...selectedDays][0])?.[1]??"Un día"):
+   selectedDays.size+" días";
+  xitemsSummary.textContent=!selectedItems.size?"Ningún ítem":
+   selectedItems.size===items.length?"Todos los ítems ("+items.length+")":
+   selectedItems.size===1?(items.find(([id])=>selectedItems.has(id))?.[1]??"1 ítem"):
+   selectedItems.size+" ítems seleccionados";
+  for(const [id,sel] of [["qXYearsDrop",selectedYears],["qXWeeksDrop",selectedWeeks],["qXDaysDrop",selectedDays]])
+   panel.querySelector("#"+id).classList.toggle("is-specific",sel!==null&&sel?.size>0);
  }
  const dropdowns=[
-   panel.querySelector("#qXYearsDrop"),panel.querySelector("#qXWeeksDrop"),
-   panel.querySelector("#qXItemsDrop")
+  panel.querySelector("#qXYearsDrop"),panel.querySelector("#qXWeeksDrop"),
+  panel.querySelector("#qXDaysDrop"),panel.querySelector("#qXItemsDrop")
  ];
  dropdowns.forEach(menu=>menu.addEventListener("toggle",()=>{
-   if(menu.open)dropdowns.forEach(other=>{if(other!==menu)other.open=false});
+  if(menu.open)dropdowns.forEach(other=>{if(other!==menu)other.open=false});
  }));
  function drawChoices(element,key,rows,sel){
   element.innerHTML=rows.map(([value,label])=>'<label class="q-choice"><input type="checkbox" data-compare="'+
    key+'" value="'+esc(value)+'"'+(sel===null||sel.has(String(value))||sel.has(Number(value))?' checked':'')+
    '><span>'+esc(label)+'</span></label>').join("");
  }
- function renderChoices(resetItems=false){
+ function renderChoices(resetItems=false,resetPeriods=false){
   const items=itemsAvailable();
-  if(resetItems||![...selectedItems].some(id=>items.some(([k])=>k===id)))
+  if(resetItems||![...selectedItems].some(id=>items.some(([itemId])=>itemId===id)))
    selectedItems=new Set(items.length?[items[0][0]]:[]);
   variantButtons.forEach(button=>{
-    const active=button.dataset.qualityVariant===selectedGroup;
-    button.classList.toggle("active",active);
-    button.setAttribute("aria-pressed",String(active));
+   const active=button.dataset.qualityVariant===selectedGroup;
+   button.classList.toggle("active",active);
+   button.setAttribute("aria-pressed",String(active));
   });
   xpeople.innerHTML=[...new Set(base().map(worker).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"))
    .map(name=>'<option value="'+esc(name)+'"></option>').join("");
-  drawChoices(xyears,"year",yearsAvailable().map(year=>[year,String(year)]),selectedYears);
-  drawChoices(xweeks,"week",weeksAvailable().map(week=>[week,"S"+String(week).padStart(2,"0")]),selectedWeeks);
+  syncComparisonPeriod(resetPeriods);
   drawChoices(xitems,"item",items,selectedItems);
-  syncComparisonPeriod();
   xbanner.hidden=!demoMode;
   xbanner.innerHTML=demoMode?
    '<strong>DATOS DE PRUEBA — COMPARACIÓN DEMOSTRATIVA</strong>'+
@@ -869,8 +866,8 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  }
  function readChoices(container,kind){
   const all=[...container.querySelectorAll('input[data-compare="'+kind+'"]')];
-  const checked=all.filter(node=>node.checked).map(node=>node.value);
-  return checked.length===all.length?null:new Set(checked.map(Number));
+  const chosen=all.filter(node=>node.checked).map(node=>Number(node.value));
+  return all.length&&chosen.length===all.length?null:new Set(chosen);
  }
  const setPersonMode=mode=>{
   personMode=mode;
@@ -886,35 +883,38 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  };
  xgroup.addEventListener("click",()=>setPersonMode("grupal"));
  xone.addEventListener("click",()=>setPersonMode("individual"));
- xyear.addEventListener("change",()=>{multiPeriod=false;singleYear=xyear.value;singleWeek=null;singleDay="";syncComparisonPeriod();exploreResult()});
- xweek.addEventListener("change",()=>{multiPeriod=false;singleWeek=xweek.value;singleDay="";syncComparisonPeriod();exploreResult()});
- xday.addEventListener("change",()=>{singleDay=xday.value;exploreResult()});
- panel.querySelector("#qXBackSimple").addEventListener("click",()=>{
-  multiPeriod=false;syncComparisonPeriod();exploreResult();xadvanced.open=false;
+ xyears.addEventListener("change",()=>{
+  selectedYears=readChoices(xyears,"year");syncComparisonPeriod();exploreResult();
  });
- xyears.addEventListener("change",()=>{selectedYears=readChoices(xyears,"year");multiPeriod=true;singleDay="";exactPeriods=null;syncComparisonPeriod();exploreResult()});
- xweeks.addEventListener("change",()=>{selectedWeeks=readChoices(xweeks,"week");multiPeriod=true;singleDay="";exactPeriods=null;syncComparisonPeriod();exploreResult()});
+ xweeks.addEventListener("change",()=>{
+  selectedWeeks=readChoices(xweeks,"week");syncComparisonPeriod();exploreResult();
+ });
+ xdays.addEventListener("change",()=>{
+  selectedDays=readChoices(xdays,"day");exploreResult();
+ });
  xitems.addEventListener("change",()=>{
   selectedItems=new Set([...xitems.querySelectorAll('input[data-compare="item"]:checked')].map(node=>node.value));
   exploreResult();
  });
  xworker.addEventListener("input",exploreResult);
- for(const [id,kind,value] of [
-  ["qXYearsAll","year",null],["qXYearsNone","year",new Set()],
-  ["qXWeeksAll","week",null],["qXWeeksNone","week",new Set()]
+ for(const [id,kind,all] of [
+  ["qXYearsAll","year",true],["qXYearsNone","year",false],
+  ["qXWeeksAll","week",true],["qXWeeksNone","week",false],
+  ["qXDaysAll","day",true],["qXDaysNone","day",false]
  ]){
   panel.querySelector("#"+id).addEventListener("click",()=>{
-   if(kind==="year")selectedYears=value===null?null:new Set();
-   else selectedWeeks=value===null?null:new Set();
-   multiPeriod=true;singleDay="";exactPeriods=null;renderChoices(false);
+   const selection=all?null:new Set();
+   if(kind==="year")selectedYears=selection;
+   else if(kind==="week")selectedWeeks=selection;
+   else selectedDays=selection;
+   syncComparisonPeriod();exploreResult();
   });
  }
  variantButtons.forEach(button=>button.addEventListener("click",()=>{
   const group=button.dataset.qualityVariant;
   if(!groupNames.includes(group)||group===selectedGroup)return;
   selectedGroup=group;g.value=selectedGroup;
-  selectedYears=null;selectedWeeks=null;exactPeriods=null;
-  singleYear=null;singleWeek=null;singleDay="";multiPeriod=false;
+  selectedYears=undefined;selectedWeeks=undefined;selectedDays=null;
   periods();refresh();renderChoices(true);
  }));
  panel.querySelector("#qSelectItemsAll").addEventListener("click",()=>{
@@ -928,14 +928,10 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  function exploreResult(){
   updateFilterSummaries();
   const items=itemsAvailable(),c=groups[selectedGroup],
-   years=multiPeriod?selectedYears:(singleYear?new Set([Number(singleYear)]):null),
-   weeks=multiPeriod?selectedWeeks:(singleWeek?new Set([Number(singleWeek.slice(-2))]):null),
-   exact=multiPeriod?exactPeriods:(singleWeek?new Set([singleWeek.replace("-S","-")]):null),
    searched=personMode==="individual"?xworker.value.trim():"",
    data=personMode==="individual"&&!searched?
     {periods:[],chosen:items.filter(([id])=>selectedItems.has(id)),excluded:0}:
-    analyzeComparison(base(),c,items,selectedItems,years,weeks,exact,searched,
-     multiPeriod?"":singleDay);
+    analyzeComparison(base(),c,items,selectedItems,selectedYears,selectedWeeks,null,searched,selectedDays);
   const {periods,chosen,excluded}=data;
   const total=periods.reduce((sum,r)=>sum+r.n,0);
   const chosenOk=periods.reduce((sum,r)=>sum+r.selected,0);
@@ -945,21 +941,9 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    label:name,values:periods.map(r=>r.n?100*r.ids.get(id)/r.n:null)
   }));
   const format=(ok,n)=>n?pct(ok,n):"—";
-  const dayNames=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
-  const calendar=multiPeriod||!singleWeek?[]:compareWeekDays(singleWeek);
-  const index=calendar.indexOf(singleDay);
-  const selectedDate=singleDay&&index>=0?
-   dayNames[index]+" "+singleDay.slice(8,10)+"/"+singleDay.slice(5,7):"Todos los días";
-  const chosenPeriod=multiPeriod?
-   [selectedYears===null?"Todos los años":selectedYears.size+" año(s)",
-    selectedWeeks===null?"Todas las semanas":selectedWeeks.size+" semana(s)","Selección múltiple"]:
-   [singleYear||"Todos los años",
-    singleWeek?"Semana "+Number(singleWeek.slice(-2))+
-     (calendar.length?" ("+calendar[0].slice(8,10)+"/"+calendar[0].slice(5,7)+
-      " al "+calendar[6].slice(8,10)+"/"+calendar[6].slice(5,7)+")":""):"Todas las semanas",
-    selectedDate];
   const who=personMode==="grupal"?"Todas las personas":searched?"Persona: "+searched:"Selecciona una persona";
-  const descriptions=[who,...chosenPeriod,chosen.length+" ítem(s)"];
+  const descriptions=[who,xyearsSummary.textContent,xweeksSummary.textContent,
+   xdaysSummary.textContent,xitemsSummary.textContent];
   xselection.innerHTML='<span class="performance-selection-caption">CONSULTA ACTUAL</span>'+
    '<span class="performance-selection-detail">'+descriptions.map(v=>'<span>'+esc(v)+'</span>')
     .join('<span class="performance-selection-separator" aria-hidden="true">·</span>')+
