@@ -361,12 +361,14 @@ function render({areaId,mod,view,panel,getRecords,selectedVariant=null,allowedGr
  let demo=view==="rendimiento"?!realLabor.length:view==="calidad"?!currentQuality.length:
   !realLabor.length&&!currentQuality.length;
  let currentRole=roleIDs[0]??"";
- panel.innerHTML='<div class="dash-controlbar"><div class="dash-controlgroup">'+
+ panel.innerHTML='<div class="dash-filter-panel">'+
+   '<span class="dash-filter-caption">FILTRAR INDICADORES</span>'+
+   '<div class="dash-controlbar"><div class="dash-controlgroup">'+
    '<label>Desde<input type="date" id="dashFrom"></label><label>Hasta<input type="date" id="dashTo"></label>'+
    '<label>Colaborador<input type="search" id="dashWorker" placeholder="Nombre o código"></label>'+
    (view==="rendimiento"||roleIDs.length<=1?"":'<label>Modalidad<select id="dashRole">'+roleIDs.map(id=>
     '<option value="'+clean(id)+'">'+clean(roles[id].label)+'</option>').join("")+'</select></label>')+
-   '</div><button type="button" class="btn-secondary" id="dashDemoButton">Ver registros reales</button></div>'+
+   '</div><div class="dash-control-actions"><button type="button" class="btn-secondary" id="dashDemoButton">Ver registros reales</button></div></div></div>'+
    '<div id="dashFeedback"></div><div id="dashContents"></div>';
  const find=id=>panel.querySelector("#"+id),
  from=find("dashFrom"),to=find("dashTo"),worker=find("dashWorker"),
