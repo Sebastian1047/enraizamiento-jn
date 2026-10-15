@@ -49,11 +49,12 @@ function netHours(r){
    if(num(r.horasTrabajadas)!==null)return num(r.horasTrabajadas);
  }
  const extras=minutes("horasExtraMin")||minutes("horasExtra")*60;
+ const jornada=num(r.horasLaboralesMin)??435;
  const categories=minutes("desplazamientoMin")+minutes("calisteniaMin")+minutes("capacitacionMin");
  const aggregate=num(r.otrasLaboresMin);
  const extraTasks=aggregate===null?
    minutes("pMadresMin")+minutes("pAbuelasMin"):Math.max(0,aggregate-categories);
- return Math.max(0,(435+extras-categories-extraTasks)/60);
+ return Math.max(0,(jornada+extras-categories-extraTasks)/60);
 }
 function demoBandejas(){
  const labor=[
@@ -113,6 +114,49 @@ function demoDesbotonado(){
   });
  });
  return {labor,times};
+}
+// Adaptación de Tiempos en Bancos / Siembra / Cosecha de CalidadJSWebAsync.
+// Los valores de pantalla están en horas; los registros locales se guardan en minutos.
+const TIME_INPUTS=[
+ ["pTFBase","Jornada laboral","Horas laborales programadas"],
+ ["pTFExtra","Horas extra","Tiempo extra trabajado"],
+ ["pTFMove","Desplazamiento","Desplazamiento durante la jornada"],
+ ["pTFGym","Calistenia","Tiempo de calistenia"],
+ ["pTFTrain","Capacitación","Capacitación o reunión"],
+ ["pTFMadres","Plantas madres","Tiempo en plantas madres"],
+ ["pTFAbuelas","Plantas abuelas","Tiempo en plantas abuelas"],
+ ["pTFPause","Pausas","Pausas adicionales"],
+ ["pTFChange","Cambio de labor","Tiempo de cambio de actividad"],
+ ["pTFIncap","Incapacidad","Horas de incapacidad"],
+ ["pTFVac","Vacaciones","Horas de vacaciones"],
+ ["pTFMedical","Examen médico","Tiempo de examen médico"],
+ ["pTFOther","Otras labores","Otras actividades no incluidas arriba"]
+];
+function scheduledHours(date){
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return 7.25;
+ const weekday=new Date(date+"T12:00:00Z").getUTCDay();
+ return weekday===6?5.75:weekday===0?0:7.25;
+}
+function timeHours(input){
+ const str=String(input??"").trim().replace(",",".");
+ return str!==""&&Number.isFinite(Number(str))&&Number(str)>=0?Number(str):null;
+}
+function timeFormCalculation(form){
+ const values={};
+ for(const [id] of TIME_INPUTS){
+  const v=timeHours(form[id]);
+  if(v===null||v>24)return {error:"Revisa las horas: deben ser números entre 0 y 24."};
+  values[id]=v;
+ }
+ if(values.pTFBase<=0)return {error:"Las horas laborales deben ser mayores que cero."};
+ const available=values.pTFBase+values.pTFExtra;
+ const deducted=TIME_INPUTS.slice(2).reduce((sum,[id])=>sum+values[id],0);
+ if(deducted>available+0.00001)return {error:"Las actividades descontadas superan las horas laborales más las extras."};
+ const roundMinutes=h=>Math.round(h*60);
+ const base=roundMinutes(values.pTFBase),extra=roundMinutes(values.pTFExtra);
+ const deductions=TIME_INPUTS.slice(2).reduce((sum,[id])=>sum+roundMinutes(values[id]),0);
+ if(deductions>base+extra)return {error:"El total de minutos descontados supera la jornada disponible."};
+ return {values,base,extra,deductions,minutes:base+extra-deductions,net:(base+extra-deductions)/60};
 }
 function joinLabor(modId,labor,times){
  const config=MODS[modId],hoursByDay=new Map(),quantByDay=new Map(),rows=[];
@@ -245,7 +289,25 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  '<button type="button" class="btn-secondary" id="pCSV">Exportar CSV</button>'+
  (["bandejas-enraizamiento","desbotonado-mallas"].includes(mod.id)?
    '<button type="button" class="btn-secondary" id="pDemo">Ver registros reales</button>':"")+
- '</div><div id="pNote" class="module-notice"></div>'+
+ '</div>'+
+ '<section id="pTimeForm" class="performance-time-form" hidden>'+
+ '<div class="performance-time-head"><div><h3>Registrar tiempo de la labor</h3>'+
+ '<p>Formulario basado en Tiempos de Bancos, Siembra y Cosecha. Datos en horas; cálculo automático del tiempo efectivo.</p></div></div>'+
+ '<div class="performance-time-grid performance-time-identity">'+
+ '<label>Fecha de la labor<input type="date" id="pTFDate" required></label>'+
+ '<label>Código o nombre del trabajador<input type="text" id="pTFWorker" list="pTFPeople" placeholder="Buscar o escribir código" autocomplete="off" required><datalist id="pTFPeople"></datalist></label>'+
+ '<label>Nombre del trabajador<input type="text" id="pTFName" placeholder="Nombre completo" required></label></div>'+
+ '<div class="performance-time-grid">'+
+ TIME_INPUTS.map(([id,label,help])=>'<label title="'+esc(help)+'">'+esc(label)+' (h)'+
+ '<input id="'+id+'" type="number" min="0" max="24" step="0.05" inputmode="decimal" value="0"></label>').join("")+'</div>'+
+ '<div class="performance-time-result"><div><span>Tiempo disponible</span><strong id="pTFAvailable">—</strong></div>'+
+ '<div><span>Tiempo de otras actividades</span><strong id="pTFDeducted">—</strong></div>'+
+ '<div><span>Tiempo efectivo de la labor</span><strong id="pTFNet">—</strong></div></div>'+
+ '<p class="performance-time-help">Tiempo efectivo = jornada laboral + horas extra − desplazamiento − calistenia − capacitación − plantas madres/abuelas − pausas − cambio de labor − incapacidad − vacaciones − examen médico − otras labores. Cada categoría se resta una sola vez. Jornada sugerida: 7,25 h entre semana y 5,75 h el sábado.</p>'+
+ '<div class="performance-time-buttons"><button type="button" id="pTFSave" class="btn-primary">Guardar tiempo</button>'+
+ '<button type="button" id="pTFClear" class="btn-secondary">Limpiar formulario</button></div>'+
+ '<p id="pTFStatus" role="status" aria-live="polite" class="performance-time-status"></p></section>'+
+ '<div id="pNote" class="module-notice"></div>'+
  '<div id="pDemoNote" class="quality-demo-banner" hidden></div>'+
  '<div id="pStats" class="module-summary analysis-metrics"></div>'+
  '<div id="pResult" aria-live="polite"></div></div>';
@@ -256,9 +318,121 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  let selectedYear="",selectedWeek="",selectedDay="",visible=[],visibleType="labor";
  const activeLabor=()=> (demo?example.labor:labor).filter(matches);
  const activeTimes=()=>demo?example.times:times;
+ const findWorker=(entry)=>{
+  const normalized=normalize(entry);
+  return activeLabor().find(r=>normalize(code(r))===normalized||normalize(person(r))===normalized)
+   ||activeTimes().find(r=>normalize(code(r))===normalized||normalize(person(r))===normalized);
+ };
+ const getTimeFormValues=()=>Object.fromEntries(TIME_INPUTS.map(([id])=>[id,$(id).value]));
+ const calculateForm=()=>{
+  const calc=timeFormCalculation(getTimeFormValues());
+  if(calc.error){
+   $("pTFAvailable").textContent="—";$("pTFDeducted").textContent="—";
+   $("pTFNet").textContent=calc.error;return calc;
+  }
+  $("pTFAvailable").textContent=fmt.format((calc.base+calc.extra)/60)+" h";
+  $("pTFDeducted").textContent=fmt.format(calc.deductions/60)+" h";
+  $("pTFNet").textContent=fmt.format(calc.net)+" h";
+  return calc;
+ };
+ const resetTimeForm=(keepIdentity=false)=>{
+  if(!keepIdentity){
+   $("pTFDate").value=day(activeLabor().at(-1))||new Date().toLocaleDateString("en-CA");
+   $("pTFWorker").value="";$("pTFName").value="";
+  }
+  TIME_INPUTS.forEach(([id])=>$(id).value=id==="pTFBase"?String(scheduledHours($("pTFDate").value)):"0");
+  $("pTFStatus").textContent="";calculateForm();
+ };
+ // Importante: los registros de tiempo de una modalidad no se atribuyen
+ // automáticamente a otra modalidad del mismo colaborador/día.
+ const taggedTime=r=>String(r.__laborGrupo??r.tipoLabor??r.tipoRol??"").trim()!=="";
+ const belongsTimeToVariant=r=>!selectedVariant||matches(r);
+ const matchesTimeRecord=(r,workerKey,fecha)=>{
+  if(day(r)!==fecha||code(r)!==workerKey)return false;
+  if(!selectedVariant)return !taggedTime(r);
+  return taggedTime(r)&&belongsTimeToVariant(r);
+ };
+ const fillExisting=()=>{
+  const dateValue=$("pTFDate").value,entry=$("pTFWorker").value.trim();
+  const candidate=findWorker(entry);
+  if(candidate && !$("pTFName").value.trim())$("pTFName").value=person(candidate);
+  if(!candidate||!dateValue)return;
+  const found=times.find(r=>matchesTimeRecord(r,code(candidate),dateValue));
+  if(!found)return;
+  const valueInHours=key=>String(Number(((num(found[key])??0)/60).toFixed(3)));
+  const map={
+   pTFBase:"horasLaboralesMin",pTFExtra:"horasExtraMin",pTFMove:"desplazamientoMin",
+   pTFGym:"calisteniaMin",pTFTrain:"capacitacionMin",pTFMadres:"pMadresMin",
+   pTFAbuelas:"pAbuelasMin",pTFPause:"pausasMin",pTFChange:"cambioLaborMin",
+   pTFIncap:"incapacidadMin",pTFVac:"vacacionesMin",pTFMedical:"examenMedicoMin"
+  };
+  Object.entries(map).forEach(([id,key])=>$(id).value=valueInHours(key));
+  const components=["desplazamientoMin","calisteniaMin","capacitacionMin",
+   "pMadresMin","pAbuelasMin","pausasMin","cambioLaborMin",
+   "incapacidadMin","vacacionesMin","examenMedicoMin"];
+  const exclusive=Math.max(0,(num(found.otrasLaboresMin)??0)-
+   components.reduce((sum,key)=>sum+(num(found[key])??0),0));
+  $("pTFOther").value=String(Number((exclusive/60).toFixed(3)));
+  $("pTFStatus").textContent="Registro existente: al guardar se actualizará el tiempo de este trabajador y fecha.";
+  calculateForm();
+ };
+ TIME_INPUTS.forEach(([id])=>$(id).addEventListener("input",calculateForm));
+ $("pTFDate").addEventListener("change",()=>{
+  $("pTFBase").value=String(scheduledHours($("pTFDate").value));
+  $("pTFStatus").textContent="";fillExisting();calculateForm();
+ });
+ $("pTFWorker").addEventListener("change",()=>{
+  const match=findWorker($("pTFWorker").value);
+  if(match){$("pTFWorker").value=String(match.sembrador??match.colaborador??match.empleado??match.codigo??code(match));
+   $("pTFName").value=person(match);}
+  else $("pTFName").value="";
+  $("pTFStatus").textContent="";fillExisting();
+ });
+ $("pTFClear").addEventListener("click",()=>resetTimeForm());
+ $("pTFSave").addEventListener("click",()=>{
+  const status=$("pTFStatus");
+  if(demo){status.textContent="Estás viendo datos de prueba. Selecciona «Ver registros reales» antes de guardar.";return}
+  const fecha=$("pTFDate").value,typed=$("pTFWorker").value.trim(),known=findWorker(typed);
+  const id=known?code(known):typed.toLowerCase();
+  const name=$("pTFName").value.trim()||(known?person(known):"");
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(fecha)){status.textContent="Selecciona una fecha válida.";return}
+  if(!id||!name){status.textContent="Ingresa el código y el nombre del trabajador.";return}
+  const calc=calculateForm();
+  if(calc.error){status.textContent=calc.error;return}
+  if(calc.minutes<=0){status.textContent="El tiempo efectivo de la labor debe ser mayor que cero.";return}
+  const minutes=id=>Math.round(calc.values[id]*60);
+  const categorical=["pTFMove","pTFGym","pTFTrain","pTFMadres","pTFAbuelas",
+   "pTFPause","pTFChange","pTFIncap","pTFVac","pTFMedical","pTFOther"];
+  const obj={fecha,colaborador:id,colaboradorNombre:name,
+   horasLaboralesMin:calc.base,horasExtraMin:calc.extra,
+   desplazamientoMin:minutes("pTFMove"),calisteniaMin:minutes("pTFGym"),
+   capacitacionMin:minutes("pTFTrain"),pMadresMin:minutes("pTFMadres"),
+   pAbuelasMin:minutes("pTFAbuelas"),pausasMin:minutes("pTFPause"),
+   cambioLaborMin:minutes("pTFChange"),incapacidadMin:minutes("pTFIncap"),
+   vacacionesMin:minutes("pTFVac"),examenMedicoMin:minutes("pTFMedical"),
+   otrasLaboresMin:categorical.reduce((sum,key)=>sum+minutes(key),0),
+   tiempoDisponibleMin:calc.base+calc.extra,tiempoRealMin:calc.minutes,
+   ...(selectedVariant?{__laborGrupo:selectedVariant}:{}),
+   origen:"FlowerLogix JN - formulario de tiempos"};
+  const existing=times.findIndex(r=>matchesTimeRecord(r,id,fecha));
+  if(existing>=0)times[existing]={...times[existing],...obj};
+  else times.push(obj);
+  try{localStorage.setItem(dataKey(mod.id+"_tiempos"),JSON.stringify(times))}
+  catch(error){status.textContent="No fue posible guardar en este navegador: "+error.message;return}
+  refresh();
+  status.textContent=(existing>=0?"Tiempo actualizado":"Tiempo guardado")+
+    " para "+name+" · "+fecha+" · "+fmt.format(calc.net)+" h efectivas.";
+ });
  const asLabel=(value,label)=>'<div class="module-stat"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong></div>';
  const refresh=()=>{
   const baseLabor=activeLabor(),baseTimes=activeTimes();
+  $("pTimeForm").hidden=detailMode!=="tiempos";
+  $("pTFSave").disabled=demo;
+  // El selector conserva lo escrito mientras cambian las tablas/filtros.
+  if(!$("pTFDate").value)resetTimeForm();
+  $("pTFPeople").innerHTML=[...new Map([...baseLabor,...baseTimes].map(r=>[code(r),person(r)]))]
+   .filter(([id])=>Boolean(id))
+   .map(([id,name])=>'<option value="'+esc(id)+'" label="'+esc(name)+'"></option>').join("");
   // Only time records belonging to workers and days of THIS labor.
   const dayKeys=new Set(baseLabor.map(dayPerson));
   // El registro de tiempos de Desbotonado es por persona/día, no por
