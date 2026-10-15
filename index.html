@@ -398,6 +398,29 @@
       .performance-controls .module-stat strong {font-size:1.23rem;}
     }
 
+    /* Evitar que los menús y filtros vuelvan a competir en pantallas pequeñas. */
+    @media(max-width:720px){
+      .q-explore-controls {padding:12px;}
+      .q-explore-primary {max-width:none;}
+      .q-explore-primary label {max-width:none;flex:1 1 100%;}
+      .q-explore-variants {width:100%;}
+      .q-variant-btn {flex:1 1 110px;}
+      .quality-report-actions {padding:11px;}
+      .quality-report-period-group {width:100%;}
+      .indicator-section-nav {align-items:stretch;gap:8px;}
+      .indicator-section-caption {width:100%;}
+      .indicator-subtabs {width:100%;}
+      .indicator-subtab {flex:1 1 110px;}
+      .dash-controlgroup {flex:1 1 100%;min-width:0;}
+      .dash-controlgroup label {flex:1 1 135px;}
+      .dash-controlgroup input,.dash-controlgroup select {box-sizing:border-box;width:100%;max-width:none;}
+      .dash-control-actions {flex:1 1 100%;padding:10px 0 0;border-left:0;border-top:1px solid #e0e9e2;}
+      .module-filter-fields {flex:1 1 100%;}
+      .module-filter-inputs label {flex:1 1 145px;min-width:0;}
+      .module-filter-inputs input {box-sizing:border-box;width:100%;max-width:none;}
+      .module-filter-actions {flex:1 1 100%;padding-top:9px;border-top:1px solid #e0e9e2;}
+    }
+
     .quality-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}
     .quality-table{min-width:900px}
     .quality-table th{font-size:.66rem;min-width:105px;text-align:center;white-space:normal}
