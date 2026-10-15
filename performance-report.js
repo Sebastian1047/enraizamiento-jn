@@ -244,14 +244,23 @@ function displayLabor(mod,rows){
  return {headers:h.length?h:["Fecha","Colaborador"],rows:raw};
 }
 function displayTimes(rows,names=new Map()){
- const headers=["Fecha","Colaborador","Horas extra","Desplazamiento","Calistenia","Capacitación","Otras labores","Tiempo efectivo (h)"];
+ const headers=["Fecha","Colaborador","Horas laborales","Horas extra","Desplazamiento",
+ "Calistenia","Capacitación","Plantas madres","Plantas abuelas","Otras actividades",
+ "Tiempo efectivo (h)"];
  const data=rows.map(r=>{
   const categories=(num(r.desplazamientoMin)??0)+(num(r.calisteniaMin)??0)+(num(r.capacitacionMin)??0);
   const other=num(r.otrasLaboresMin),exclusivo=other===null?
    (num(r.pMadresMin)??0)+(num(r.pAbuelasMin)??0):Math.max(0,other-categories);
-  return [day(r),names.get(dayPerson(r))||person(r),fmt.format((num(r.horasExtraMin)??((num(r.horasExtra)??0)*60))/60),
-   fmt.format((num(r.desplazamientoMin)??0)/60),fmt.format((num(r.calisteniaMin)??0)/60),
-   fmt.format((num(r.capacitacionMin)??0)/60),fmt.format(exclusivo/60),
+  const otherOnly=Math.max(0,exclusivo-(num(r.pMadresMin)??0)/60-(num(r.pAbuelasMin)??0)/60);
+  return [day(r),names.get(dayPerson(r))||person(r),
+   fmt.format((num(r.horasLaboralesMin)??435)/60),
+   fmt.format((num(r.horasExtraMin)??((num(r.horasExtra)??0)*60))/60),
+   fmt.format((num(r.desplazamientoMin)??0)/60),
+   fmt.format((num(r.calisteniaMin)??0)/60),
+   fmt.format((num(r.capacitacionMin)??0)/60),
+   fmt.format((num(r.pMadresMin)??0)/60),
+   fmt.format((num(r.pAbuelasMin)??0)/60),
+   fmt.format(otherOnly),
    netHours(r)===null?"—":fmt.format(netHours(r))];
  });
  return {headers,rows:data};
@@ -550,7 +559,10 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  year.addEventListener("change",()=>{selectedYear=year.value;selectedWeek="";refresh()});
  week.addEventListener("change",()=>{selectedWeek=week.value;refresh()});
  date.addEventListener("change",()=>{selectedDay=date.value;refresh()});
- if($("pDemo"))$("pDemo").addEventListener("click",()=>{demo=!demo;selectedYear="";selectedWeek="";selectedDay="";refresh()});
+ if($("pDemo"))$("pDemo").addEventListener("click",()=>{
+  demo=!demo;selectedYear="";selectedWeek="";selectedDay="";
+  resetTimeForm();refresh();
+ });
  $("pImport").addEventListener("change",async event=>{
   const file=event.target.files[0];if(!file)return;
   try{
@@ -571,8 +583,11 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
     else labor=incoming;
     localStorage.setItem(dataKey(mod.id),JSON.stringify(labor));
    }else{
-    // Importados para el módulo; no afectar registros de labor.
-    times=rows;
+    // Si hay submodalidades, conservar los tiempos de las otras labores.
+    const incoming=selectedVariant?rows.map(r=>taggedTime(r)?r:{...r,__laborGrupo:selectedVariant}):rows;
+    times=selectedVariant?
+      [...times.filter(r=>!taggedTime(r)||!belongsTimeToVariant(r)),...incoming]:
+      incoming;
     localStorage.setItem(dataKey(mod.id+"_tiempos"),JSON.stringify(times));
    }
    demo=false;selectedYear="";selectedWeek="";selectedDay="";
