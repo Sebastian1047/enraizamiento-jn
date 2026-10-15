@@ -128,13 +128,13 @@ function displayLabor(mod,rows){
  }),...(config.unit?[r.__rendHours===null?"—":fmt.format(r.__rendHours),r.__rendRate===null?"—":fmt.format(r.__rendRate)]:[])]);
  return {headers:h.length?h:["Fecha","Colaborador"],rows:raw};
 }
-function displayTimes(rows){
+function displayTimes(rows,names=new Map()){
  const headers=["Fecha","Colaborador","Horas extra","Desplazamiento","Calistenia","Capacitación","Otras labores","Tiempo efectivo (h)"];
  const data=rows.map(r=>{
   const categories=(num(r.desplazamientoMin)??0)+(num(r.calisteniaMin)??0)+(num(r.capacitacionMin)??0);
   const other=num(r.otrasLaboresMin),exclusivo=other===null?
    (num(r.pMadresMin)??0)+(num(r.pAbuelasMin)??0):Math.max(0,other-categories);
-  return [day(r),person(r),fmt.format((num(r.horasExtraMin)??((num(r.horasExtra)??0)*60))/60),
+  return [day(r),names.get(dayPerson(r))||person(r),fmt.format((num(r.horasExtraMin)??((num(r.horasExtra)??0)*60))/60),
    fmt.format((num(r.desplazamientoMin)??0)/60),fmt.format((num(r.calisteniaMin)??0)/60),
    fmt.format((num(r.capacitacionMin)??0)/60),fmt.format(exclusivo/60),
    netHours(r)===null?"—":fmt.format(netHours(r))];
@@ -233,7 +233,8 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
    ...(unit?[asLabel(stats.rate===null?"—":fmt.format(stats.rate),unit+"/hora")]:[])
   ].join("");
   visibleType=detailMode;
-  const result=detailMode==="labor"?displayLabor(mod.id,enriched):displayTimes(filteredTimes);
+  const nameByDate=new Map(baseLabor.map(r=>[dayPerson(r),person(r)]));
+  const result=detailMode==="labor"?displayLabor(mod.id,enriched):displayTimes(filteredTimes,nameByDate);
   visible=result.rows;
   $("pResult").innerHTML='<h3 class="quality-heading">'+(detailMode==="labor"?"Registros de labor":"Registros de tiempos")+'</h3>'+
    htmlTable(result.headers,result.rows,"Sin registros para la labor y el período seleccionados.");
