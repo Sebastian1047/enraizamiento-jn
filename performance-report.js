@@ -265,7 +265,7 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  '<nav class="performance-detail-nav" aria-label="Registros de rendimiento">'+
  '<button type="button" class="active" data-detail-mode="labor" aria-pressed="true">Labor</button>'+
  '<button type="button" data-detail-mode="tiempos" aria-pressed="false">Tiempos</button></nav>'+
- '<div class="performance-actions"><label class="btn-primary quality-upload">Importar JSON de <span id="pImportKind">Labor</span>'+
+ '<div class="performance-actions" id="pActions"><label class="btn-primary quality-upload">Importar JSON de <span id="pImportKind">Labor</span>'+
  '<input type="file" id="pImport" accept=".json,application/json" hidden></label>'+
  '<button type="button" class="btn-secondary" id="pCSV">Exportar CSV</button>'+
  (["bandejas-enraizamiento","desbotonado-mallas"].includes(mod.id)?
@@ -288,6 +288,9 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  const belongsTimeToVariant=r=>!selectedVariant||matches(r);
  const asLabel=(value,label)=>'<div class="module-stat"><span>'+esc(label)+'</span><strong>'+esc(value)+'</strong></div>';
  const refresh=()=>{
+  // Importar, Exportar CSV y Ver registros reales se usan solo en Labor.
+  // Tiempos es una vista de consulta, sin acciones de importación.
+  $("pActions").hidden=detailMode==="tiempos";
   const baseLabor=activeLabor(),baseTimes=activeTimes();
   // Only time records belonging to workers and days of THIS labor.
   const dayKeys=new Set(baseLabor.map(dayPerson));
