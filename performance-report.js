@@ -254,22 +254,30 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  let personMode="grupal",periodMode="anio",detailMode="labor";
  const areaText=selectedVariant?String(selectedVariant):mod.name;
  panel.innerHTML='<div class="performance-controls">'+
- '<div class="performance-person"><label class="performance-worker">Buscar colaborador'+
+ '<section class="performance-filter-card" aria-label="Filtros de rendimiento">'+
+ '<div class="performance-filter-heading">'+
+ '<div><span class="performance-filter-kicker">CONSULTAR RESULTADOS</span>'+
+ '<p class="performance-filter-summary">Elige a quién y en qué período consultar.</p></div>'+
+ '<div class="performance-person-switch" role="group" aria-label="Consultar rendimiento">'+
+ '<button type="button" data-person-mode="grupal" class="active" aria-pressed="true">Todas las personas</button>'+
+ '<button type="button" data-person-mode="individual" aria-pressed="false">Una persona</button></div></div>'+
+ '<div class="performance-filter-fields">'+
+ '<label class="performance-worker">Colaborador'+
  '<input type="search" id="pWorker" placeholder="Nombre o código" list="pWorkers" autocomplete="off">'+
  '<datalist id="pWorkers"></datalist></label>'+
- '<div class="performance-person-switch" role="group" aria-label="Alcance del rendimiento">'+
- '<button type="button" data-person-mode="grupal" class="active" aria-pressed="true">Rendimiento grupal</button>'+
- '<button type="button" data-person-mode="individual" aria-pressed="false">Una persona</button></div></div>'+
+ '<div class="performance-period-group"><span class="performance-field-caption">Período</span>'+
  '<nav class="performance-period-nav" aria-label="Consultar rendimiento por período">'+
- '<button type="button" class="active" data-period-mode="anio" aria-pressed="true">Por año</button>'+
- '<button type="button" data-period-mode="semana" aria-pressed="false">Por semana</button>'+
- '<button type="button" data-period-mode="dia" aria-pressed="false">Por fecha (día)</button></nav>'+
+ '<button type="button" class="active" data-period-mode="anio" aria-pressed="true">Año</button>'+
+ '<button type="button" data-period-mode="semana" aria-pressed="false">Semana</button>'+
+ '<button type="button" data-period-mode="dia" aria-pressed="false">Día</button></nav></div>'+
  '<div class="performance-period-fields"><label id="pYearLabel">Año<select id="pYear"></select></label>'+
  '<label id="pWeekLabel" hidden>Semana<select id="pWeek"></select></label>'+
  '<label id="pDayLabel" hidden>Fecha<input id="pDay" type="date"></label></div>'+
+ '</div></section>'+
+ '<div class="performance-result-heading"><span class="performance-field-caption">VER INFORMACIÓN DE</span>'+
  '<nav class="performance-detail-nav" aria-label="Registros de rendimiento">'+
  '<button type="button" class="active" data-detail-mode="labor" aria-pressed="true">Labor</button>'+
- '<button type="button" data-detail-mode="tiempos" aria-pressed="false">Tiempos</button></nav>'+
+ '<button type="button" data-detail-mode="tiempos" aria-pressed="false">Tiempos</button></nav></div>'+
  '<div id="pNote" class="module-notice"></div>'+
  '<div id="pDemoNote" class="quality-demo-banner" hidden></div>'+
  '<div id="pStats" class="module-summary analysis-metrics"></div>'+
