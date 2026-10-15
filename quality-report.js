@@ -529,8 +529,12 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  '<button type="button" id="qToggleDemo">Ver registros reales</button></div>'+
  '<div class="module-notice" id="qNotice" hidden style="display:none"></div>'+
  '<div class="quality-report-actions">'+
+ '<div class="quality-report-period-filters">'+
+ '<label for="qReportYear">Año<select id="qReportYear" aria-label="Año del informe"></select></label>'+
+ '<label for="qReportWeek">Semana<select id="qReportWeek" aria-label="Semana del informe"></select></label></div>'+
+ '<div class="quality-report-action-buttons">'+
  '<button type="button" class="btn-primary" id="qDownloadReport">Descargar</button>'+
- '<button type="button" class="btn-secondary" id="qPrintReport">Imprimir</button>'+
+ '<button type="button" class="btn-secondary" id="qPrintReport">Imprimir</button></div>'+
  '<span id="qPdfStatus" class="quality-pdf-status" role="status" aria-live="polite"></span></div>'+
  '<div id="qReport"></div>';
  const reportMarkup=panel.innerHTML;
@@ -574,7 +578,8 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  let syncExplore=()=>{};
  const demoBanner=panel.querySelector("#qDemoBanner"),demoToggle=panel.querySelector("#qToggleDemo");
  const g=panel.querySelector("#qGroup"),y=panel.querySelector("#qYear"),w=panel.querySelector("#qWeek"),
- search=panel.querySelector("#qSearch"),area=panel.querySelector("#qReport"),note=panel.querySelector("#qNotice");
+ search=panel.querySelector("#qSearch"),area=panel.querySelector("#qReport"),note=panel.querySelector("#qNotice"),
+ reportYear=panel.querySelector("#qReportYear"),reportWeek=panel.querySelector("#qReportWeek");
  g.value=selectedGroup;
  function setViewNotice(){
    demoBanner.hidden=!demoMode;
@@ -610,24 +615,49 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
      periodsOfRows.get(k).records.push(row);
    }
    const chronological=[...periodsOfRows.values()].sort((a,b)=>a.yr-b.yr||a.week-b.week);
-   const latest=chronological.at(-1)??null;
+   // El informe presenta una sola semana, no el conjunto de semanas del análisis.
+   // Por defecto selecciona la más reciente con evaluaciones; permite volver a
+   // cualquier año y semana que tenga registros para esta modalidad.
+   const years=[...new Set(chronological.map(p=>p.yr))].sort((a,b)=>b-a);
+   const chosenYear=years.includes(Number(reportYear.value))?
+     Number(reportYear.value):years[0]??null;
+   reportYear.innerHTML=years.length?
+     years.map(value=>'<option value="'+value+'">'+value+'</option>').join(""):
+     '<option value="">Sin años con evaluaciones</option>';
+   reportYear.value=chosenYear===null?"":String(chosenYear);
+   const availableWeeks=chronological.filter(p=>p.yr===chosenYear);
+   const chosenWeek=availableWeeks.find(p=>String(p.week)===reportWeek.value)??availableWeeks.at(-1)??null;
+   reportWeek.innerHTML=availableWeeks.length?
+     availableWeeks.map(p=>'<option value="'+p.week+'">Semana '+String(p.week).padStart(2,"0")+'</option>').join(""):
+     '<option value="">Sin semanas con evaluaciones</option>';
+   reportWeek.value=chosenWeek?String(chosenWeek.week):"";
+   const selected=chosenWeek;
    pdfFilename="informe-calidad-"+mod.id+"-"+selectedGroup+
-     (latest?"-"+latest.yr+"-semana-"+String(latest.week).padStart(2,"0"):"")+
+     (selected?"-"+selected.yr+"-semana-"+String(selected.week).padStart(2,"0"):"")+
      (demoMode?"-DEMO":"")+".pdf";
-   const weekRecords=latest?latest.records:[];
+   const weekRecords=selected?selected.records:[];
    const res=calc(weekRecords,c,items);
    reportHeaders=["NOMBRE DEL COLABORADOR","MUESTRAS REALES",...items.map(x=>x[1]),"CONFORMIDAD TOTAL"];
    reportRows=res.rows.map(p=>[p.name,p.samples,...items.map(([id])=>pct(p.samples-(p.issues.get(id)||0),p.samples)),pct(p.pass,p.samples)]);
-   const weeks=chronological.slice(-4).map(p=>{
+   // La gráfica y la tabla de cuatro semanas terminan en la semana elegida,
+   // nunca incluyen semanas posteriores al informe consultado.
+   const selectedIndex=selected?chronological.indexOf(selected):-1;
+   const weeks=(selectedIndex<0?[]:chronological.slice(Math.max(0,selectedIndex-3),selectedIndex+1)).map(p=>{
      const result=calc(p.records,c,items);
      return {yr:p.yr,week:p.week,
       n:result.rows.reduce((sum,r)=>sum+r.samples,0),
       pass:result.rows.reduce((sum,r)=>sum+r.pass,0)};
    });
    reportPayload={moduleId:mod.id,group:c,items,rows:res.rows,weekRows:weeks,
-     current:latest,excluded:res.excluded,isDemo:demoMode};
+     current:selected,excluded:res.excluded,isDemo:demoMode};
    area.innerHTML=qualityPaperReport(reportPayload);
  }
+ reportYear.addEventListener("change",()=>{
+   // Al cambiar el año, seleccionar su última semana con registros.
+   reportWeek.value="";
+   refresh();
+ });
+ reportWeek.addEventListener("change",refresh);
  panel.querySelector("#qPrintReport").addEventListener("click",()=>window.print());
  panel.querySelector("#qDownloadReport").addEventListener("click",async()=>{
    const button=panel.querySelector("#qDownloadReport");
