@@ -19,16 +19,26 @@
     .module-link strong { font-size:.86rem; }
     .module-link small { display:block; color:var(--muted); font-size:.65rem; margin-bottom:7px; }
     .module-icon { display:grid; place-items:center; min-width:36px; height:36px; border-radius:11px; background:var(--green-soft); font-size:1.15rem; }
-    .operation-tabs { display:flex; gap:10px; flex-wrap:wrap; padding:14px; margin:20px 0 8px; border:1px solid var(--border); border-radius:13px; background:#f5faf7; }
-    .operation-tab { flex:1 1 160px; min-height:46px; border:1px solid #c6dccd; border-radius:11px; background:#fff; font:inherit; color:#215037; font-size:.79rem; font-weight:800; cursor:pointer; padding:11px 15px; }
-    .operation-tab:hover { border-color:var(--green); }
-    .operation-tab.active { background:var(--green); color:#fff; border-color:var(--green); box-shadow:0 5px 12px rgba(20,100,58,.13); }
-    .operation-tab:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
+    /* Nivel 1: las secciones Rendimiento, Calidad e Indicadores son navegación,
+       no filtros. Mantener otras páginas sin selector de modalidad intactas. */
     .analysis-tabs { display:flex; flex-wrap:wrap; gap:8px; padding:10px 0 13px; margin-top:18px; margin-bottom:16px; border-bottom:1px solid var(--border); }
     .analysis-tab { padding:10px 20px; min-width:130px; border-radius:11px; border:1px solid var(--border); background:#f3f8f5; color:#274637; font:inherit; font-size:.77rem; font-weight:800; cursor:pointer; }
     .analysis-tab:hover { border-color:var(--green); }
     .analysis-tab.active { background:var(--green); color:#fff; border-color:var(--green); }
     .analysis-tab:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
+    .layered-primary-tabs {gap:28px;align-items:stretch;margin:16px 0 13px;padding:0;border-bottom:1px solid #dce8df;}
+    .layered-primary-tabs .analysis-tab {min-width:0;min-height:47px;padding:11px 4px 13px;border:0;border-radius:0;background:transparent;color:#6c8072;font-size:.84rem;font-weight:800;box-shadow:none;}
+    .layered-primary-tabs .analysis-tab:hover {border:0;color:#256946;}
+    .layered-primary-tabs .analysis-tab.active {background:transparent;color:#175e3c;box-shadow:inset 0 -3px 0 #197447;}
+    /* Nivel 2: selector compacto de modalidad, visualmente distinto de las pestañas. */
+    .operation-selector {display:flex;align-items:center;flex-wrap:wrap;gap:13px;margin:0 0 19px;padding:9px 12px;border:1px solid #e5ede8;border-radius:12px;background:#f9fbfa;}
+    .operation-selector-label {flex:0 0 auto;color:#7a8980;font-size:.63rem;font-weight:850;letter-spacing:.095em;}
+    .operation-tabs {display:flex;align-items:center;flex-wrap:wrap;gap:3px;padding:3px;margin:0;border:1px solid #e1e9e3;border-radius:10px;background:#eff3f0;}
+    .operation-tab {flex:0 1 auto;min-height:34px;padding:7px 12px;border:1px solid transparent;border-radius:7px;background:transparent;font:inherit;color:#526b5b;font-size:.73rem;font-weight:700;cursor:pointer;white-space:normal;}
+    .operation-tab:hover {background:#f9fdfa;color:#205f3f;border-color:#dce8df;}
+    .operation-tab.active {background:#fff;color:#175e3c;border-color:#bed5c4;box-shadow:0 1px 3px rgba(22,75,44,.07);font-weight:800;}
+    .operation-tab.active::before {content:"";display:inline-block;width:6px;height:6px;margin-right:7px;border-radius:50%;background:#288255;vertical-align:middle;}
+    .operation-tab:focus-visible {outline:2px solid var(--green);outline-offset:2px;}
     .indicator-subtabs { display:flex; flex-wrap:wrap; gap:10px; margin:12px 0 18px; }
     .indicator-subtab { border:1px solid var(--border); border-radius:11px; background:#f3f8f5; color:#274637; padding:10px 20px; min-width:145px; font:inherit; font-size:.77rem; font-weight:800; cursor:pointer; }
     .indicator-subtab:hover { border-color:var(--green); }
@@ -303,35 +313,67 @@
     }
 
 
-    /* Rendimiento de Producción — consulta por período, persona y tipo de registro */
-    .performance-controls {display:block;}
-    .performance-person {display:flex;align-items:end;justify-content:space-between;flex-wrap:wrap;gap:13px;margin:8px 0 18px;}
-    .performance-worker {display:flex;flex:1 1 250px;max-width:430px;flex-direction:column;gap:6px;font-size:.73rem;font-weight:800;color:#2d593d;}
-    .performance-worker input {background:#fff;min-height:42px;padding:10px 12px;border:1px solid #c7dbce;border-radius:10px;font-size:.76rem;color:#263d2e;}
-    .performance-worker input:disabled {background:#f1f5f2;color:#829788;cursor:not-allowed;}
-    .performance-person-switch {display:flex;gap:7px;flex-wrap:wrap;}
-    .performance-person-switch button {background:#f1f7f3;border:1px solid #c6dacb;padding:11px 16px;border-radius:10px;color:#27553c;font-weight:800;font-size:.75rem;cursor:pointer;}
-    .performance-person-switch button.active {background:var(--green);color:#fff;border-color:var(--green);}
-    .performance-period-nav,.performance-detail-nav {display:flex;gap:9px;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--border);}
-    .performance-period-nav button,.performance-detail-nav button {padding:11px 17px;min-height:43px;flex:1 1 145px;max-width:235px;border-radius:10px;background:#eff6f1;border:1px solid #ceded1;color:#234a34;font-size:.77rem;font-weight:850;cursor:pointer;}
-    .performance-period-nav button.active,.performance-detail-nav button.active {background:var(--green);border-color:var(--green);color:#fff;}
-    .performance-detail-nav {margin-top:13px;}
-    .performance-period-fields {display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:8px 0 18px;}
-    .performance-period-fields label {display:flex;flex-direction:column;gap:6px;min-width:170px;font-size:.73rem;font-weight:800;color:#3b5a46;}
-    .performance-period-fields label[hidden]{display:none!important;}
-    .performance-period-fields input,.performance-period-fields select {padding:10px 12px;min-height:42px;border:1px solid #c7dbce;border-radius:9px;background:white;color:#284a34;font-size:.76rem;}
-    .performance-table {min-width:760px;}
-    .performance-controls .module-summary {margin:16px 0;}
+    /* Nivel 3: filtros discretos, agrupados y compactos. */
+    .performance-controls {display:block;min-width:0;}
+    .performance-filter-card {border:1px solid #e1eae3;border-radius:13px;background:#fafcfb;padding:14px 17px 16px;}
+    .performance-filter-heading {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px;}
+    .performance-filter-kicker {display:block;font-size:.65rem;font-weight:850;letter-spacing:.09em;color:#547260;}
+    .performance-filter-summary {margin:4px 0 0;font-size:.69rem;font-weight:400;color:#72877a;}
+    .performance-person-switch {display:inline-flex;align-items:center;flex-wrap:wrap;gap:3px;padding:3px;border:1px solid #dce7de;border-radius:9px;background:#f0f5f1;}
+    .performance-person-switch button {min-height:31px;padding:6px 12px;border:1px solid transparent;border-radius:7px;background:transparent;color:#567061;font:inherit;font-size:.72rem;font-weight:720;cursor:pointer;}
+    .performance-person-switch button:hover {color:#1d6640;}
+    .performance-person-switch button.active {background:#fff;color:#175e3c;border-color:#c4dccb;box-shadow:0 1px 2px rgba(20,70,38,.05);}
+    .performance-filter-fields {display:grid;grid-template-columns:minmax(170px,1.1fr) minmax(190px,1.25fr) minmax(138px,.75fr);gap:14px;align-items:end;}
+    .performance-worker,.performance-period-fields label {display:flex;flex-direction:column;gap:6px;min-width:0;color:#4c6255;font-size:.68rem;font-weight:750;}
+    .performance-worker input,.performance-period-fields input,.performance-period-fields select {box-sizing:border-box;width:100%;min-height:39px;padding:9px 11px;border:1px solid #d3dfd6;border-radius:8px;background:#fff;color:#263d2e;font:inherit;font-size:.75rem;}
+    .performance-worker input:focus-visible,.performance-period-fields select:focus-visible,.performance-period-fields input:focus-visible {outline:2px solid var(--green);outline-offset:2px;}
+    .performance-worker input:disabled {background:#f3f6f3;color:#9bad9f;cursor:not-allowed;}
+    .performance-period-group {display:flex;flex-direction:column;gap:6px;min-width:0;}
+    .performance-field-caption {color:#64786a;font-size:.68rem;font-weight:750;}
+    .performance-period-nav {display:flex;align-items:center;gap:3px;min-height:39px;padding:3px;border:1px solid #dce7de;border-radius:9px;background:#eef3ef;}
+    .performance-period-nav button {flex:1 1 0;min-width:0;min-height:31px;padding:5px 9px;border:1px solid transparent;border-radius:6px;background:transparent;color:#607466;font:inherit;font-size:.72rem;font-weight:700;cursor:pointer;}
+    .performance-period-nav button:hover {color:#246c45;}
+    .performance-period-nav button.active {background:#fff;color:#19633e;border-color:#c4dccb;box-shadow:0 1px 2px rgba(20,70,38,.05);}
+    .performance-period-fields {display:flex;align-items:end;min-width:0;}
+    .performance-period-fields label {width:100%;}
+    .performance-period-fields label[hidden] {display:none!important;}
+    /* Nivel 4: Labor/Tiempos identifica qué resultados se están consultando. */
+    .performance-result-heading {display:flex;align-items:center;gap:17px;flex-wrap:wrap;margin:17px 0 0;padding:0 0 9px;border-bottom:1px solid #e2eae4;}
+    .performance-result-heading .performance-field-caption {letter-spacing:.055em;font-size:.65rem;}
+    .performance-detail-nav {display:flex;align-items:center;gap:18px;}
+    .performance-detail-nav button {min-height:36px;padding:8px 3px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:#718477;font:inherit;font-size:.77rem;font-weight:750;cursor:pointer;}
+    .performance-detail-nav button:hover {color:#17643f;}
+    .performance-detail-nav button.active {color:#17643f;border-bottom-color:#228451;}
+    .performance-controls .module-notice {border:0;border-radius:0;background:transparent;margin:9px 0 4px;padding:0;color:#728378;font-size:.68rem;line-height:1.55;}
+    .performance-controls .module-summary {margin:15px 0;gap:10px;}
+    .performance-controls .module-stat {padding:13px 15px;min-height:0;}
+    .performance-controls .module-stat span {font-size:.67rem;}
+    .performance-controls .module-stat strong {font-size:1.38rem;margin-top:6px;}
     .performance-table {width:max-content;min-width:100%;white-space:nowrap;}
     .performance-table th,.performance-table td {text-align:left;padding:10px 12px;}
     .performance-table th:last-child,.performance-table td:last-child {font-weight:800;color:#17633e;background:#f1f9f2;}
     .performance-controls [data-period-mode]:focus-visible,.performance-controls [data-detail-mode]:focus-visible,
     .performance-controls [data-person-mode]:focus-visible {outline:2px solid var(--green);outline-offset:2px;}
-    @media(max-width:600px){
-      .performance-person-switch,.performance-worker {width:100%;max-width:none;}
+    @media(max-width:960px) {
+      .performance-filter-fields {grid-template-columns:minmax(160px,1fr) minmax(200px,1fr);}
+      .performance-period-fields {grid-column:1/-1;max-width:230px;}
+    }
+    @media(max-width:600px) {
+      .operation-selector {align-items:stretch;}
+      .operation-selector-label {width:100%;}
+      .operation-tabs {width:100%;}
+      .operation-tab {flex:1 1 90px;padding:7px 6px;}
+      .layered-primary-tabs {gap:16px;}
+      .layered-primary-tabs .analysis-tab {flex:1 1 auto;text-align:center;padding:12px 0;}
+      .performance-filter-card {padding:13px;}
+      .performance-filter-heading {align-items:stretch;}
+      .performance-person-switch {width:100%;box-sizing:border-box;}
       .performance-person-switch button {flex:1;}
-      .performance-period-nav button,.performance-detail-nav button {max-width:none;flex:1 1 90px;padding:10px 8px;}
-      .performance-period-fields label{flex:1 1 120px;min-width:0;}
+      .performance-filter-fields {grid-template-columns:1fr;gap:12px;}
+      .performance-period-fields {grid-column:auto;max-width:none;}
+      .performance-result-heading {gap:12px;}
+      .performance-detail-nav {flex:1;justify-content:flex-start;}
+      .performance-controls .module-stat strong {font-size:1.23rem;}
     }
 
     .quality-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}
@@ -1929,22 +1971,30 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  let personMode="grupal",periodMode="anio",detailMode="labor";
  const areaText=selectedVariant?String(selectedVariant):mod.name;
  panel.innerHTML='<div class="performance-controls">'+
- '<div class="performance-person"><label class="performance-worker">Buscar colaborador'+
+ '<section class="performance-filter-card" aria-label="Filtros de rendimiento">'+
+ '<div class="performance-filter-heading">'+
+ '<div><span class="performance-filter-kicker">CONSULTAR RESULTADOS</span>'+
+ '<p class="performance-filter-summary">Elige a quién y en qué período consultar.</p></div>'+
+ '<div class="performance-person-switch" role="group" aria-label="Consultar rendimiento">'+
+ '<button type="button" data-person-mode="grupal" class="active" aria-pressed="true">Todas las personas</button>'+
+ '<button type="button" data-person-mode="individual" aria-pressed="false">Una persona</button></div></div>'+
+ '<div class="performance-filter-fields">'+
+ '<label class="performance-worker">Colaborador'+
  '<input type="search" id="pWorker" placeholder="Nombre o código" list="pWorkers" autocomplete="off">'+
  '<datalist id="pWorkers"></datalist></label>'+
- '<div class="performance-person-switch" role="group" aria-label="Alcance del rendimiento">'+
- '<button type="button" data-person-mode="grupal" class="active" aria-pressed="true">Rendimiento grupal</button>'+
- '<button type="button" data-person-mode="individual" aria-pressed="false">Una persona</button></div></div>'+
+ '<div class="performance-period-group"><span class="performance-field-caption">Período</span>'+
  '<nav class="performance-period-nav" aria-label="Consultar rendimiento por período">'+
- '<button type="button" class="active" data-period-mode="anio" aria-pressed="true">Por año</button>'+
- '<button type="button" data-period-mode="semana" aria-pressed="false">Por semana</button>'+
- '<button type="button" data-period-mode="dia" aria-pressed="false">Por fecha (día)</button></nav>'+
+ '<button type="button" class="active" data-period-mode="anio" aria-pressed="true">Año</button>'+
+ '<button type="button" data-period-mode="semana" aria-pressed="false">Semana</button>'+
+ '<button type="button" data-period-mode="dia" aria-pressed="false">Día</button></nav></div>'+
  '<div class="performance-period-fields"><label id="pYearLabel">Año<select id="pYear"></select></label>'+
  '<label id="pWeekLabel" hidden>Semana<select id="pWeek"></select></label>'+
  '<label id="pDayLabel" hidden>Fecha<input id="pDay" type="date"></label></div>'+
+ '</div></section>'+
+ '<div class="performance-result-heading"><span class="performance-field-caption">VER INFORMACIÓN DE</span>'+
  '<nav class="performance-detail-nav" aria-label="Registros de rendimiento">'+
  '<button type="button" class="active" data-detail-mode="labor" aria-pressed="true">Labor</button>'+
- '<button type="button" data-detail-mode="tiempos" aria-pressed="false">Tiempos</button></nav>'+
+ '<button type="button" data-detail-mode="tiempos" aria-pressed="false">Tiempos</button></nav></div>'+
  '<div id="pNote" class="module-notice"></div>'+
  '<div id="pDemoNote" class="quality-demo-banner" hidden></div>'+
  '<div id="pStats" class="module-summary analysis-metrics"></div>'+
@@ -2369,17 +2419,19 @@ window.PerformanceReports={render,weekKey,netHours,joinLabor,summary,displayLabo
         '<h2 class="page-title">'+esc(mod.name)+'</h2>' +
         '<p class="page-description">Seleccione la vista de rendimiento, calidad o indicadores de esta labor.</p></div>' +
         '<a class="btn-secondary back-link" href="#'+areaId+'">← Volver a '+esc(area.label)+'</a></div>' +
+        '<div class="analysis-tabs'+(operationOptions.length?' layered-primary-tabs':'')+'" role="tablist" aria-label="Vistas de '+esc(mod.name)+'">' +
+        tabs.map(tab=>'<button type="button" role="tab" class="analysis-tab'+
+          (tab.id===activeTab?' active':'')+'" data-tab="'+tab.id+'" aria-selected="'+
+          (tab.id===activeTab?'true':'false')+'">'+tab.label+'</button>').join("") +
+        '</div>'+
         (operationOptions.length?
+          '<div class="operation-selector"><span class="operation-selector-label">TIPO DE LABOR</span>'+
           '<nav class="operation-tabs" aria-label="Labores de '+esc(mod.name)+'">'+
           operationOptions.map(item=>'<button type="button" class="operation-tab'+
             (item.id===selectedOperation?' active':'')+'" data-operation="'+item.id+
             '" aria-pressed="'+(item.id===selectedOperation?'true':'false')+'">'+esc(item.label)+'</button>').join("")+
-          '</nav>':'')+
-        '<div class="analysis-tabs" role="tablist" aria-label="Vistas de '+esc(mod.name)+'">' +
-        tabs.map(tab=>'<button type="button" role="tab" class="analysis-tab'+
-          (tab.id===activeTab?' active':'')+'" data-tab="'+tab.id+'" aria-selected="'+
-          (tab.id===activeTab?'true':'false')+'">'+tab.label+'</button>').join("") +
-        '</div><section id="moduleTabPanel" role="tabpanel" aria-live="polite"></section>';
+          '</nav></div>':'')+
+        '<section id="moduleTabPanel" role="tabpanel" aria-live="polite"></section>';
       const panel=document.getElementById("moduleTabPanel");
       const tabButtons=[...app.querySelectorAll("[data-tab]")];
       const operationButtons=[...app.querySelectorAll("[data-operation]")];
