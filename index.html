@@ -21,15 +21,20 @@
     .module-icon { display:grid; place-items:center; min-width:36px; height:36px; border-radius:11px; background:var(--green-soft); font-size:1.15rem; }
     /* Nivel 1: las secciones Rendimiento, Calidad e Indicadores son navegación,
        no filtros. Mantener otras páginas sin selector de modalidad intactas. */
-    .analysis-tabs { display:flex; flex-wrap:wrap; gap:8px; padding:10px 0 13px; margin-top:18px; margin-bottom:16px; border-bottom:1px solid var(--border); }
-    .analysis-tab { padding:10px 20px; min-width:130px; border-radius:11px; border:1px solid var(--border); background:#f3f8f5; color:#274637; font:inherit; font-size:.77rem; font-weight:800; cursor:pointer; }
-    .analysis-tab:hover { border-color:var(--green); }
-    .analysis-tab.active { background:var(--green); color:#fff; border-color:var(--green); }
+    /* Rendimiento / Calidad / Indicadores: misma identidad en TODOS los módulos.
+       Verde sólido = vista activa; verde casi blanco = otras vistas.
+       Los filtros conservan un tono verde intermedio para mantener la jerarquía. */
+    .analysis-tabs { display:flex; flex-wrap:wrap; align-items:center; gap:9px; padding:0 0 13px; margin-top:18px; margin-bottom:16px; border-bottom:1px solid var(--border); }
+    .analysis-tab { padding:10px 20px; min-width:143px; min-height:42px; border-radius:12px; border:1px solid #cfdfd4; background:#f1f6f3; color:#173c29; font:inherit; font-size:.79rem; font-weight:800; cursor:pointer; box-shadow:none; transition:background .15s ease,border-color .15s ease; }
+    .analysis-tab:hover:not(.active) { border-color:#a4c5b0; background:#e8f2eb; }
+    .analysis-tab.active { background:#197447; color:#fff; border-color:#197447; box-shadow:none; }
     .analysis-tab:focus-visible { outline:2px solid var(--green); outline-offset:2px; }
-    .layered-primary-tabs {gap:28px;align-items:stretch;margin:16px 0 13px;padding:0;border-bottom:1px solid #dce8df;}
-    .layered-primary-tabs .analysis-tab {min-width:0;min-height:47px;padding:11px 4px 13px;border:0;border-radius:0;background:transparent;color:#6c8072;font-size:.84rem;font-weight:800;box-shadow:none;}
-    .layered-primary-tabs .analysis-tab:hover {border:0;color:#256946;}
-    .layered-primary-tabs .analysis-tab.active {background:transparent;color:#175e3c;box-shadow:inset 0 -3px 0 #197447;}
+    /* El diseño de las tres pestañas también se aplica en módulos con
+       segundo nivel de navegación (Pompón, Spider, Malla y Corte). */
+    .layered-primary-tabs {gap:9px;align-items:center;margin:16px 0 14px;padding:0 0 13px;border-bottom:1px solid #dce8df;}
+    .layered-primary-tabs .analysis-tab {min-width:143px;min-height:42px;padding:10px 20px;border:1px solid #cfdfd4;border-radius:12px;background:#f1f6f3;color:#173c29;font-size:.79rem;font-weight:800;box-shadow:none;}
+    .layered-primary-tabs .analysis-tab:hover:not(.active) {border-color:#a4c5b0;background:#e8f2eb;color:#173c29;}
+    .layered-primary-tabs .analysis-tab.active {background:#197447;color:#fff;border-color:#197447;box-shadow:none;}
     /* Nivel 2: selector compacto de modalidad, visualmente distinto de las pestañas. */
     .operation-selector {display:flex;align-items:center;flex-wrap:wrap;gap:13px;margin:0 0 19px;padding:9px 12px;border:1px solid #e5ede8;border-radius:12px;background:#f9fbfa;}
     .operation-selector-label {flex:0 0 auto;color:#7a8980;font-size:.63rem;font-weight:850;letter-spacing:.095em;}
