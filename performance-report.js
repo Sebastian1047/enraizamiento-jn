@@ -24,7 +24,7 @@ const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const normalize=v=>String(v??"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 const num=v=>v!==null&&v!==undefined&&v!==""&&Number.isFinite(Number(v))&&Number(v)>=0?Number(v):null;
 const day=r=>String(r?.fecha??r?.fechaRegistro??"").slice(0,10);
-const code=r=>String(r?.sembrador??r?.colaborador??r?.empleado??r?.codigo??r?.trabajador??r?.sembradorNombre??r?.colaboradorNombre??r?.empleadoNombre??r?.nombre??"").trim().toLowerCase();
+const code=r=>String(r?.sembrador??r?.colaborador??r?.empleado??r?.codigo??r?.codOperario??r?.sembradorId??r?.empleadoId??r?.trabajador??r?.sembradorNombre??r?.colaboradorNombre??r?.empleadoNombre??r?.nombre??"").trim().toLowerCase();
 const person=r=>String(r?.sembradorNombre??r?.colaboradorNombre??r?.empleadoNombre??r?.nombreColaborador??r?.trabajadorNombre??r?.nombre??r?.sembrador??r?.colaborador??r?.empleado??r?.codigo??"Sin identificar");
 const dayPerson=r=>day(r)+"|"+code(r);
 function weekKey(value){
@@ -308,11 +308,11 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  '<label>Nombre del trabajador<input type="text" id="pTFName" placeholder="Nombre completo" required></label></div>'+
  '<div class="performance-time-grid">'+
  TIME_INPUTS.slice(0,5).map(([id,label,help])=>'<label title="'+esc(help)+'">'+esc(label)+' (h)'+
- '<input id="'+id+'" type="number" min="0" max="24" step="0.05" inputmode="decimal" value="0"></label>').join("")+'</div>'+
+ '<input id="'+id+'" type="number" min="0" max="24" step="any" inputmode="decimal" value="0"></label>').join("")+'</div>'+
  '<details class="performance-time-more"><summary>Otras actividades y descuentos</summary>'+
  '<div class="performance-time-grid">'+
  TIME_INPUTS.slice(5).map(([id,label,help])=>'<label title="'+esc(help)+'">'+esc(label)+' (h)'+
- '<input id="'+id+'" type="number" min="0" max="24" step="0.05" inputmode="decimal" value="0"></label>').join("")+
+ '<input id="'+id+'" type="number" min="0" max="24" step="any" inputmode="decimal" value="0"></label>').join("")+
  '</div></details>'+
  '<div class="performance-time-result"><div><span>Tiempo disponible</span><strong id="pTFAvailable">—</strong></div>'+
  '<div><span>Tiempo de otras actividades</span><strong id="pTFDeducted">—</strong></div>'+
