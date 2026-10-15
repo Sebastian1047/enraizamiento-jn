@@ -298,8 +298,13 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  '<label>Código o nombre del trabajador<input type="text" id="pTFWorker" list="pTFPeople" placeholder="Buscar o escribir código" autocomplete="off" required><datalist id="pTFPeople"></datalist></label>'+
  '<label>Nombre del trabajador<input type="text" id="pTFName" placeholder="Nombre completo" required></label></div>'+
  '<div class="performance-time-grid">'+
- TIME_INPUTS.map(([id,label,help])=>'<label title="'+esc(help)+'">'+esc(label)+' (h)'+
+ TIME_INPUTS.slice(0,5).map(([id,label,help])=>'<label title="'+esc(help)+'">'+esc(label)+' (h)'+
  '<input id="'+id+'" type="number" min="0" max="24" step="0.05" inputmode="decimal" value="0"></label>').join("")+'</div>'+
+ '<details class="performance-time-more"><summary>Otras actividades y descuentos</summary>'+
+ '<div class="performance-time-grid">'+
+ TIME_INPUTS.slice(5).map(([id,label,help])=>'<label title="'+esc(help)+'">'+esc(label)+' (h)'+
+ '<input id="'+id+'" type="number" min="0" max="24" step="0.05" inputmode="decimal" value="0"></label>').join("")+
+ '</div></details>'+
  '<div class="performance-time-result"><div><span>Tiempo disponible</span><strong id="pTFAvailable">—</strong></div>'+
  '<div><span>Tiempo de otras actividades</span><strong id="pTFDeducted">—</strong></div>'+
  '<div><span>Tiempo efectivo de la labor</span><strong id="pTFNet">—</strong></div></div>'+
@@ -337,7 +342,9 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  };
  const resetTimeForm=(keepIdentity=false)=>{
   if(!keepIdentity){
-   $("pTFDate").value=day(activeLabor().at(-1))||new Date().toLocaleDateString("en-CA");
+   const now=new Date();
+   const today=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,10);
+   $("pTFDate").value=day(activeLabor().at(-1))||today;
    $("pTFWorker").value="";$("pTFName").value="";
   }
   TIME_INPUTS.forEach(([id])=>$(id).value=id==="pTFBase"?String(scheduledHours($("pTFDate").value)):"0");
@@ -447,10 +454,16 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
     if(type)laborTypesByDay.get(key).add(type);
    });
   }
-  const tiedTimes=baseTimes.filter(r=>
-   dayKeys.has(dayPerson(r))&&
-   (mod.id!=="desbotonado-mallas"||(laborTypesByDay.get(dayPerson(r))?.size??0)<=1)
-  );
+  const tiedTimes=baseTimes.filter(r=>{
+   // Los tiempos nuevos identifican explícitamente a qué labor pertenecen.
+   if(taggedTime(r))return belongsTimeToVariant(r);
+   // Los tiempos antiguos compartidos solo se atribuyen a una modalidad
+   // cuando fue la única labor de esa persona ese día.
+   if(!selectedVariant)return true;
+   if(!dayKeys.has(dayPerson(r)))return false;
+   return mod.id!=="desbotonado-mallas"||
+     (laborTypesByDay.get(dayPerson(r))?.size??0)<=1;
+  });
   const available=[...new Set([...baseLabor.map(day),...tiedTimes.map(day)]
      .filter(v=>/^\d{4}-\d{2}-\d{2}$/.test(v)))].sort();
   const isoWeeks=[...new Set(available.map(weekKey).filter(Boolean))].sort();
@@ -484,16 +497,22 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
    normalize(person(r)+" "+code(r)).includes(normalize(worker.value));
   const filteredLabor=baseLabor.filter(r=>inPeriod(r)&&matchesWorker(r));
   const filteredKeys=new Set(filteredLabor.map(dayPerson));
-  const filteredTimes=tiedTimes.filter(r=>inPeriod(r)&&filteredKeys.has(dayPerson(r)));
+  const filteredTimes=tiedTimes.filter(r=>inPeriod(r)&&matchesWorker(r)&&
+    (filteredKeys.has(dayPerson(r))||taggedTime(r)||!selectedVariant));
   const enriched=joinLabor(mod.id,filteredLabor,filteredTimes);
   const stats=summary(enriched,filteredTimes,mod.id);
   const unit=config.unit,quantity=unit&&stats.qty!==null?fmt.format(stats.qty):"—";
+  const registeredTime=new Map(filteredTimes.map(r=>[dayPerson(r)+"|"+(r.__laborGrupo??""),netHours(r)]));
+  const registeredHours=[...registeredTime.values()].filter(v=>v!==null);
+  const totalTime=registeredHours.reduce((sum,h)=>sum+h,0);
   $("pStats").innerHTML=[
-   asLabel(fmt.format(stats.people),"Colaboradores"),
-   asLabel(fmt.format(stats.records),"Registros de labor"),
+   asLabel(fmt.format(detailMode==="tiempos"?new Set(filteredTimes.map(code).filter(Boolean)).size:stats.people),"Colaboradores"),
+   asLabel(fmt.format(detailMode==="tiempos"?filteredTimes.length:stats.records),
+     detailMode==="tiempos"?"Registros de tiempos":"Registros de labor"),
    asLabel(unit?quantity:fmt.format(new Set(filteredLabor.map(day).filter(Boolean)).size),
      unit?config.label:"Días con labor"),
-   asLabel(stats.hours===null?"—":fmt.format(stats.hours)+" h","Tiempo efectivo"),
+   asLabel(detailMode==="tiempos"?(registeredHours.length?fmt.format(totalTime)+" h":"—"):
+     (stats.hours===null?"—":fmt.format(stats.hours)+" h"),"Tiempo efectivo"),
    ...(unit?[asLabel(stats.rate===null?"—":fmt.format(stats.rate),unit+"/hora")]:[])
   ].join("");
   visibleType=detailMode;
