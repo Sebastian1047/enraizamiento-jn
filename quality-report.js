@@ -792,6 +792,8 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  }
  function itemsAvailable(){return cols()}
  const dayNames=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
+ const canSelectDays=()=>selectedYears instanceof Set&&selectedYears.size===1&&
+  selectedWeeks instanceof Set&&selectedWeeks.size===1;
  function dayOptions(){
   const years=selectedYears!=null?[...selectedYears]:[];
   const weeks=selectedWeeks!=null?[...selectedWeeks]:[];
@@ -813,6 +815,13 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    if(!selectedWeeks.size&&weeks.length)selectedWeeks=new Set([weeks[weeks.length-1]]);
   }
   drawChoices(xweeks,"week",weeks.map(w=>[w,"Semana "+String(w).padStart(2,"0")]),selectedWeeks);
+  const enabled=canSelectDays(),daysMenu=panel.querySelector("#qXDaysDrop");
+  if(!enabled){selectedDays=null;daysMenu.open=false;}
+  daysMenu.inert=!enabled;
+  daysMenu.classList.toggle("is-disabled",!enabled);
+  daysMenu.setAttribute("aria-disabled",String(!enabled));
+  daysMenu.title=enabled?"Elige uno, varios o todos los días":
+   "Selecciona exactamente un año y una semana para habilitar los días";
   drawChoices(xdays,"day",dayOptions(),selectedDays);
  }
  function updateFilterSummaries(){
@@ -885,12 +894,13 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  xgroup.addEventListener("click",()=>setPersonMode("grupal"));
  xone.addEventListener("click",()=>setPersonMode("individual"));
  xyears.addEventListener("change",()=>{
-  selectedYears=readChoices(xyears,"year");syncComparisonPeriod();exploreResult();
+  selectedYears=readChoices(xyears,"year");selectedDays=null;syncComparisonPeriod();exploreResult();
  });
  xweeks.addEventListener("change",()=>{
-  selectedWeeks=readChoices(xweeks,"week");syncComparisonPeriod();exploreResult();
+  selectedWeeks=readChoices(xweeks,"week");selectedDays=null;syncComparisonPeriod();exploreResult();
  });
  xdays.addEventListener("change",()=>{
+  if(!canSelectDays())return;
   selectedDays=readChoices(xdays,"day");exploreResult();
  });
  xitems.addEventListener("change",()=>{
@@ -904,9 +914,10 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   ["qXDaysAll","day",true],["qXDaysNone","day",false]
  ]){
   panel.querySelector("#"+id).addEventListener("click",()=>{
+   if(kind==="day"&&!canSelectDays())return;
    const selection=all?null:new Set();
-   if(kind==="year")selectedYears=selection;
-   else if(kind==="week")selectedWeeks=selection;
+   if(kind==="year"){selectedYears=selection;selectedDays=null;}
+   else if(kind==="week"){selectedWeeks=selection;selectedDays=null;}
    else selectedDays=selection;
    syncComparisonPeriod();exploreResult();
   });
@@ -932,7 +943,8 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    searched=personMode==="individual"?xworker.value.trim():"",
    data=personMode==="individual"&&!searched?
     {periods:[],chosen:items.filter(([id])=>selectedItems.has(id)),excluded:0}:
-    analyzeComparison(base(),c,items,selectedItems,selectedYears,selectedWeeks,null,searched,selectedDays);
+    analyzeComparison(base(),c,items,selectedItems,selectedYears,selectedWeeks,null,searched,
+     canSelectDays()?selectedDays:null);
   const {periods,chosen,excluded}=data;
   const total=periods.reduce((sum,r)=>sum+r.n,0);
   const chosenOk=periods.reduce((sum,r)=>sum+r.selected,0);

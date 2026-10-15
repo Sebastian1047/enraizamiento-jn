@@ -200,6 +200,10 @@
     .q-compare-selection .performance-selection-total{white-space:nowrap}
     @media(max-width:960px){.q-compare-filter-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:600px){.q-compare-heading{align-items:stretch}.q-compare-person-switch{width:100%}.q-compare-person-switch button{flex:1}.q-compare-filter-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.q-compare-filter-fields label:first-child{grid-column:1/-1}.q-compare-secondary>.q-filter-items{width:100%}.q-compare-advanced{flex-basis:100%}.q-compare-advanced-panel .q-explore-filters{grid-template-columns:1fr}.q-compare-selection .performance-selection-total{width:100%;margin-left:0}.q-compare-controls{padding:13px}.q-compare-controls .q-filter-popup{position:static;left:auto;right:auto;transform:none;width:100%;max-width:none;box-shadow:0 5px 14px rgba(24,64,40,.09);margin-top:5px}}
+    /* Día disponible únicamente con un año y una semana seleccionados. */
+    .q-compare-filter-fields .q-compare-choice.is-disabled{opacity:.58;cursor:not-allowed}
+    .q-compare-filter-fields .q-compare-choice.is-disabled .q-filter-trigger{background:#f0f3f1;color:#829389;border-color:#d6dfd9;cursor:not-allowed}
+    .q-compare-filter-fields .q-compare-choice.is-disabled .q-filter-trigger strong{color:#829389}
     /* Calidad: multiselección de período con apariencia de desplegable */
     .q-compare-filter-fields>.q-compare-select-field{display:flex;flex-direction:column;gap:6px;min-width:0}
     .q-compare-select-field>.q-compare-field-label{color:#4c6255;font-size:.68rem;font-weight:750}
@@ -1313,6 +1317,8 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  }
  function itemsAvailable(){return cols()}
  const dayNames=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
+ const canSelectDays=()=>selectedYears instanceof Set&&selectedYears.size===1&&
+  selectedWeeks instanceof Set&&selectedWeeks.size===1;
  function dayOptions(){
   const years=selectedYears!=null?[...selectedYears]:[];
   const weeks=selectedWeeks!=null?[...selectedWeeks]:[];
@@ -1334,6 +1340,13 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    if(!selectedWeeks.size&&weeks.length)selectedWeeks=new Set([weeks[weeks.length-1]]);
   }
   drawChoices(xweeks,"week",weeks.map(w=>[w,"Semana "+String(w).padStart(2,"0")]),selectedWeeks);
+  const enabled=canSelectDays(),daysMenu=panel.querySelector("#qXDaysDrop");
+  if(!enabled){selectedDays=null;daysMenu.open=false;}
+  daysMenu.inert=!enabled;
+  daysMenu.classList.toggle("is-disabled",!enabled);
+  daysMenu.setAttribute("aria-disabled",String(!enabled));
+  daysMenu.title=enabled?"Elige uno, varios o todos los días":
+   "Selecciona exactamente un año y una semana para habilitar los días";
   drawChoices(xdays,"day",dayOptions(),selectedDays);
  }
  function updateFilterSummaries(){
@@ -1406,12 +1419,13 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  xgroup.addEventListener("click",()=>setPersonMode("grupal"));
  xone.addEventListener("click",()=>setPersonMode("individual"));
  xyears.addEventListener("change",()=>{
-  selectedYears=readChoices(xyears,"year");syncComparisonPeriod();exploreResult();
+  selectedYears=readChoices(xyears,"year");selectedDays=null;syncComparisonPeriod();exploreResult();
  });
  xweeks.addEventListener("change",()=>{
-  selectedWeeks=readChoices(xweeks,"week");syncComparisonPeriod();exploreResult();
+  selectedWeeks=readChoices(xweeks,"week");selectedDays=null;syncComparisonPeriod();exploreResult();
  });
  xdays.addEventListener("change",()=>{
+  if(!canSelectDays())return;
   selectedDays=readChoices(xdays,"day");exploreResult();
  });
  xitems.addEventListener("change",()=>{
@@ -1425,9 +1439,10 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   ["qXDaysAll","day",true],["qXDaysNone","day",false]
  ]){
   panel.querySelector("#"+id).addEventListener("click",()=>{
+   if(kind==="day"&&!canSelectDays())return;
    const selection=all?null:new Set();
-   if(kind==="year")selectedYears=selection;
-   else if(kind==="week")selectedWeeks=selection;
+   if(kind==="year"){selectedYears=selection;selectedDays=null;}
+   else if(kind==="week"){selectedWeeks=selection;selectedDays=null;}
    else selectedDays=selection;
    syncComparisonPeriod();exploreResult();
   });
@@ -1453,7 +1468,8 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    searched=personMode==="individual"?xworker.value.trim():"",
    data=personMode==="individual"&&!searched?
     {periods:[],chosen:items.filter(([id])=>selectedItems.has(id)),excluded:0}:
-    analyzeComparison(base(),c,items,selectedItems,selectedYears,selectedWeeks,null,searched,selectedDays);
+    analyzeComparison(base(),c,items,selectedItems,selectedYears,selectedWeeks,null,searched,
+     canSelectDays()?selectedDays:null);
   const {periods,chosen,excluded}=data;
   const total=periods.reduce((sum,r)=>sum+r.n,0);
   const chosenOk=periods.reduce((sum,r)=>sum+r.selected,0);
