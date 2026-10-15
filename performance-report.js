@@ -122,7 +122,7 @@ function displayLabor(mod,rows){
   return i>=0&&j>=0?i-j:i>=0?-1:j>=0?1:0;
  });
  const config=MODS[mod];
- const h=keys.map(k=>k)+(config.unit?["Horas efectivas","Rendimiento ("+config.unit+"/h)"]:[]);
+ const h=[...keys,...(config.unit?["Horas efectivas","Rendimiento ("+config.unit+"/h)"]:[])];
  const raw=rows.map(r=>[...keys.map(k=>{
   const v=r[k];return v!==null&&typeof v==="object"?JSON.stringify(v):v??"";
  }),...(config.unit?[r.__rendHours===null?"—":fmt.format(r.__rendHours),r.__rendRate===null?"—":fmt.format(r.__rendRate)]:[])]);
@@ -220,7 +220,8 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
   const matchesWorker=r=>personMode==="grupal"||!worker.value.trim()||
    normalize(person(r)+" "+code(r)).includes(normalize(worker.value));
   const filteredLabor=baseLabor.filter(r=>inPeriod(r)&&matchesWorker(r));
-  const filteredTimes=tiedTimes.filter(r=>inPeriod(r)&&matchesWorker(r));
+  const filteredKeys=new Set(filteredLabor.map(dayPerson));
+  const filteredTimes=tiedTimes.filter(r=>inPeriod(r)&&filteredKeys.has(dayPerson(r)));
   const enriched=joinLabor(mod.id,filteredLabor,filteredTimes);
   const stats=summary(enriched,filteredTimes,mod.id);
   const unit=config.unit,quantity=unit&&stats.qty!==null?fmt.format(stats.qty):"—";
