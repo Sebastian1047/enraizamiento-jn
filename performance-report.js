@@ -67,6 +67,53 @@ function demoBandejas(){
   {fecha:"2026-10-07",sembrador:"DEMO03",horasExtraMin:0,desplazamientoMin:15,calisteniaMin:15,capacitacionMin:15,otrasLaboresMin:60}];
  return {labor,times};
 }
+// Muestras ficticias únicamente en memoria, para las tres modalidades.
+function demoDesbotonado(){
+ const groups=[
+  {tipoLabor:"Desbotón Pompón",prefix:"P",people:[
+   ["DEMO-P01","Ana Pérez (ejemplo)"],["DEMO-P02","Carlos Ruiz (ejemplo)"],
+   ["DEMO-P03","María López (ejemplo)"],["DEMO-P04","Juan Torres (ejemplo)"]]},
+  {tipoLabor:"Desbotón Spider",prefix:"S",people:[
+   ["DEMO-S01","Laura Gómez (ejemplo)"],["DEMO-S02","Andrés Díaz (ejemplo)"],
+   ["DEMO-S03","Natalia Ríos (ejemplo)"],["DEMO-S04","Pedro Vargas (ejemplo)"]]},
+  {tipoLabor:"Malla",prefix:"M",people:[
+   ["DEMO-M01","Paola Castro (ejemplo)"],["DEMO-M02","Jorge Moreno (ejemplo)"],
+   ["DEMO-M03","Diana Pardo (ejemplo)"],["DEMO-M04","Luis Medina (ejemplo)"]]}
+ ];
+ // Cuatro semanas ISO de 2026, incluida la semana actual.
+ const dates=["2026-09-24","2026-10-01","2026-10-08","2026-10-15"];
+ const labor=[],times=[];
+ groups.forEach((group,g)=>{
+  dates.forEach((fecha,weekIndex)=>{
+   group.people.forEach(([colaborador,colaboradorNombre],personIndex)=>{
+    const extra=(personIndex+weekIndex)%3===0?30:0;
+    const desplazamiento=10+5*(personIndex%2);
+    const calistenia=15,capacitacion=weekIndex%2===0?10:0;
+    const otrasLabores=15+5*(g%3);
+    const tiempoRealMin=435+extra-desplazamiento-calistenia-capacitacion-otrasLabores;
+    times.push({id:"DEMO-T-"+group.prefix+"-"+weekIndex+"-"+personIndex,
+      __soloDemostracion:true,fecha,colaborador,colaboradorNombre,
+      horasLaboralesMin:435,horasExtraMin:extra,desplazamientoMin:desplazamiento,
+      calisteniaMin:calistenia,capacitacionMin:capacitacion,
+      otrasLaboresMin:desplazamiento+calistenia+capacitacion+otrasLabores,
+      pMadresMin:otrasLabores,pAbuelasMin:0,tiempoRealMin});
+    for(let camaIndex=0;camaIndex<2;camaIndex++){
+     const mediosCuadros=6+((weekIndex+personIndex+camaIndex+g)%5)*2;
+     const tallosCama=960+((weekIndex*2+personIndex+camaIndex+g)%5)*160;
+     const erradicaciones=(weekIndex+personIndex+camaIndex)%3*16;
+     const tallos=(tallosCama-erradicaciones)/16*mediosCuadros;
+     labor.push({id:"DEMO-L-"+group.prefix+"-"+weekIndex+"-"+personIndex+"-"+camaIndex,
+       __soloDemostracion:true,fecha,colaborador,colaboradorNombre,
+       tipoLabor:group.tipoLabor,bloque:"B"+(g+1)+"-"+(personIndex%2+1),
+       cama:"C"+(personIndex*2+camaIndex+1),
+       mediosCuadros,tallosCama,erradicaciones,tallos,
+       observaciones:"Registro ficticio para visualizar la tabla"});
+    }
+   });
+  });
+ });
+ return {labor,times};
+}
 function joinLabor(modId,labor,times){
  const config=MODS[modId],hoursByDay=new Map(),quantByDay=new Map(),rows=[];
  times.forEach(t=>{
@@ -169,10 +216,12 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  if(areaId!=="produccion"||!MODS[mod.id])return false;
  const config=MODS[mod.id],dataKey=id=>"flowerlogix_jn_data_"+areaId+"_"+id;
  const origin=getRecords(areaId,mod.id),originTimes=getRecords(areaId,mod.id+"_tiempos");
- let labor=origin,times=originTimes,demo=mod.id==="bandejas-enraizamiento"&&!origin.length;
- const example=demoBandejas();
- let personMode="grupal",periodMode="anio",detailMode="labor";
  const matches=r=>!selectedVariant||window.ProductionIndicators?.matchLaborVariant?.(mod.id,r,selectedVariant);
+ let labor=origin,times=originTimes,
+     demo=(mod.id==="bandejas-enraizamiento"&&!origin.length)||
+          (mod.id==="desbotonado-mallas"&&!origin.some(matches));
+ const example=mod.id==="desbotonado-mallas"?demoDesbotonado():demoBandejas();
+ let personMode="grupal",periodMode="anio",detailMode="labor";
  const areaText=selectedVariant?String(selectedVariant):mod.name;
  panel.innerHTML='<div class="performance-controls">'+
  '<div class="performance-person"><label class="performance-worker">Buscar colaborador'+
@@ -194,7 +243,8 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  '<div class="performance-actions"><label class="btn-primary quality-upload">Importar JSON de <span id="pImportKind">Labor</span>'+
  '<input type="file" id="pImport" accept=".json,application/json" hidden></label>'+
  '<button type="button" class="btn-secondary" id="pCSV">Exportar CSV</button>'+
- (mod.id==="bandejas-enraizamiento"?'<button type="button" class="btn-secondary" id="pDemo">Ver registros reales</button>':"")+
+ (["bandejas-enraizamiento","desbotonado-mallas"].includes(mod.id)?
+   '<button type="button" class="btn-secondary" id="pDemo">Ver registros reales</button>':"")+
  '</div><div id="pNote" class="module-notice"></div>'+
  '<div id="pDemoNote" class="quality-demo-banner" hidden></div>'+
  '<div id="pStats" class="module-summary analysis-metrics"></div>'+
@@ -356,5 +406,5 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  refresh();
  return true;
 }
-window.PerformanceReports={render,weekKey,netHours,joinLabor,summary,displayLabor,displayTimes};
+window.PerformanceReports={render,weekKey,netHours,joinLabor,summary,displayLabor,displayTimes,demoDesbotonado};
 })();
