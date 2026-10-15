@@ -320,7 +320,6 @@
     .performance-period-fields label {display:flex;flex-direction:column;gap:6px;min-width:170px;font-size:.73rem;font-weight:800;color:#3b5a46;}
     .performance-period-fields label[hidden]{display:none!important;}
     .performance-period-fields input,.performance-period-fields select {padding:10px 12px;min-height:42px;border:1px solid #c7dbce;border-radius:9px;background:white;color:#284a34;font-size:.76rem;}
-    .performance-actions {display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:13px 0;}
     .performance-table {min-width:760px;}
     .performance-controls .module-summary {margin:16px 0;}
     .performance-table {width:max-content;min-width:100%;white-space:nowrap;}
@@ -1915,12 +1914,17 @@ function displayTimes(rows,names=new Map()){
 }
 function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  if(areaId!=="produccion"||!MODS[mod.id])return false;
- const config=MODS[mod.id],dataKey=id=>"flowerlogix_jn_data_"+areaId+"_"+id;
+ const config=MODS[mod.id];
  const origin=getRecords(areaId,mod.id),originTimes=getRecords(areaId,mod.id+"_tiempos");
  const matches=r=>!selectedVariant||window.ProductionIndicators?.matchLaborVariant?.(mod.id,r,selectedVariant);
- let labor=origin,times=originTimes,
-     demo=(mod.id==="bandejas-enraizamiento"&&!origin.length)||
-          (mod.id==="desbotonado-mallas"&&!origin.some(matches));
+ const labor=origin,times=originTimes;
+ // Los datos de prueba se activan únicamente cuando no hay registros reales
+ // de la modalidad. Es esencial porque ya no hay botón para alternar.
+ const realTimesForView=selectedVariant?
+   originTimes.some(r=>matches(r)):
+   originTimes.length>0;
+ const demo=(mod.id==="bandejas-enraizamiento"||mod.id==="desbotonado-mallas")&&
+   !origin.some(matches)&&!realTimesForView;
  const example=mod.id==="desbotonado-mallas"?demoDesbotonado():demoBandejas();
  let personMode="grupal",periodMode="anio",detailMode="labor";
  const areaText=selectedVariant?String(selectedVariant):mod.name;
@@ -1941,12 +1945,6 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  '<nav class="performance-detail-nav" aria-label="Registros de rendimiento">'+
  '<button type="button" class="active" data-detail-mode="labor" aria-pressed="true">Labor</button>'+
  '<button type="button" data-detail-mode="tiempos" aria-pressed="false">Tiempos</button></nav>'+
- '<div class="performance-actions"><label class="btn-primary quality-upload">Importar JSON de <span id="pImportKind">Labor</span>'+
- '<input type="file" id="pImport" accept=".json,application/json" hidden></label>'+
- '<button type="button" class="btn-secondary" id="pCSV">Exportar CSV</button>'+
- (["bandejas-enraizamiento","desbotonado-mallas"].includes(mod.id)?
-   '<button type="button" class="btn-secondary" id="pDemo">Ver registros reales</button>':"")+
- '</div>'+
  '<div id="pNote" class="module-notice"></div>'+
  '<div id="pDemoNote" class="quality-demo-banner" hidden></div>'+
  '<div id="pStats" class="module-summary analysis-metrics"></div>'+
@@ -1955,7 +1953,7 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  const buttons=[...panel.querySelectorAll("[data-person-mode]")],
   periods=[...panel.querySelectorAll("[data-period-mode]")],
   details=[...panel.querySelectorAll("[data-detail-mode]")];
- let selectedYear="",selectedWeek="",selectedDay="",visible=[],visibleType="labor";
+ let selectedYear="",selectedWeek="",selectedDay="";
  const activeLabor=()=> (demo?example.labor:labor).filter(matches);
  const activeTimes=()=>demo?example.times:times;
  // Los tiempos históricos pueden venir asociados a una modalidad
@@ -2040,15 +2038,12 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
      (stats.hours===null?"—":fmt.format(stats.hours)+" h"),"Tiempo efectivo"),
    ...(unit?[asLabel(stats.rate===null?"—":fmt.format(stats.rate),unit+"/hora")]:[])
   ].join("");
-  visibleType=detailMode;
   const nameByDate=new Map(baseLabor.map(r=>[dayPerson(r),person(r)]));
   const result=detailMode==="labor"?displayLabor(mod.id,enriched):displayTimes(filteredTimes,nameByDate);
-  visible=result.rows;
   $("pResult").innerHTML='<h3 class="quality-heading">'+(detailMode==="labor"?"Registros de labor":"Tiempos consultados")+'</h3>'+
    (detailMode==="tiempos"?
      '<p class="page-description">Solo consulta: registros recogidos en otra aplicación. Todas las cantidades se muestran en horas. Desliza la tabla horizontalmente para ver las actividades y el tiempo efectivo.</p>':"")+
    htmlTable(result.headers,result.rows,"Sin registros para la labor y el período seleccionados.");
-  $("pImportKind").textContent=detailMode==="labor"?"Labor":"Tiempos (consulta)";
   $("pNote").textContent=detailMode==="tiempos"?
     "Consulta de tiempos de la otra aplicación. Puedes cargar su JSON para visualizarlos, pero aquí no se registran ni editan jornadas. "+
     "El tiempo real guardado en origen prevalece sobre cualquier cálculo; no hay conexión automática con la API.":
@@ -2059,7 +2054,6 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
   $("pDemoNote").hidden=!demo;
   $("pDemoNote").innerHTML=demo?'<strong>DATOS DE PRUEBA — VISTA DEMOSTRATIVA</strong>'+
     '<span>Los registros y tiempos son ficticios y no se almacenan.</span>':"";
-  if($("pDemo"))$("pDemo").textContent=demo?"Ver registros reales":"Ver datos de prueba";
   if(detailMode==="tiempos"&&!filteredTimes.length&&filteredLabor.length)
     $("pResult").insertAdjacentHTML("beforeend",'<p class="page-description">No hay tiempos asociados a esta labor para el período elegido.</p>');
  };
@@ -2079,58 +2073,6 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  year.addEventListener("change",()=>{selectedYear=year.value;selectedWeek="";refresh()});
  week.addEventListener("change",()=>{selectedWeek=week.value;refresh()});
  date.addEventListener("change",()=>{selectedDay=date.value;refresh()});
- if($("pDemo"))$("pDemo").addEventListener("click",()=>{
-  demo=!demo;selectedYear="";selectedWeek="";selectedDay="";
-  refresh();
- });
- $("pImport").addEventListener("change",async event=>{
-  const file=event.target.files[0];if(!file)return;
-  try{
-   if(file.size>5*1024*1024)throw Error("El archivo supera 5 MB.");
-   const doc=JSON.parse(await file.text()),mode=detailMode;
-   const keys=mode==="labor"?["labor","bandejasEnraizamiento","registros"]:
-     ["tiempos","bandejasTiempos","registros"];
-   const rows=Array.isArray(doc)?doc:keys.map(k=>doc?.[k]).find(Array.isArray);
-   if(!Array.isArray(rows)||rows.length>20000||!rows.every(r=>r&&typeof r==="object"&&!Array.isArray(r)))
-    throw Error("Se requiere un arreglo de registros JSON válido, máximo 20.000.");
-   if(rows.some(r=>!day(r)||!code(r)))throw Error("Cada registro necesita fecha y colaborador.");
-   if(mode==="labor"){
-    const incoming=rows.map(r=>{
-     if(!selectedVariant||r.__laborGrupo||r.tipoLabor||r.rol||r.tipoRol)return r;
-     return {...r,__laborGrupo:selectedVariant};
-    });
-    if(selectedVariant)labor=[...labor.filter(r=>!matches(r)),...incoming];
-    else labor=incoming;
-    localStorage.setItem(dataKey(mod.id),JSON.stringify(labor));
-   }else{
-    // Si hay submodalidades, conservar los tiempos de las otras labores.
-    const incoming=selectedVariant?rows.map(r=>taggedTime(r)?r:{...r,__laborGrupo:selectedVariant}):rows;
-    times=selectedVariant?
-      [...times.filter(r=>!taggedTime(r)||!belongsTimeToVariant(r)),...incoming]:
-      incoming;
-    localStorage.setItem(dataKey(mod.id+"_tiempos"),JSON.stringify(times));
-   }
-   demo=false;selectedYear="";selectedWeek="";selectedDay="";
-   refresh();
-   $("pNote").textContent="Se importaron "+rows.length+" registros de "+(mode==="labor"?"labor":"tiempos")+
-     " y se guardaron en este navegador. Los datos de otras labores se conservan.";
-  }catch(error){$("pNote").textContent="Error al importar: "+error.message;}
-  finally{event.target.value="";}
- });
- $("pCSV").addEventListener("click",()=>{
-  const table=panel.querySelector(".performance-table");
-  if(!table||!visible.length)return;
-  const headings=[...table.querySelectorAll("thead th")].map(x=>x.textContent);
-  const quote=value=>{
-   const v=String(value??""),safe=/^[=+\-@]/.test(v)?"'"+v:v;
-   return '"'+safe.replaceAll('"','""')+'"';
-  };
-  const csv="\uFEFF"+[headings,...visible].map(r=>r.map(quote).join(";")).join("\r\n");
-  const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
-  const link=document.createElement("a");link.href=url;
-  link.download="rendimiento-"+mod.id+"-"+visibleType+(demo?"-DEMO":"")+".csv";link.click();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
- });
  refresh();
  return true;
 }
