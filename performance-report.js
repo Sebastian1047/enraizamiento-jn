@@ -6,7 +6,15 @@ const MODS={
    if(num(r.lineas)!==null&&num(r.densidad)!==null)return num(r.lineas)*num(r.densidad);
    return num(r.totalEsquejes??r.totalEsquejesSembrados??r.cantidad);
  }},
- "desbotonado-mallas":{unit:"tallos",label:"Tallos registrados",quantity:r=>num(r.tallos)},
+ "desbotonado-mallas":{unit:"tallos",label:"Tallos realizados",quantity:r=>{
+   const stored=num(r.tallos??r.tallosRealizados);
+   if(stored!==null)return stored;
+   const stems=num(r.tallosCama??r.tallosPorCama);
+   const medium=num(r.mediosCuadros??r.mediosCuadrados??r.mediosCuadrosHechos);
+   const eliminated=num(r.erradicaciones??0);
+   return stems!==null&&medium!==null&&eliminated!==null&&eliminated<=stems?
+     (stems-eliminated)/16*medium:null;
+ }},
  "corte":{unit:null,label:"Actividad registrada",quantity:()=>null},
  "bandejas-enraizamiento":{unit:"esquejes",label:"Esquejes sembrados",quantity:r=>num(r.cantidad??r.totalEsquejes??r.totalEsquejesSembrados)},
  "preparacion-camas":{unit:null,label:"Actividad registrada",quantity:()=>null}
@@ -30,6 +38,9 @@ function weekKey(value){
 }
 function netHours(r){
  if(!r)return null;
+ // El registro original de Desbotonado/Mallas guarda este resultado
+ // ya descontado. Evitar recalcularlo con una jornada distinta.
+ if(num(r.tiempoRealMin)!==null)return num(r.tiempoRealMin)/60;
  const minutes=k=>num(r[k])??0;
  const components=["horasExtraMin","horasExtra","desplazamientoMin","calisteniaMin","capacitacionMin","otrasLaboresMin","pMadresMin","pAbuelasMin"];
  if(!components.some(k=>num(r[k])!==null)){
@@ -103,6 +114,19 @@ function htmlTable(headers,rows,empty){
  '</tbody></table></div>';
 }
 function displayLabor(mod,rows){
+ if(mod==="desbotonado-mallas"){
+  const headers=["Nombre de la persona","Bloque","Cama","Medios cuadrados hechos",
+   "Tallos por cama","Tallos realizados","Rendimiento por hora"];
+  return {headers,rows:rows.map(r=>[
+   person(r),r.bloque??"—",r.cama??"—",
+   num(r.mediosCuadros??r.mediosCuadrados??r.mediosCuadrosHechos)===null?"—":
+    fmt.format(num(r.mediosCuadros??r.mediosCuadrados??r.mediosCuadrosHechos)),
+   num(r.tallosCama??r.tallosPorCama)===null?"—":
+    fmt.format(num(r.tallosCama??r.tallosPorCama)),
+   r.__rendQty===null?"—":fmt.format(r.__rendQty),
+   r.__rendRate===null?"—":fmt.format(r.__rendRate)
+  ])};
+ }
  if(mod==="bandejas-enraizamiento"){
   const h=["Fecha","Nombre del sembrador","Bloque","Cama","Total esquejes sembrados","Horas trabajadas","Promedio esquejes/hora"];
   const sums=new Map();
@@ -187,7 +211,22 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
   const baseLabor=activeLabor(),baseTimes=activeTimes();
   // Only time records belonging to workers and days of THIS labor.
   const dayKeys=new Set(baseLabor.map(dayPerson));
-  const tiedTimes=baseTimes.filter(r=>dayKeys.has(dayPerson(r)));
+  // El registro de tiempos de Desbotonado es por persona/día, no por
+  // Pompón, Spider o Mallas. No atribuir una jornada completa a una de
+  // esas labores si el mismo día hizo otras modalidades.
+  const laborTypesByDay=new Map();
+  if(mod.id==="desbotonado-mallas"){
+   (demo?example.labor:labor).forEach(r=>{
+    const key=dayPerson(r);
+    if(!laborTypesByDay.has(key))laborTypesByDay.set(key,new Set());
+    const type=normalize(r.__laborGrupo??r.tipoLabor??r.tipoLaborNombre??"");
+    if(type)laborTypesByDay.get(key).add(type);
+   });
+  }
+  const tiedTimes=baseTimes.filter(r=>
+   dayKeys.has(dayPerson(r))&&
+   (mod.id!=="desbotonado-mallas"||(laborTypesByDay.get(dayPerson(r))?.size??0)<=1)
+  );
   const available=[...new Set([...baseLabor.map(day),...tiedTimes.map(day)]
      .filter(v=>/^\d{4}-\d{2}-\d{2}$/.test(v)))].sort();
   const isoWeeks=[...new Set(available.map(weekKey).filter(Boolean))].sort();
