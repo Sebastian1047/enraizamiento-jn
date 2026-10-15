@@ -228,7 +228,8 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
   $("pStats").innerHTML=[
    asLabel(fmt.format(stats.people),"Colaboradores"),
    asLabel(fmt.format(stats.records),"Registros de labor"),
-   asLabel(quantity,unit?config.label:"Producción"),
+   asLabel(unit?quantity:fmt.format(new Set(filteredLabor.map(day).filter(Boolean)).size),
+     unit?config.label:"Días con labor"),
    asLabel(stats.hours===null?"—":fmt.format(stats.hours)+" h","Tiempo efectivo"),
    ...(unit?[asLabel(stats.rate===null?"—":fmt.format(stats.rate),unit+"/hora")]:[])
   ].join("");
