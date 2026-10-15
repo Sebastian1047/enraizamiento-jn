@@ -36,6 +36,19 @@ function weekKey(value){
  anchor.setUTCDate(anchor.getUTCDate()+3-(anchor.getUTCDay()+6)%7);
  return year+"-S"+String(1+Math.round((d-anchor)/604800000)).padStart(2,"0");
 }
+function weekDates(key){
+ const parts=/^(\d{4})-S(\d{2})$/.exec(String(key??""));
+ if(!parts)return [];
+ const isoYear=Number(parts[1]),isoWeek=Number(parts[2]);
+ if(isoWeek<1||isoWeek>53)return [];
+ const jan4=new Date(Date.UTC(isoYear,0,4));
+ const monday=new Date(Date.UTC(isoYear,0,4-((jan4.getUTCDay()+6)%7)+7*(isoWeek-1)));
+ const dates=Array.from({length:7},(_,offset)=>{
+  const d=new Date(monday);d.setUTCDate(monday.getUTCDate()+offset);
+  return d.toISOString().slice(0,10);
+ });
+ return weekKey(dates[0])===key?dates:[];
+}
 function netHours(r){
  if(!r)return null;
  // El registro original de Desbotonado/Mallas guarda este resultado
@@ -251,7 +264,7 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  const demo=(mod.id==="bandejas-enraizamiento"||mod.id==="desbotonado-mallas")&&
    !origin.some(matches)&&!realTimesForView;
  const example=mod.id==="desbotonado-mallas"?demoDesbotonado():demoBandejas();
- let personMode="grupal",periodMode="anio",detailMode="labor";
+ let personMode="grupal",detailMode="labor";
  const areaText=selectedVariant?String(selectedVariant):mod.name;
  panel.innerHTML='<div class="performance-controls">'+
  '<section class="performance-filter-card" aria-label="Filtros de rendimiento">'+
@@ -265,15 +278,13 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  '<label class="performance-worker">Colaborador'+
  '<input type="search" id="pWorker" placeholder="Nombre o código" list="pWorkers" autocomplete="off">'+
  '<datalist id="pWorkers"></datalist></label>'+
- '<div class="performance-period-group"><span class="performance-field-caption">Período</span>'+
- '<nav class="performance-period-nav" aria-label="Consultar rendimiento por período">'+
- '<button type="button" class="active" data-period-mode="anio" aria-pressed="true">Año</button>'+
- '<button type="button" data-period-mode="semana" aria-pressed="false">Semana</button>'+
- '<button type="button" data-period-mode="dia" aria-pressed="false">Día</button></nav></div>'+
- '<div class="performance-period-fields"><label id="pYearLabel">Año<select id="pYear"></select></label>'+
- '<label id="pWeekLabel" hidden>Semana<select id="pWeek"></select></label>'+
- '<label id="pDayLabel" hidden>Fecha<input id="pDay" type="date"></label></div>'+
- '</div></section>'+
+ '<div class="performance-period-fields" role="group" aria-label="Seleccionar año, semana y día">'+
+ '<label>Año<select id="pYear" aria-label="Año de consulta"></select></label>'+
+ '<label>Semana<select id="pWeek" aria-label="Semana de consulta"></select></label>'+
+ '<label>Día<select id="pDay" aria-label="Día de consulta"></select></label></div>'+
+ '</div>'+
+ '<div id="pFilterSelection" class="performance-filter-selection" role="status" aria-live="polite" aria-atomic="true"></div>'+
+ '</section>'+
  '<div class="performance-result-heading"><span class="performance-field-caption">VER INFORMACIÓN DE</span>'+
  '<nav class="performance-detail-nav" aria-label="Registros de rendimiento">'+
  '<button type="button" class="active" data-detail-mode="labor" aria-pressed="true">Labor</button>'+
@@ -284,9 +295,9 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  '<div id="pResult" aria-live="polite"></div></div>';
  const $=id=>panel.querySelector("#"+id),worker=$("pWorker"),year=$("pYear"),week=$("pWeek"),date=$("pDay");
  const buttons=[...panel.querySelectorAll("[data-person-mode]")],
-  periods=[...panel.querySelectorAll("[data-period-mode]")],
   details=[...panel.querySelectorAll("[data-detail-mode]")];
- let selectedYear="",selectedWeek="",selectedDay="";
+ // null: inicio; cadena vacía: todos los períodos.
+ let selectedYear=null,selectedWeek=null,selectedDay="";
  const activeLabor=()=> (demo?example.labor:labor).filter(matches);
  const activeTimes=()=>demo?example.times:times;
  // Los tiempos históricos pueden venir asociados a una modalidad
@@ -323,31 +334,38 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
   const available=[...new Set([...baseLabor.map(day),...tiedTimes.map(day)]
      .filter(v=>/^\d{4}-\d{2}-\d{2}$/.test(v)))].sort();
   const isoWeeks=[...new Set(available.map(weekKey).filter(Boolean))].sort();
-  const years=[...new Set(available.map(v=>String(v.slice(0,4)))
+  const years=[...new Set(available.map(v=>v.slice(0,4))
     .concat(isoWeeks.map(v=>v.slice(0,4))))].sort((a,b)=>b.localeCompare(a));
-  if(!years.includes(selectedYear))selectedYear=years[0]??new Date().getFullYear().toString();
-  year.innerHTML=years.length?years.map(n=>'<option value="'+n+'">'+n+'</option>').join(""):
-    '<option value="'+selectedYear+'">'+selectedYear+'</option>';
+  if(selectedYear===null||(selectedYear!==""&&!years.includes(selectedYear)))
+    selectedYear=years[0]??String(new Date().getFullYear());
+  year.innerHTML='<option value="">Todos los años</option>'+
+    (years.length?years:[selectedYear]).filter(Boolean).map(n=>
+      '<option value="'+n+'">'+n+'</option>').join("");
   year.value=selectedYear;
-  const yearWeeks=isoWeeks.filter(v=>v.startsWith(selectedYear+"-"));
-  if(!yearWeeks.includes(selectedWeek))selectedWeek=yearWeeks.at(-1)??"";
-  week.innerHTML=yearWeeks.length?yearWeeks.map(v=>'<option value="'+v+'">Semana '+v.slice(-2)+'</option>').join(""):
-    '<option value="">Sin semanas con registros</option>';
+  const yearWeeks=isoWeeks.filter(v=>!selectedYear||v.startsWith(selectedYear+"-"));
+  if(selectedWeek===null)selectedWeek=yearWeeks.at(-1)??"";
+  else if(selectedWeek!==""&&!yearWeeks.includes(selectedWeek))selectedWeek="";
+  week.innerHTML='<option value="">Todas las semanas</option>'+
+    yearWeeks.map(v=>'<option value="'+v+'">Semana '+v.slice(-2)+
+      (!selectedYear?' · '+v.slice(0,4):"")+'</option>').join("");
   week.value=selectedWeek;
-  if(!available.includes(selectedDay))selectedDay=available.at(-1)??"";
+  const weekDays=selectedWeek?weekDates(selectedWeek):[];
+  if(!weekDays.includes(selectedDay))selectedDay="";
+  const dayNames=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
+  date.innerHTML='<option value="">Todos los días</option>'+
+    weekDays.map((d,i)=>'<option value="'+d+'">'+dayNames[i]+' '+d.slice(8,10)+'/'+d.slice(5,7)+'</option>').join("");
   date.value=selectedDay;
-  $("pYearLabel").hidden=periodMode==="dia";
-  $("pWeekLabel").hidden=periodMode!=="semana";
-  $("pDayLabel").hidden=periodMode!=="dia";
+  date.disabled=!selectedWeek;
+  date.title=selectedWeek?"Selecciona un día o todos los días de la semana":"Elige una semana para consultar un día concreto";
   worker.disabled=personMode==="grupal";worker.placeholder=personMode==="grupal"?
     "Todas las personas de esta labor":"Buscar nombre o código";
   $("pWorkers").innerHTML=[...new Map([...baseLabor,...tiedTimes].map(r=>[code(r),person(r)]))].map(([id,name])=>
     '<option value="'+esc(name)+'">'+esc(id)+'</option>').join("");
   const inPeriod=r=>{
-   const d=day(r);
-   if(periodMode==="dia")return Boolean(selectedDay)&&d===selectedDay;
-   if(periodMode==="semana")return Boolean(selectedWeek)&&weekKey(d)===selectedWeek;
-   return d.startsWith(selectedYear+"-");
+   const d=day(r),iso=weekKey(d);
+   if(selectedWeek)return iso===selectedWeek&&(!selectedDay||d===selectedDay);
+   if(selectedYear)return d.startsWith(selectedYear+"-");
+   return Boolean(iso);
   };
   const matchesWorker=r=>personMode==="grupal"||!worker.value.trim()||
    normalize(person(r)+" "+code(r)).includes(normalize(worker.value));
@@ -373,6 +391,26 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
   ].join("");
   const nameByDate=new Map(baseLabor.map(r=>[dayPerson(r),person(r)]));
   const result=detailMode==="labor"?displayLabor(mod.id,enriched):displayTimes(filteredTimes,nameByDate);
+  const weekdays=selectedWeek?weekDates(selectedWeek):[];
+  const selectedLabel=selectedDay?
+    dayNames[weekdays.indexOf(selectedDay)]+" "+selectedDay.slice(8,10)+"/"+selectedDay.slice(5,7):
+    "Todos los días";
+  const weekLabel=selectedWeek?
+    "Semana "+Number(selectedWeek.slice(-2))+
+      (weekdays.length?" ("+weekdays[0].slice(8,10)+"/"+weekdays[0].slice(5,7)+
+        " al "+weekdays[6].slice(8,10)+"/"+weekdays[6].slice(5,7)+")":""):
+    "Todas las semanas";
+  const personLabel=personMode==="grupal"?"Todas las personas":
+    (worker.value.trim()?"Persona: "+worker.value.trim():"Una persona (sin búsqueda)");
+  const count=result.rows.length;
+  $("pFilterSelection").innerHTML=
+    '<span class="performance-selection-caption">CONSULTA ACTUAL</span>'+
+    '<span class="performance-selection-detail">'+
+    [personLabel,selectedYear||"Todos los años",weekLabel,selectedLabel]
+      .map(value=>'<span>'+esc(value)+'</span>').join('<span class="performance-selection-separator" aria-hidden="true">·</span>')+
+    '</span><strong class="performance-selection-total">'+
+    fmt.format(count)+' '+(count===1?"registro":"registros")+
+    ' de '+(detailMode==="labor"?"labor":"tiempos")+'</strong>';
   $("pResult").innerHTML='<h3 class="quality-heading">'+(detailMode==="labor"?"Registros de labor":"Tiempos consultados")+'</h3>'+
    (detailMode==="tiempos"?
      '<p class="page-description">Solo consulta: registros recogidos en otra aplicación. Todas las cantidades se muestran en horas. Desliza la tabla horizontalmente para ver las actividades y el tiempo efectivo.</p>':"")+
@@ -396,15 +434,12 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  buttons.forEach(b=>b.addEventListener("click",()=>{
   personMode=b.dataset.personMode;activate(buttons,"personMode",personMode);refresh();
  }));
- periods.forEach(b=>b.addEventListener("click",()=>{
-  periodMode=b.dataset.periodMode;activate(periods,"periodMode",periodMode);refresh();
- }));
  details.forEach(b=>b.addEventListener("click",()=>{
   detailMode=b.dataset.detailMode;activate(details,"detailMode",detailMode);refresh();
  }));
  worker.addEventListener("input",refresh);
- year.addEventListener("change",()=>{selectedYear=year.value;selectedWeek="";refresh()});
- week.addEventListener("change",()=>{selectedWeek=week.value;refresh()});
+ year.addEventListener("change",()=>{selectedYear=year.value;selectedWeek="";selectedDay="";refresh()});
+ week.addEventListener("change",()=>{selectedWeek=week.value;selectedDay="";refresh()});
  date.addEventListener("change",()=>{selectedDay=date.value;refresh()});
  refresh();
  return true;
