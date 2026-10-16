@@ -58,6 +58,25 @@
     .dash-controlgroup {display:flex;gap:10px;flex-wrap:wrap;align-items:end;}
     .dash-control-actions {display:flex;align-items:center;padding-left:12px;border-left:1px solid #e0e9e2;}
     .dash-control-actions button {font-size:.7rem;min-height:36px;padding:8px 11px;}
+    /* Indicadores de Calidad: filtros de períodos con multiselección. */
+    .dash-quality-fields{display:grid;grid-template-columns:repeat(2,minmax(155px,240px)) minmax(130px,200px);align-items:end;gap:12px;flex:1 1 450px;min-width:0}
+    .dash-quality-fields:not(:has(#dashRole)){grid-template-columns:repeat(2,minmax(155px,260px))}
+    .dash-quality-field{display:flex;flex-direction:column;gap:6px;min-width:0}
+    .dash-quality-label{font-size:.69rem;color:#465c50;font-weight:750}
+    .dash-quality-dropdown .q-filter-trigger{min-height:40px;box-sizing:border-box;padding:8px 32px 8px 11px}
+    .dash-quality-dropdown .q-filter-trigger strong{font-size:.75rem}
+    .dash-quality-dropdown.is-specific .q-filter-trigger{background:#cfe8d8;border-color:#97c2a7}
+    .dash-quality-dropdown .q-filter-popup{left:0;right:auto;transform:none;width:max(100%,285px);max-width:min(420px,calc(100vw - 44px))}
+    .dash-quality-fields>.dash-quality-field:nth-child(2) .q-filter-popup{left:auto;right:0}
+    .dash-quality-dropdown .q-check-options{max-height:210px;overflow-y:auto}
+    .dash-quality-dropdown .q-choice{flex:0 1 auto}
+    .dash-quality-dropdown .q-choice input{width:15px;max-width:15px;margin:0;padding:0}
+    .dash-quality-fields>label select{box-sizing:border-box;width:100%;max-width:none;min-height:40px}
+    .dash-quality-summary{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;margin-top:13px;padding-top:11px;border-top:1px solid #e0e9e2;color:#3d624c;font-size:.72rem}
+    .dash-quality-selected{flex:1 1 300px;min-width:0;overflow-wrap:anywhere;line-height:1.6}
+    .dash-quality-count{margin-left:auto;color:#145a38;font-weight:800;white-space:nowrap}
+    @media(max-width:720px){.dash-quality-fields,.dash-quality-fields:not(:has(#dashRole)){grid-template-columns:repeat(2,minmax(0,1fr));flex:1 1 100%}.dash-quality-fields>label{grid-column:1/-1}.dash-quality-count{margin-left:0}}
+    @media(max-width:480px){.dash-quality-dropdown .q-filter-popup{position:static;left:auto!important;right:auto!important;transform:none;width:100%;max-width:none;box-shadow:0 5px 14px rgba(24,64,40,.08);margin-top:5px}}
     .dash-controlgroup label { display:flex; flex-direction:column; gap:5px; font-size:.69rem; font-weight:700; color:#465c50; }
     .dash-controlgroup input,.dash-controlgroup select { background:#fff; padding:9px; border-radius:9px; border:1px solid var(--border); max-width:210px; font-size:.73rem; color:var(--text); }
     .dash-kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:14px 0 20px; }
@@ -1640,6 +1659,13 @@ function filterPeriod(rows,from,to,search){
  return rows.filter(r=>(!from||date(r)>=from)&&(!to||date(r)<=to)&&
   (!search||norm(workerName(r)+" "+workerCode(r)).includes(norm(search))));
 }
+function filterIndicatorQualityPeriods(rows,years,weeks){
+ return rows.filter(r=>{
+  const weekKey=isoWeek(r);if(!weekKey)return false;
+  return (years===null||years.has(Number(weekKey.slice(0,4))))&&
+   (weeks===null||weeks.has(Number(weekKey.slice(-2))));
+ });
+}
 function metric(label,value,sub=""){
  return '<div class="kpi-card"><span>'+clean(label)+'</span><strong>'+clean(value)+'</strong>'+
   (sub?'<small>'+clean(sub)+'</small>':"")+'</div>';
@@ -1905,18 +1931,70 @@ function render({areaId,mod,view,panel,getRecords,selectedVariant=null,allowedGr
  let demo=view==="rendimiento"?!realLabor.length:view==="calidad"?!currentQuality.length:
   !realLabor.length&&!currentQuality.length;
  let currentRole=roleIDs[0]??"";
- panel.innerHTML='<div class="dash-filter-panel">'+
-   '<span class="dash-filter-caption">FILTRAR INDICADORES</span>'+
-   '<div class="dash-controlbar"><div class="dash-controlgroup">'+
-   '<label>Desde<input type="date" id="dashFrom"></label><label>Hasta<input type="date" id="dashTo"></label>'+
-   '<label>Colaborador<input type="search" id="dashWorker" placeholder="Nombre o código"></label>'+
-   (view==="rendimiento"||roleIDs.length<=1?"":'<label>Modalidad<select id="dashRole">'+roleIDs.map(id=>
-    '<option value="'+clean(id)+'">'+clean(roles[id].label)+'</option>').join("")+'</select></label>')+
-   '</div><div class="dash-control-actions"><button type="button" class="btn-secondary" id="dashDemoButton">Ver registros reales</button></div></div></div>'+
-   '<div id="dashFeedback"></div><div id="dashContents"></div>';
- const find=id=>panel.querySelector("#"+id),
- from=find("dashFrom"),to=find("dashTo"),worker=find("dashWorker"),
- role=find("dashRole"),msg=find("dashFeedback"),output=find("dashContents"),switcher=find("dashDemoButton");
+ const roleMarkup=view==="rendimiento"||roleIDs.length<=1?"":'<label>Modalidad<select id="dashRole">'+
+   roleIDs.map(id=>'<option value="'+clean(id)+'">'+clean(roles[id].label)+'</option>').join("")+'</select></label>';
+ const qDropdown=(id,label)=>'<div class="dash-quality-field"><span class="dash-quality-label">'+label+'</span>'+
+  '<details class="q-filter-dropdown dash-quality-dropdown" id="dashQuality'+id+'Drop">'+
+  '<summary class="q-filter-trigger"><strong id="dashQuality'+id+'Text">Todos</strong></summary>'+
+  '<div class="q-filter-popup"><div class="q-select-actions">'+
+  '<button type="button" id="dashQuality'+id+'All">Todos</button>'+
+  '<button type="button" id="dashQuality'+id+'None">Limpiar</button></div>'+
+  '<div id="dashQuality'+id+'Options" class="q-check-options"></div></div></details></div>';
+ const filterMarkup=view==="calidad"?
+  '<div class="dash-filter-panel dash-quality-panel">'+
+  '<span class="dash-filter-caption">FILTRAR INDICADORES DE CALIDAD</span>'+
+  '<div class="dash-controlbar"><div class="dash-quality-fields">'+
+  qDropdown("Years","Años")+qDropdown("Weeks","Semanas")+roleMarkup+'</div>'+
+  '<div class="dash-control-actions"><button type="button" class="btn-secondary" id="dashDemoButton">Ver registros reales</button></div></div>'+
+  '<div class="dash-quality-summary" id="dashQualitySummary" role="status" aria-live="polite" aria-atomic="true"></div></div>':
+  '<div class="dash-filter-panel"><span class="dash-filter-caption">FILTRAR INDICADORES</span>'+
+  '<div class="dash-controlbar"><div class="dash-controlgroup">'+
+  '<label>Desde<input type="date" id="dashFrom"></label><label>Hasta<input type="date" id="dashTo"></label>'+
+  '<label>Colaborador<input type="search" id="dashWorker" placeholder="Nombre o código"></label>'+
+  roleMarkup+'</div><div class="dash-control-actions">'+
+  '<button type="button" class="btn-secondary" id="dashDemoButton">Ver registros reales</button></div></div></div>';
+ panel.innerHTML=filterMarkup+'<div id="dashFeedback"></div><div id="dashContents"></div>';
+ const find=id=>panel.querySelector("#"+id),dummy=()=>({value:"",addEventListener(){}});
+ const from=find("dashFrom")??dummy(),to=find("dashTo")??dummy(),worker=find("dashWorker")??dummy(),
+  role=find("dashRole"),msg=find("dashFeedback"),output=find("dashContents"),switcher=find("dashDemoButton");
+ let yearsSelection=null,weeksSelection=null;
+ const yearsMenu=view==="calidad"?find("dashQualityYearsDrop"):null,
+  weeksMenu=view==="calidad"?find("dashQualityWeeksDrop"):null,
+  yearsOptions=view==="calidad"?find("dashQualityYearsOptions"):null,
+  weeksOptions=view==="calidad"?find("dashQualityWeeksOptions"):null,
+  yearsText=view==="calidad"?find("dashQualityYearsText"):null,
+  weeksText=view==="calidad"?find("dashQualityWeeksText"):null,
+  summary=view==="calidad"?find("dashQualitySummary"):null;
+ const selectedFrom= (element,type)=>{
+  const all=[...element.querySelectorAll('input[data-dash-choice="'+type+'"]')];
+  const chosen=all.filter(c=>c.checked).map(c=>Number(c.value));
+  return all.length&&chosen.length===all.length?null:new Set(chosen);
+ };
+ const showChoices=(element,type,values,selection,label)=>{
+  element.innerHTML=values.map(value=>'<label class="q-choice"><input type="checkbox" data-dash-choice="'+type+
+   '" value="'+value+'"'+(selection===null||selection.has(value)?' checked':'')+
+   '><span>'+clean(label(value))+'</span></label>').join("");
+ };
+ const syncPeriods=quality=>{
+  const eligible=qualityRows(mod.id,quality,currentRole,"","","").rows;
+  const weekCodes=[...new Set(eligible.map(isoWeek).filter(Boolean))];
+  const availableYears=[...new Set(weekCodes.map(k=>Number(k.slice(0,4))))].sort((a,b)=>a-b);
+  if(yearsSelection!==null)yearsSelection=new Set([...yearsSelection].filter(y=>availableYears.includes(y)));
+  const availableWeeks=[...new Set(weekCodes.filter(k=>yearsSelection===null||
+    yearsSelection.has(Number(k.slice(0,4)))).map(k=>Number(k.slice(-2))))].sort((a,b)=>a-b);
+  if(weeksSelection!==null)weeksSelection=new Set([...weeksSelection].filter(w=>availableWeeks.includes(w)));
+  showChoices(yearsOptions,"year",availableYears,yearsSelection,y=>String(y));
+  showChoices(weeksOptions,"week",availableWeeks,weeksSelection,w=>"Semana "+String(w).padStart(2,"0"));
+  const displayedYears=yearsSelection===null?availableYears:[...yearsSelection].sort((a,b)=>a-b);
+  const displayedWeeks=weeksSelection===null?availableWeeks:[...weeksSelection].sort((a,b)=>a-b);
+  yearsText.textContent=yearsSelection===null?"Todos los años":!displayedYears.length?"Ningún año":
+   displayedYears.length===1?String(displayedYears[0]):displayedYears.length+" años";
+  weeksText.textContent=weeksSelection===null?"Todas las semanas":!displayedWeeks.length?"Ninguna semana":
+   displayedWeeks.length===1?"Semana "+String(displayedWeeks[0]).padStart(2,"0"):displayedWeeks.length+" semanas";
+  yearsMenu.classList.toggle("is-specific",yearsSelection!==null&&yearsSelection.size>0);
+  weeksMenu.classList.toggle("is-specific",weeksSelection!==null&&weeksSelection.size>0);
+  return {displayedYears,displayedWeeks};
+ };
  const renderNow=()=>{
   const labor=filterPeriod(enrichedLabor(mod.id,demo?fakeLabor:realLabor,demo?fakeTimes:realTimes),
    from.value,to.value,worker.value);
@@ -1927,12 +2005,47 @@ function render({areaId,mod,view,panel,getRecords,selectedVariant=null,allowedGr
   switcher.textContent=demo?"Ver registros reales":"Ver datos de prueba";
   if(role&&role.value&&Object.prototype.hasOwnProperty.call(roles,role.value))currentRole=role.value;
   if(view==="rendimiento")output.innerHTML=sectionRend(mod.id,labor);
-  else if(view==="calidad")output.innerHTML=sectionQuality(mod.id,quality,currentRole,from.value,to.value,worker.value);
+  else if(view==="calidad"){
+   const {displayedYears,displayedWeeks}=syncPeriods(quality);
+   const filtered=filterIndicatorQualityPeriods(quality,yearsSelection,weeksSelection);
+   const result=qualityRows(mod.id,filtered,currentRole,"","","");
+   summary.innerHTML='<span class="performance-selection-caption">CONSULTA ACTUAL</span>'+
+    '<span class="dash-quality-selected">'+
+    clean(displayedYears.length?"Años: "+displayedYears.join(", "):"Ningún año")+' · '+
+    clean(displayedWeeks.length?"Semanas: "+displayedWeeks.map(w=>"Semana "+String(w).padStart(2,"0")).join(", "):"Ninguna semana")+
+    '</span><strong class="dash-quality-count">'+nf.format(result.rows.length)+
+    (result.rows.length===1?" evaluación":" evaluaciones")+'</strong>';
+   msg.innerHTML=sharedNotice(demo,!demo&&!result.rows.length?
+    "No hay evaluaciones reales para los años, semanas y modalidad seleccionados.":"");
+   output.innerHTML=sectionQuality(mod.id,filtered,currentRole,"","","");
+  }
   else output.innerHTML=summarySection(mod.id,labor,quality,currentRole,from.value,to.value,worker.value);
  };
- [from,to,worker].forEach(input=>input.addEventListener("input",renderNow));
- if(role)role.addEventListener("change",renderNow);
- switcher.addEventListener("click",()=>{demo=!demo;renderNow()});
+ if(view==="calidad"){
+  [yearsMenu,weeksMenu].forEach(menu=>menu.addEventListener("toggle",()=>{
+   if(menu.open)[yearsMenu,weeksMenu].forEach(other=>{if(menu!==other)other.open=false});
+  }));
+  yearsOptions.addEventListener("change",()=>{yearsSelection=selectedFrom(yearsOptions,"year");renderNow()});
+  weeksOptions.addEventListener("change",()=>{weeksSelection=selectedFrom(weeksOptions,"week");renderNow()});
+  for(const [id,kind,all] of [
+   ["dashQualityYearsAll","year",true],["dashQualityYearsNone","year",false],
+   ["dashQualityWeeksAll","week",true],["dashQualityWeeksNone","week",false]
+  ])find(id).addEventListener("click",()=>{
+   const next=all?null:new Set();
+   if(kind==="year")yearsSelection=next;
+   else weeksSelection=next;
+   renderNow();
+  });
+ }else [from,to,worker].forEach(input=>input.addEventListener("input",renderNow));
+ if(role)role.addEventListener("change",()=>{
+  if(view==="calidad"){yearsSelection=null;weeksSelection=null;}
+  renderNow();
+ });
+ switcher.addEventListener("click",()=>{
+  demo=!demo;
+  if(view==="calidad"){yearsSelection=null;weeksSelection=null;}
+  renderNow();
+ });
  renderNow();return true;
 }
 window.ProductionIndicators={render,isoWeek,qualityRole,failuresOf,bandejasTimeHours,qualityData,
