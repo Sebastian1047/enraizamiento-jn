@@ -142,7 +142,7 @@
     .q-modebar .q-mode-btn {display:inline-flex;align-items:center;justify-content:center;min-height:39px;padding:9px 17px;border:1px solid #d9e5dd;border-radius:9px;background:#f4f7f5;color:#587063;font:inherit;font-size:.77rem;font-weight:750;cursor:pointer;transition:background-color .18s,border-color .18s,color .18s,box-shadow .18s;}
     .q-modebar .q-mode-btn:hover:not(.active) {background:#e6f4e9;border-color:#bdd6c4;color:#17643f;}
     .q-modebar .q-mode-btn.active,
-    .q-modebar .q-mode-btn[aria-pressed="true"] {background:#b9f5b0;border-color:#7edc72;color:#145a32;box-shadow:0 0 0 2px rgba(126,220,114,.18);}
+    .q-modebar .q-mode-btn[aria-pressed="true"] {background:#b9f5b0!important;border:1px solid #7edc72!important;color:#145a32!important;box-shadow:0 0 0 2px rgba(126,220,114,.18)!important;}
     .q-modebar .q-mode-btn.active:hover {background:#aaf2a1;}
     .q-mode-btn:focus-visible,.q-select-actions button:focus-visible {outline:2px solid var(--green);outline-offset:2px}
     #qExplorePane[hidden],#qReportPane[hidden] {display:none !important}
@@ -1124,8 +1124,12 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  '<div id="qReport"></div>';
  const reportMarkup=panel.innerHTML;
  panel.innerHTML='<nav class="q-modebar" aria-label="Vista de Calidad">'+
- '<button type="button" id="qAnalysisButton" class="q-mode-btn active" aria-pressed="true">Análisis comparativo</button>'+
- '<button type="button" id="qReportButton" class="q-mode-btn" aria-pressed="false">Informe</button></nav>'+
+ '<button type="button" id="qAnalysisButton" class="q-mode-btn active" aria-pressed="true" '+
+ 'style="background:#b9f5b0!important;color:#145a32!important;border:1px solid #7edc72!important;'+
+ 'border-radius:9px!important;padding:9px 17px!important;">Análisis comparativo</button>'+
+ '<button type="button" id="qReportButton" class="q-mode-btn" aria-pressed="false" '+
+ 'style="background:#f4f7f5!important;color:#587063!important;border:1px solid #d9e5dd!important;'+
+ 'border-radius:9px!important;padding:9px 17px!important;">Informe</button></nav>'+
  '<section id="qExplorePane" class="q-explore-pane">'+
    '<div class="q-explore-header"><div><h3>Comparar evaluaciones de calidad</h3>'+
    '<p>Selecciona varios años, semanas e ítems para comparar la conformidad en distintos momentos.</p></div>'+
@@ -1318,13 +1322,25 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  const variantButtons=[...panel.querySelectorAll("[data-quality-variant]")];
  let selectedYears=undefined,selectedWeeks=undefined,selectedDays=null,
   selectedItems=new Set(),personMode="grupal";
+ function styleModeButton(button,selected){
+  button.classList.toggle("active",selected);
+  button.setAttribute("aria-pressed",String(selected));
+  const css=button.style;
+  css.setProperty("background-color",selected?"#b9f5b0":"#f4f7f5","important");
+  css.setProperty("color",selected?"#145a32":"#587063","important");
+  css.setProperty("border",selected?"1px solid #7edc72":"1px solid #d9e5dd","important");
+  css.setProperty("border-radius","9px","important");
+  css.setProperty("padding","9px 17px","important");
+  css.setProperty("min-height","39px","important");
+  css.setProperty("box-shadow",selected?"0 0 0 2px rgba(126,220,114,.18)":"none","important");
+  css.setProperty("border-bottom-width","1px","important");
+  css.setProperty("text-decoration","none","important");
+ }
  function showMode(mode){
   const report=mode==="informe";
   xp.hidden=report;rp.hidden=!report;
-  xa.classList.toggle("active",!report);
-  xi.classList.toggle("active",report);
-  xa.setAttribute("aria-pressed",String(!report));
-  xi.setAttribute("aria-pressed",String(report));
+  styleModeButton(xa,!report);
+  styleModeButton(xi,report);
   if(report)refresh();else exploreResult();
  }
  xa.addEventListener("click",()=>showMode("analisis"));
@@ -1558,6 +1574,8 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  }
  syncExplore=renderChoices;
  periods();refresh();renderChoices(true);
+ styleModeButton(xa,true);
+ styleModeButton(xi,false);
 
 }
 window.QualityReports={render,calc,evaluate,analyzeComparison,config:CONFIG,sampleQualityRecords,demoItems};

@@ -573,8 +573,12 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  '<div id="qReport"></div>';
  const reportMarkup=panel.innerHTML;
  panel.innerHTML='<nav class="q-modebar" aria-label="Vista de Calidad">'+
- '<button type="button" id="qAnalysisButton" class="q-mode-btn active" aria-pressed="true">Análisis comparativo</button>'+
- '<button type="button" id="qReportButton" class="q-mode-btn" aria-pressed="false">Informe</button></nav>'+
+ '<button type="button" id="qAnalysisButton" class="q-mode-btn active" aria-pressed="true" '+
+ 'style="background:#b9f5b0!important;color:#145a32!important;border:1px solid #7edc72!important;'+
+ 'border-radius:9px!important;padding:9px 17px!important;">Análisis comparativo</button>'+
+ '<button type="button" id="qReportButton" class="q-mode-btn" aria-pressed="false" '+
+ 'style="background:#f4f7f5!important;color:#587063!important;border:1px solid #d9e5dd!important;'+
+ 'border-radius:9px!important;padding:9px 17px!important;">Informe</button></nav>'+
  '<section id="qExplorePane" class="q-explore-pane">'+
    '<div class="q-explore-header"><div><h3>Comparar evaluaciones de calidad</h3>'+
    '<p>Selecciona varios años, semanas e ítems para comparar la conformidad en distintos momentos.</p></div>'+
@@ -767,13 +771,25 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  const variantButtons=[...panel.querySelectorAll("[data-quality-variant]")];
  let selectedYears=undefined,selectedWeeks=undefined,selectedDays=null,
   selectedItems=new Set(),personMode="grupal";
+ function styleModeButton(button,selected){
+  button.classList.toggle("active",selected);
+  button.setAttribute("aria-pressed",String(selected));
+  const css=button.style;
+  css.setProperty("background-color",selected?"#b9f5b0":"#f4f7f5","important");
+  css.setProperty("color",selected?"#145a32":"#587063","important");
+  css.setProperty("border",selected?"1px solid #7edc72":"1px solid #d9e5dd","important");
+  css.setProperty("border-radius","9px","important");
+  css.setProperty("padding","9px 17px","important");
+  css.setProperty("min-height","39px","important");
+  css.setProperty("box-shadow",selected?"0 0 0 2px rgba(126,220,114,.18)":"none","important");
+  css.setProperty("border-bottom-width","1px","important");
+  css.setProperty("text-decoration","none","important");
+ }
  function showMode(mode){
   const report=mode==="informe";
   xp.hidden=report;rp.hidden=!report;
-  xa.classList.toggle("active",!report);
-  xi.classList.toggle("active",report);
-  xa.setAttribute("aria-pressed",String(!report));
-  xi.setAttribute("aria-pressed",String(report));
+  styleModeButton(xa,!report);
+  styleModeButton(xi,report);
   if(report)refresh();else exploreResult();
  }
  xa.addEventListener("click",()=>showMode("analisis"));
@@ -1007,6 +1023,8 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  }
  syncExplore=renderChoices;
  periods();refresh();renderChoices(true);
+ styleModeButton(xa,true);
+ styleModeButton(xi,false);
 
 }
 window.QualityReports={render,calc,evaluate,analyzeComparison,config:CONFIG,sampleQualityRecords,demoItems};
