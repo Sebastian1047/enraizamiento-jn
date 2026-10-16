@@ -1940,9 +1940,9 @@ function render({areaId,mod,view,panel,getRecords,selectedVariant=null,allowedGr
   '<button type="button" id="dashQuality'+id+'All">Todos</button>'+
   '<button type="button" id="dashQuality'+id+'None">Limpiar</button></div>'+
   '<div id="dashQuality'+id+'Options" class="q-check-options"></div></div></details></div>';
- const filterMarkup=view==="calidad"?
+ const filterMarkup=(view==="calidad"||view==="resumen")?
   '<div class="dash-filter-panel dash-quality-panel">'+
-  '<span class="dash-filter-caption">FILTRAR INDICADORES DE CALIDAD</span>'+
+  '<span class="dash-filter-caption">'+(view==="calidad"?"FILTRAR INDICADORES DE CALIDAD":"FILTRAR RESUMEN EJECUTIVO")+'</span>'+
   '<div class="dash-controlbar"><div class="dash-quality-fields">'+
   qDropdown("Years","Años")+qDropdown("Weeks","Semanas")+roleMarkup+'</div>'+
   '<div class="dash-control-actions"><button type="button" class="btn-secondary" id="dashDemoButton">Ver registros reales</button></div></div>'+
@@ -1958,13 +1958,14 @@ function render({areaId,mod,view,panel,getRecords,selectedVariant=null,allowedGr
  const from=find("dashFrom")??dummy(),to=find("dashTo")??dummy(),worker=find("dashWorker")??dummy(),
   role=find("dashRole"),msg=find("dashFeedback"),output=find("dashContents"),switcher=find("dashDemoButton");
  let yearsSelection=null,weeksSelection=null;
- const yearsMenu=view==="calidad"?find("dashQualityYearsDrop"):null,
-  weeksMenu=view==="calidad"?find("dashQualityWeeksDrop"):null,
-  yearsOptions=view==="calidad"?find("dashQualityYearsOptions"):null,
-  weeksOptions=view==="calidad"?find("dashQualityWeeksOptions"):null,
-  yearsText=view==="calidad"?find("dashQualityYearsText"):null,
-  weeksText=view==="calidad"?find("dashQualityWeeksText"):null,
-  summary=view==="calidad"?find("dashQualitySummary"):null;
+ const periodicDashboard=view==="calidad"||view==="resumen";
+ const yearsMenu=periodicDashboard?find("dashQualityYearsDrop"):null,
+  weeksMenu=periodicDashboard?find("dashQualityWeeksDrop"):null,
+  yearsOptions=periodicDashboard?find("dashQualityYearsOptions"):null,
+  weeksOptions=periodicDashboard?find("dashQualityWeeksOptions"):null,
+  yearsText=periodicDashboard?find("dashQualityYearsText"):null,
+  weeksText=periodicDashboard?find("dashQualityWeeksText"):null,
+  summary=periodicDashboard?find("dashQualitySummary"):null;
  const selectedFrom= (element,type)=>{
   const all=[...element.querySelectorAll('input[data-dash-choice="'+type+'"]')];
   const chosen=all.filter(c=>c.checked).map(c=>Number(c.value));
@@ -1975,9 +1976,10 @@ function render({areaId,mod,view,panel,getRecords,selectedVariant=null,allowedGr
    '" value="'+value+'"'+(selection===null||selection.has(value)?' checked':'')+
    '><span>'+clean(label(value))+'</span></label>').join("");
  };
- const syncPeriods=quality=>{
+ const syncPeriods=(quality,labor=[])=>{
   const eligible=qualityRows(mod.id,quality,currentRole,"","","").rows;
-  const weekCodes=[...new Set(eligible.map(isoWeek).filter(Boolean))];
+  // El Resumen ejecutivo incluye semanas con producción aunque todavía no haya evaluación.
+  const weekCodes=[...new Set([...eligible,...labor].map(isoWeek).filter(Boolean))];
   const availableYears=[...new Set(weekCodes.map(k=>Number(k.slice(0,4))))].sort((a,b)=>a-b);
   if(yearsSelection!==null)yearsSelection=new Set([...yearsSelection].filter(y=>availableYears.includes(y)));
   const availableWeeks=[...new Set(weekCodes.filter(k=>yearsSelection===null||
@@ -2005,23 +2007,32 @@ function render({areaId,mod,view,panel,getRecords,selectedVariant=null,allowedGr
   switcher.textContent=demo?"Ver registros reales":"Ver datos de prueba";
   if(role&&role.value&&Object.prototype.hasOwnProperty.call(roles,role.value))currentRole=role.value;
   if(view==="rendimiento")output.innerHTML=sectionRend(mod.id,labor);
-  else if(view==="calidad"){
-   const {displayedYears,displayedWeeks}=syncPeriods(quality);
-   const filtered=filterIndicatorQualityPeriods(quality,yearsSelection,weeksSelection);
-   const result=qualityRows(mod.id,filtered,currentRole,"","","");
+  else if(periodicDashboard){
+   const {displayedYears,displayedWeeks}=syncPeriods(quality,view==="resumen"?labor:[]);
+   const filteredQuality=filterIndicatorQualityPeriods(quality,yearsSelection,weeksSelection);
+   const result=qualityRows(mod.id,filteredQuality,currentRole,"","","");
+   const filteredLabor=view==="resumen"?
+    filterIndicatorQualityPeriods(labor,yearsSelection,weeksSelection):[];
    summary.innerHTML='<span class="performance-selection-caption">CONSULTA ACTUAL</span>'+
     '<span class="dash-quality-selected">'+
     clean(displayedYears.length?"Años: "+displayedYears.join(", "):"Ningún año")+' · '+
     clean(displayedWeeks.length?"Semanas: "+displayedWeeks.map(w=>"Semana "+String(w).padStart(2,"0")).join(", "):"Ninguna semana")+
-    '</span><strong class="dash-quality-count">'+nf.format(result.rows.length)+
+    '</span><strong class="dash-quality-count">'+
+    (view==="resumen"?
+     nf.format(filteredLabor.length)+" registros de labor · "+nf.format(result.rows.length):
+     nf.format(result.rows.length))+
     (result.rows.length===1?" evaluación":" evaluaciones")+'</strong>';
-   msg.innerHTML=sharedNotice(demo,!demo&&!result.rows.length?
-    "No hay evaluaciones reales para los años, semanas y modalidad seleccionados.":"");
-   output.innerHTML=sectionQuality(mod.id,filtered,currentRole,"","","");
+   const missing=view==="resumen"?
+    !filteredLabor.length&&!result.rows.length:
+    !result.rows.length;
+   msg.innerHTML=sharedNotice(demo,!demo&&missing?
+    "No hay datos reales para los años, semanas y modalidad seleccionados.":"");
+   output.innerHTML=view==="calidad"?
+    sectionQuality(mod.id,filteredQuality,currentRole,"","",""):
+    summarySection(mod.id,filteredLabor,filteredQuality,currentRole,"","","");
   }
-  else output.innerHTML=summarySection(mod.id,labor,quality,currentRole,from.value,to.value,worker.value);
  };
- if(view==="calidad"){
+ if(periodicDashboard){
   [yearsMenu,weeksMenu].forEach(menu=>menu.addEventListener("toggle",()=>{
    if(menu.open)[yearsMenu,weeksMenu].forEach(other=>{if(menu!==other)other.open=false});
   }));
@@ -2038,12 +2049,12 @@ function render({areaId,mod,view,panel,getRecords,selectedVariant=null,allowedGr
   });
  }else [from,to,worker].forEach(input=>input.addEventListener("input",renderNow));
  if(role)role.addEventListener("change",()=>{
-  if(view==="calidad"){yearsSelection=null;weeksSelection=null;}
+  if(periodicDashboard){yearsSelection=null;weeksSelection=null;}
   renderNow();
  });
  switcher.addEventListener("click",()=>{
   demo=!demo;
-  if(view==="calidad"){yearsSelection=null;weeksSelection=null;}
+  if(periodicDashboard){yearsSelection=null;weeksSelection=null;}
   renderNow();
  });
  renderNow();return true;
