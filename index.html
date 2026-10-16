@@ -434,10 +434,11 @@
     /* Nivel 4: Labor/Tiempos identifica qué resultados se están consultando. */
     .performance-result-heading {display:flex;align-items:center;gap:17px;flex-wrap:wrap;margin:17px 0 0;padding:0 0 9px;border-bottom:1px solid #e2eae4;}
     .performance-result-heading .performance-field-caption {letter-spacing:.055em;font-size:.65rem;}
-    .performance-detail-nav {display:flex;align-items:center;gap:18px;}
-    .performance-detail-nav button {min-height:36px;padding:8px 3px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:#718477;font:inherit;font-size:.77rem;font-weight:750;cursor:pointer;}
-    .performance-detail-nav button:hover {color:#17643f;}
-    .performance-detail-nav button.active {color:#17643f;border-bottom-color:#228451;}
+    .performance-detail-nav {display:flex;align-items:center;gap:8px;}
+    .performance-detail-nav button {min-height:39px;padding:9px 17px;border:1px solid #d9e5dd;border-radius:9px;background:#f4f7f5;color:#587063;font:inherit;font-size:.77rem;font-weight:750;cursor:pointer;transition:background-color .18s,border-color .18s,color .18s,box-shadow .18s;}
+    .performance-detail-nav button:hover:not(.active) {background:#e6f4e9;border-color:#bdd6c4;color:#17643f;}
+    .performance-detail-nav button.active {background:#b9f5b0;border-color:#7edc72;color:#145a32;box-shadow:0 0 0 2px rgba(126,220,114,.18);}
+    .performance-detail-nav button.active:hover {background:#aaf2a1;}
     .performance-controls .module-notice {border:0;border-radius:0;background:transparent;margin:9px 0 4px;padding:0;color:#728378;font-size:.68rem;line-height:1.55;}
     .performance-controls .module-summary {margin:15px 0;gap:10px;}
     .performance-controls .module-stat {padding:13px 15px;min-height:0;}
