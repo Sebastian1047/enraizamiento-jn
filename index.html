@@ -2019,7 +2019,7 @@ function render({areaId,mod,view,panel,getRecords,selectedVariant=null,allowedGr
     clean(displayedWeeks.length?"Semanas: "+displayedWeeks.map(w=>"Semana "+String(w).padStart(2,"0")).join(", "):"Ninguna semana")+
     '</span><strong class="dash-quality-count">'+
     (view==="resumen"?
-     nf.format(filteredLabor.length)+" registros de labor · "+nf.format(result.rows.length):
+     nf.format(filteredLabor.length)+(filteredLabor.length===1?" registro de labor · ":" registros de labor · ")+nf.format(result.rows.length):
      nf.format(result.rows.length))+
     (result.rows.length===1?" evaluación":" evaluaciones")+'</strong>';
    const missing=view==="resumen"?
