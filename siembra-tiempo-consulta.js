@@ -26,76 +26,55 @@ function qty(r){
  return lines!==null&&density!==null?lines*density:null;
 }
 function render(labor,times){
- const people=new Map(),byDay=new Map();
- const person=r=>{
-  const key=id(r);if(!key)return null;
-  if(!people.has(key))people.set(key,{key,name:name(r),qty:0,hasQty:false,hours:0,hasHours:false,entries:[]});
-  const item=people.get(key),label=name(r);
-  if(label&&label!==key&&(item.name===key||!item.name))item.name=label;
-  return item;
- };
- labor.forEach(r=>{const p=person(r);if(!p)return;const count=qty(r);if(count!==null){p.qty+=count;p.hasQty=true}});
- times.forEach(r=>{const p=person(r);if(!p||!date(r))return;
-  const key=date(r)+"|"+id(r),prev=byDay.get(key);
-  if(!prev||String(r.updatedAt??r.createdAt??"")>=String(prev.updatedAt??prev.createdAt??""))
-   byDay.set(key,r);
- });
- byDay.forEach(t=>{const p=person(t);if(!p)return;p.entries.push(t);const net=values(t).real;
-  if(net!==null){p.hours+=net/60;p.hasHours=true}
- });
- const workers=[...people.values()].sort((a,b)=>a.name.localeCompare(b.name,"es"));
- const paired=workers.filter(p=>p.hasQty&&p.hasHours&&p.hours>0);
- const total=workers.reduce((s,p)=>s+(p.hasQty?p.qty:0),0);
- const sumOfMeans=paired.reduce((s,p)=>s+p.qty/p.hours,0);
- const pairedHours=paired.reduce((s,p)=>s+p.hours,0);
- const groupRate=pairedHours>0?paired.reduce((s,p)=>s+p.qty,0)/pairedHours:null;
- const cards=[
-  ["Total esquejes",format.format(total),"Total del período"],
-  ["Suma de promedios",paired.length?format.format(sumOfMeans):"—","Esquejes/hora individuales"],
-  ["Rendimiento grupal",groupRate===null?"—":format.format(groupRate),"Esquejes por hora efectiva"]
- ].map(([label,value,desc])=>'<div class="siembra-time-kpi"><span>'+esc(label)+'</span><strong>'+
-  esc(value)+'</strong><small>'+esc(desc)+'</small></div>').join("");
- const measure=(label,val)=>'<div class="siembra-time-field"><span>'+esc(label)+'</span><strong>'+esc(hour(val))+'</strong></div>';
- const workerRows=workers.map(p=>{
-  const workerRate=p.hasQty&&p.hasHours&&p.hours>0?format.format(p.qty/p.hours):"—";
-  const records=p.entries.sort((a,b)=>date(b).localeCompare(date(a)));
-  const detail=records.length?records.map(t=>{
-   const v=values(t);
-   const inputs=[["Tiempo programado",v.base],["Horas extra",v.extra],["Pausas",n(t.pausasMin)],
-    ["Incapacidad",n(t.incapacidadMin)],["Cambio de labor",n(t.cambioLaborMin)],
-    ["Capacitación",n(t.capacitacionMin)],["Vacaciones",n(t.vacacionesMin)],
-    ["Examen médico",n(t.examenMedicoMin)],["Otros",v.other],["Descuento",n(t.descuentoMin)]];
-   const origin=String(t.modalidadRegistro??"");
-   const label=origin==="grupal"?"Tiempo grupal":origin==="individual"?"Tiempo individual":"Registro de tiempos";
-   return '<section class="siembra-time-day"><div class="siembra-time-day-title"><b>'+esc(date(t))+'</b><span>'+
-    esc(label)+'</span></div><div class="siembra-time-grid">'+
-    inputs.map(([key,value])=>measure(key,value)).join("")+'</div>'+
-    '<div class="siembra-time-bottom">'+
-    measure("Tiempo disponible",v.available)+measure("Total descuentos",v.deductions)+
-    '<div class="siembra-time-field siembra-time-net"><span>Tiempo efectivo de la labor</span><strong>'+
-    esc(hour(v.real))+'</strong></div></div>'+
-    (t.observaciones?'<p class="siembra-time-obs"><b>Observaciones:</b> '+esc(t.observaciones)+'</p>':"")+
-    '</section>';
-  }).join(""):'<p class="siembra-time-no-entries">No hay tiempos guardados para este colaborador durante el período.</p>';
-  return '<details class="siembra-time-person"><summary class="siembra-time-row">'+
-   '<span class="siembra-time-person-name"><b>'+esc(p.name)+'</b><small>'+esc(p.key)+'</small><em>Ver tiempos</em></span>'+
-   '<span>'+esc(p.hasQty?format.format(p.qty):"—")+'</span>'+
-   '<span>'+esc(p.hasHours?format.format(p.hours)+" h":"—")+'</span>'+
-   '<span class="siembra-time-rate">'+esc(workerRate)+'</span></summary>'+
-   '<div class="siembra-time-details">'+detail+'</div></details>';
+ const people=new Map(),dedup=new Map();
+ const ensure=r=>{const key=id(r);if(!key)return null;if(!people.has(key))people.set(key,{key,name:name(r),labor:[],times:[]});const p=people.get(key);if(name(r)&&name(r)!==key)p.name=name(r);return p;};
+ labor.forEach(r=>ensure(r)?.labor.push(r));
+ times.forEach(r=>{const p=ensure(r);if(!p||!date(r))return;const key=p.key+"|"+date(r),prior=dedup.get(key);if(!prior||String(r.updatedAt??r.createdAt??"")>=String(prior.updatedAt??prior.createdAt??""))dedup.set(key,r)});
+ dedup.forEach(r=>ensure(r)?.times.push(r));
+ const records=[...people.values()].sort((a,b)=>a.name.localeCompare(b.name,"es"));
+ const percent=v=>Math.max(0,Math.min(100,v));
+ const bars=(label,val,max)=>'<div class="siembra-demo-meter"><span>'+esc(label)+'</span><i><b style="width:'+percent(max>0?val/max*100:0).toFixed(1)+'%"></b></i><strong>'+esc(hour(val))+'</strong></div>';
+ const summaries=records.map(p=>{
+  const results=p.times.map(values),programmed=results.reduce((z,v)=>z+(v.base??0),0),
+    available=results.reduce((z,v)=>z+(v.available??0),0),
+    effective=results.reduce((z,v)=>z+(v.real??0),0), qtyTotal=p.labor.reduce((z,r)=>z+(qty(r)??0),0);
+  const byDate=new Map();
+  p.times.forEach(t=>{const d=date(t);if(!byDate.has(d))byDate.set(d,[]);byDate.get(d).push(t)});
+  const details=[...byDate].sort((a,b)=>b[0].localeCompare(a[0])).map(([d,ts])=>
+    '<div class="siembra-demo-date"><div class="siembra-demo-date-title">▾ '+esc(d.split("-").reverse().join("/"))+
+    ' — Programado '+esc(hour(ts.reduce((z,t)=>z+(values(t).base??0),0)))+
+    ' · Disponible '+esc(hour(ts.reduce((z,t)=>z+(values(t).available??0),0)))+
+    ' · Efectivo '+esc(hour(ts.reduce((z,t)=>z+(values(t).real??0),0)))+'</div>'+
+    ts.map((t,i)=>{const v=values(t);const fields=[["Tiempo programado",v.base],["Horas extra",v.extra],["Pausas",n(t.pausasMin)],["Incapacidad",n(t.incapacidadMin)],["Cambio de labor",n(t.cambioLaborMin)],["Capacitación",n(t.capacitacionMin)],["Vacaciones",n(t.vacacionesMin)],["Examen médico",n(t.examenMedicoMin)],["Otros",v.other],["Descuento",n(t.descuentoMin)]];
+    return '<div class="siembra-demo-entry"><div class="siembra-demo-entry-header"><strong>Registro #'+(i+1)+'</strong><span>'+esc(t.modalidadRegistro==="grupal"?"Tiempo grupal":t.modalidadRegistro==="individual"?"Tiempo individual":"Tiempo registrado")+'</span></div>'+
+      '<div class="siembra-demo-fields">'+fields.map(([k,m])=>'<div><small>'+esc(k)+'</small><b>'+esc(hour(m))+'</b></div>').join("")+'</div>'+
+      '<div class="siembra-demo-totals"><span>Tiempo disponible: <b>'+esc(hour(v.available))+'</b></span><span>Descuentos: <b>'+esc(hour(v.deductions))+'</b></span><span>Tiempo efectivo: <b>'+esc(hour(v.real))+'</b></span></div>'+
+      (t.observaciones?'<p>Observaciones: '+esc(t.observaciones)+'</p>':"")+'</div>';
+    }).join("")+'</div>').join("");
+  return '<details class="siembra-demo-person"><summary class="siembra-demo-person-summary"><span class="siembra-demo-worker"><strong>'+esc(p.name)+'</strong><small>'+esc(p.key)+'</small></span>'+
+    '<span class="siembra-demo-meters">'+bars("PROGRAMADO",programmed,programmed)+bars("DISPONIBLE",available,programmed)+bars("EFECTIVO",effective,programmed)+'</span>'+
+    '<span class="siembra-demo-count">'+p.times.length+' reg.</span></summary><div class="siembra-demo-expanded">'+details+
+    '<p class="siembra-demo-quantity">Esquejes registrados en el período: <b>'+esc(format.format(qtyTotal))+'</b></p></div></details>';
  }).join("");
- return '<section class="siembra-time-readonly">'+
-  '<div class="siembra-time-heading"><div><h3>Tiempos de Siembra Campo</h3>'+
-  '<p>Consulta de tiempos registrados en Labores JN. Selecciona un trabajador para ver el detalle.</p></div>'+
-  '<span>Solo lectura</span></div>'+
-  '<div class="siembra-time-summary">'+cards+'</div>'+
-  '<div class="siembra-time-list">'+
-  '<div class="siembra-time-list-header"><span>COLABORADOR / VER TIEMPOS</span><span>TOTAL ESQUEJES</span><span>TIEMPO EFECTIVO</span><span>RENDIMIENTO</span></div>'+
-  (workers.length?workerRows:'<p class="siembra-time-empty">No hay colaboradores ni tiempos para los filtros seleccionados.</p>')+
-  '</div>'+
-  (paired.length<workers.filter(p=>p.hasQty).length?
-   '<p class="siembra-time-hint">Los promedios se calculan solo para colaboradores con esquejes y tiempos efectivos conocidos.</p>':"")+
-  '</section>';
+ const sample=records.some(p=>[...p.labor,...p.times].some(r=>r.__soloDemostracion));
+ return '<section class="siembra-demo-view">'+
+  '<div class="siembra-demo-heading"><div><h3>Rendimiento · Siembra Campo</h3><p>Selecciona un colaborador para consultar el detalle de sus tiempos por fecha.</p></div><span>Solo lectura</span></div>'+
+  (sample?'<p class="siembra-demo-test">DATOS DE PRUEBA — Información ficticia únicamente para visualizar el diseño. No corresponde a registros reales.</p>':"")+
+  (records.length?summaries:'<p class="siembra-time-empty">No hay datos para los filtros seleccionados.</p>')+'</section>';
+}
+function demo(){
+ const people=[["PRUEBA001","ANA MARÍA GÓMEZ",1200],["PRUEBA002","CARLOS ANDRÉS RUIZ",980],["PRUEBA003","LAURA PATRICIA TORRES",1350]];
+ const labor=[],times=[];
+ people.forEach(([id,name,qty],i)=>{
+   ["2026-10-20","2026-10-21"].forEach((fecha,j)=>{
+     const base=435,extra=i===1?30:0;
+     const pauses=15,training=i===2?30:10,change=j===0?15:0,other=i===0?20:10;
+     const discounts=pauses+training+change+other;
+     labor.push({__soloDemostracion:true,fecha,colaborador:id,colaboradorNombre:name,cantidad:qty+j*80,bloque:"Bloq "+(i+1),cama:"Cama "+(142+i*2+j)});
+     times.push({__soloDemostracion:true,fecha,colaborador:id,colaboradorNombre:name,horasLaboralesMin:base,horasExtraMin:extra,pausasMin:pauses,capacitacionMin:training,cambioLaborMin:change,otrosMin:other,incapacidadMin:0,vacacionesMin:0,examenMedicoMin:0,descuentoMin:0,otrasLaboresMin:discounts,tiempoDisponibleMin:base+extra,tiempoRealMin:base+extra-discounts,modalidadRegistro:j===0?"grupal":"individual",observaciones:j===1?"Registro ficticio para revisar el diseño":""});
+   });
+ });
+ return {labor,times};
 }
 function load(){
  if(typeof indexedDB==="undefined")return Promise.resolve(null);
@@ -124,5 +103,5 @@ function load(){
   }catch{done(null)}
  });
 }
-window.SiembraTimeConsultation={render,values,load};
+window.SiembraTimeConsultation={render,values,load,demo};
 })();
