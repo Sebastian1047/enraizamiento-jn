@@ -450,6 +450,7 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  week.addEventListener("change",()=>{selectedWeek=week.value;selectedDay="";refresh()});
  date.addEventListener("change",()=>{selectedDay=date.value;refresh()});
  refresh();
+ if(mod.id==="siembra-campo"&&window.SiembraTimeConsultation)window.SiembraTimeConsultation.bind(panel,refresh);
  if(mod.id==="siembra-campo"&&window.SiembraTimeConsultation){
   window.SiembraTimeConsultation.load().then(source=>{
    if(panel.isConnected===false||!source)return;
