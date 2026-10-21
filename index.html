@@ -577,7 +577,43 @@
     @media(max-width:650px){.quality-stats{grid-template-columns:1fr}}
     .module-empty { padding:30px; text-align:center; color:var(--muted); font-size:.78rem; }
     @media(max-width:780px) { .module-summary { grid-template-columns:1fr 1fr; } }
-  </style>
+  
+/* Siembra Campo: tarjetas de consulta inspiradas en vistas de revisión; sin controles de edición. */
+.siembra-demo-view{display:grid;gap:13px;margin:12px 0 24px}
+.siembra-demo-heading{display:flex;justify-content:space-between;gap:16px;align-items:center}
+.siembra-demo-heading h3{color:#174b32;margin:0 0 4px;font-size:1rem}
+.siembra-demo-heading p{margin:0;color:#62746a;font-size:.79rem}
+.siembra-demo-heading>span{background:#eff8f1;border:1px solid #cadecf;border-radius:20px;color:#2a7650;padding:6px 11px;font-weight:700;font-size:.72rem;white-space:nowrap}
+.siembra-demo-test{background:#fff4d9;color:#815914;border:1px solid #e8ce8a;border-radius:9px;padding:10px 13px;font-size:.81rem;font-weight:700;margin:0}
+.siembra-demo-person{border:1px solid #c1ddca;border-radius:16px;overflow:hidden;background:#fdfdf5;box-shadow:0 6px 20px #1f613810}
+.siembra-demo-person-summary{display:grid;grid-template-columns:minmax(170px,1fr) minmax(370px,1fr) 62px;gap:16px;align-items:center;cursor:pointer;background:#e2f4e9;padding:19px 20px;list-style:none}
+.siembra-demo-person-summary::-webkit-details-marker{display:none}
+.siembra-demo-person[open] .siembra-demo-person-summary{border-bottom:1px solid #dce8d7}
+.siembra-demo-worker{display:flex;flex-direction:column;gap:4px;color:#19452e}
+.siembra-demo-worker strong{font-size:.94rem}
+.siembra-demo-worker small{font-size:.74rem;color:#647769}
+.siembra-demo-meters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:17px}
+.siembra-demo-meter{display:flex;flex-direction:column;gap:5px;min-width:0}
+.siembra-demo-meter>span{font-size:.66rem;color:#586c60}
+.siembra-demo-meter i{height:10px;background:#c5d9cb;border-radius:10px;display:block;overflow:hidden}
+.siembra-demo-meter i b{display:block;background:#187549;height:100%;border-radius:10px}
+.siembra-demo-meter>strong{font-size:.78rem;color:#164b31}
+.siembra-demo-count{font-size:.8rem;font-weight:750;color:#213e2d;text-align:right}
+.siembra-demo-expanded{padding:12px 14px 18px}
+.siembra-demo-date-title{color:#766119;font-size:.83rem;font-weight:750;margin:8px 0 12px}
+.siembra-demo-entry{background:#f2f8ee;border:1px solid #dce8d4;border-radius:11px;padding:15px;margin:9px 0}
+.siembra-demo-entry-header{display:flex;align-items:center;gap:14px;font-size:.8rem;color:#304736;margin-bottom:12px}
+.siembra-demo-entry-header span{color:#647466}
+.siembra-demo-fields{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:11px}
+.siembra-demo-fields>div{display:flex;flex-direction:column;gap:4px}
+.siembra-demo-fields small{color:#627068;font-size:.72rem}
+.siembra-demo-fields b{color:#234d35;font-size:.83rem}
+.siembra-demo-totals{display:flex;gap:22px;flex-wrap:wrap;margin-top:14px;border-top:1px solid #dce8d4;padding-top:10px;font-size:.79rem}
+.siembra-demo-totals span:last-child{color:#187549;font-weight:750}
+.siembra-demo-entry p,.siembra-demo-quantity{font-size:.78rem;color:#596e5e}
+@media(max-width:760px){.siembra-demo-person-summary{grid-template-columns:1fr auto;gap:12px}.siembra-demo-meters{grid-row:2;grid-column:1/-1}.siembra-demo-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.siembra-demo-person-summary{padding:14px}.siembra-demo-expanded{padding:10px}}
+
+</style>
 </head>
 <body>
   <div class="app-shell">
@@ -2142,7 +2178,7 @@ window.ProductionIndicators={render,isoWeek,qualityRole,failuresOf,bandejasTimeH
  sampleLabor,sampleQuality,sourceQuality,enrichedLabor,matchLaborVariant};
 })();
 </script>
-  <script src="./siembra-tiempo-consulta.js?v=ba32042a"></script>
+  <script src="./siembra-tiempo-consulta.js?v=demo20261021"></script>
 <script>
 /* FlowerLogix JN — Rendimiento de Producción: personas/grupo, año/semana/día y Labor/Tiempos */
 (()=>{
@@ -2402,6 +2438,7 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  const origin=getRecords(areaId,mod.id),originTimes=getRecords(areaId,mod.id+"_tiempos");
  const matches=r=>!selectedVariant||window.ProductionIndicators?.matchLaborVariant?.(mod.id,r,selectedVariant);
  let labor=origin,times=originTimes,siembraSource="";
+ if(mod.id==="siembra-campo"&&!origin.length&&!originTimes.length&&window.SiembraTimeConsultation){const mock=window.SiembraTimeConsultation.demo();labor=mock.labor;times=mock.times;siembraSource="demostracion";}
  // Los datos de prueba se activan únicamente cuando no hay registros reales
  // de la modalidad. Es esencial porque ya no hay botón para alternar.
  const realTimesForView=selectedVariant?
