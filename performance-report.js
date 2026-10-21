@@ -256,6 +256,7 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  const origin=getRecords(areaId,mod.id),originTimes=getRecords(areaId,mod.id+"_tiempos");
  const matches=r=>!selectedVariant||window.ProductionIndicators?.matchLaborVariant?.(mod.id,r,selectedVariant);
  let labor=origin,times=originTimes,siembraSource="";
+ if(mod.id==="siembra-campo"&&!origin.length&&!originTimes.length&&window.SiembraTimeConsultation){const mock=window.SiembraTimeConsultation.demo();labor=mock.labor;times=mock.times;siembraSource="demostracion";}
  // Los datos de prueba se activan únicamente cuando no hay registros reales
  // de la modalidad. Es esencial porque ya no hay botón para alternar.
  const realTimesForView=selectedVariant?
