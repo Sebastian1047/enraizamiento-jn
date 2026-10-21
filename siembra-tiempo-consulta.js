@@ -81,8 +81,19 @@ function render(labor,times){
     ' · Disponible '+esc(hour(ts.reduce((z,t)=>z+(values(t).available??0),0)))+
     ' · Efectivo '+esc(hour(ts.reduce((z,t)=>z+(values(t).real??0),0)))+'</div>'+
     ts.map((t,i)=>{const v=values(t);const fields=[["Tiempo programado",v.base],["Horas extra",v.extra],["Pausas",n(t.pausasMin)],["Incapacidad",n(t.incapacidadMin)],["Cambio de labor",n(t.cambioLaborMin)],["Capacitación",n(t.capacitacionMin)],["Vacaciones",n(t.vacacionesMin)],["Examen médico",n(t.examenMedicoMin)],["Otros",v.other],["Descuento",n(t.descuentoMin)]];
+    // Asociar solo la producción de la misma persona y fecha; nunca inventar tallos.
+    const laborDia=p.labor.filter(r=>date(r)===date(t));
+    const cantidades=laborDia.map(qty);
+    const tallos=cantidades.length&&cantidades.every(x=>x!==null)?cantidades.reduce((a,b)=>a+b,0):null;
+    const horas=v.real!==null&&v.real>0?v.real/60:null;
+    const promedio=tallos!==null&&horas!==null?tallos/horas:null;
+    const indicador=(titulo,valor,unidad)=>'<div class="siembra-registro-kpi"><span>'+esc(titulo)+'</span><strong>'+esc(valor)+'</strong><small>'+esc(unidad)+'</small></div>';
+    const indicadores='<div class="siembra-registro-kpis">'+
+      indicador("Número de tallos sembrados",tallos===null?"—":format.format(tallos),"tallos")+
+      indicador("Tiempo real invertido en la labor",v.real===null?"—":hour(v.real),"horas efectivas")+
+      indicador("Promedio de tallos sembrados por hora",promedio===null?"—":format.format(promedio),"tallos/hora")+'</div>';
     return '<div class="siembra-demo-entry"><div class="siembra-demo-entry-header"><strong>Registro #'+(i+1)+'</strong><span>'+esc(t.modalidadRegistro==="grupal"?"Tiempo grupal":t.modalidadRegistro==="individual"?"Tiempo individual":"Tiempo registrado")+(t.__edicionLocal?" · Editado localmente":"")+'</span><div class="siembra-edit-controls"><button type="button" data-time-edit="'+esc(recordKey(t))+'">Editar</button><button type="button" data-time-delete="'+esc(recordKey(t))+'">Eliminar</button></div></div>'+
-      '<div class="siembra-demo-fields">'+fields.map(([k,m])=>'<div><small>'+esc(k)+'</small><b>'+esc(hour(m))+'</b></div>').join("")+'</div>'+
+      indicadores+'<div class="siembra-demo-fields">'+fields.map(([k,m])=>'<div><small>'+esc(k)+'</small><b>'+esc(hour(m))+'</b></div>').join("")+'</div>'+
       '<div class="siembra-demo-totals"><span>Tiempo disponible: <b>'+esc(hour(v.available))+'</b></span><span>Descuentos: <b>'+esc(hour(v.deductions))+'</b></span><span>Tiempo efectivo: <b>'+esc(hour(v.real))+'</b></span></div>'+
       (t.observaciones?'<p>Observaciones: '+esc(t.observaciones)+'</p>':"")+editorMarkup(t)+'</div>';
     }).join("")+'</div>').join("");
