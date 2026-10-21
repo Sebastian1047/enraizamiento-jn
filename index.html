@@ -499,6 +499,63 @@
       .module-filter-actions {flex:1 1 100%;padding-top:9px;border-top:1px solid #e0e9e2;}
     }
 
+
+    /* Siembra Campo: consulta visual de tiempos de Labores JN (solo lectura). */
+    .siembra-time-readonly {min-width:0;margin:13px 0 22px;}
+    .siembra-time-heading {display:flex;align-items:flex-start;justify-content:space-between;gap:15px;flex-wrap:wrap;margin:0 0 14px;}
+    .siembra-time-heading h3 {font-size:.91rem;font-weight:800;color:#17482d;margin:0 0 5px;}
+    .siembra-time-heading p {font-size:.72rem;color:#6f8174;margin:0;line-height:1.5;}
+    .siembra-time-heading>span {padding:6px 10px;border-radius:999px;border:1px solid #d0e6d4;background:#f0f8f2;color:#36704a;font-size:.65rem;font-weight:850;}
+    .siembra-time-summary {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0 20px;}
+    .siembra-time-kpi {display:flex;flex-direction:column;gap:7px;border:1px solid #dce8df;border-radius:13px;background:#fff;padding:16px 17px;box-shadow:0 2px 10px rgba(20,70,38,.025);}
+    .siembra-time-kpi span {color:#637f6c;font-size:.71rem;font-weight:720;}
+    .siembra-time-kpi strong {color:#16643c;font-size:1.68rem;font-weight:850;font-variant-numeric:tabular-nums;}
+    .siembra-time-kpi small {color:#7c8e81;font-size:.66rem;}
+    .siembra-time-list {border:1px solid #dce8df;border-radius:13px;background:#fff;overflow:hidden;}
+    .siembra-time-list-header,.siembra-time-row {display:grid;grid-template-columns:minmax(200px,2fr) repeat(3,minmax(100px,1fr));align-items:center;gap:12px;padding:12px 16px;}
+    .siembra-time-list-header {background:#f4f8f5;color:#567460;font-size:.65rem;font-weight:800;letter-spacing:.035em;}
+    .siembra-time-person {border-top:1px solid #e1ebe3;background:#fff;}
+    .siembra-time-person:first-of-type {border-top:0;}
+    .siembra-time-person summary {list-style:none;cursor:pointer;}
+    .siembra-time-person summary::-webkit-details-marker {display:none;}
+    .siembra-time-row {min-height:62px;transition:background .18s ease;color:#263f2d;font-size:.75rem;}
+    .siembra-time-row:hover,.siembra-time-person[open]>.siembra-time-row {background:#eaf6ed;}
+    .siembra-time-person-name {display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;}
+    .siembra-time-person-name b {font-size:.79rem;overflow-wrap:anywhere;}
+    .siembra-time-person-name small {color:#74897b;font-size:.66rem;}
+    .siembra-time-person-name em {color:#247649;font-style:normal;font-size:.66rem;font-weight:750;}
+    .siembra-time-rate {font-weight:850;color:#206b43;}
+    .siembra-time-details {background:#f8fbf7;border-top:1px solid #dce8df;padding:14px 16px;}
+    .siembra-time-day {border:1px solid #dce7d6;border-radius:11px;background:#f8faf3;padding:14px 16px;margin-bottom:11px;}
+    .siembra-time-day:last-child {margin-bottom:0;}
+    .siembra-time-day-title {display:flex;justify-content:space-between;flex-wrap:wrap;gap:7px;margin-bottom:12px;color:#285236;font-size:.75rem;}
+    .siembra-time-day-title span {font-weight:700;color:#798569;font-size:.67rem;}
+    .siembra-time-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 13px;}
+    .siembra-time-field {display:flex;flex-direction:column;gap:5px;min-width:0;padding:10px 12px;border-radius:8px;border:1px solid #dee8d8;background:#fff;}
+    .siembra-time-field span {color:#6a776e;font-size:.68rem;}
+    .siembra-time-field strong {font-size:.82rem;font-weight:800;color:#2d4936;font-variant-numeric:tabular-nums;}
+    .siembra-time-bottom {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-top:13px;}
+    .siembra-time-net {background:#e0f1e4;border-color:#afd1b8;}
+    .siembra-time-net strong {color:#14673b;font-size:1.09rem;}
+    .siembra-time-obs {border-top:1px solid #dce6d7;color:#586e5a;font-size:.72rem;line-height:1.5;margin:14px 0 0;padding-top:10px;}
+    .siembra-time-no-entries,.siembra-time-empty {padding:24px;text-align:center;color:#819086;font-size:.72rem;}
+    .siembra-time-hint {margin:11px 0 0;font-size:.68rem;line-height:1.5;color:#607666;}
+    @media(max-width:790px){
+      .siembra-time-summary {grid-template-columns:1fr 1fr;}
+      .siembra-time-summary .siembra-time-kpi:last-child {grid-column:1/-1;}
+      .siembra-time-list-header,.siembra-time-row {grid-template-columns:minmax(135px,1.6fr) repeat(3,minmax(75px,1fr));gap:8px;padding:11px 12px;}
+      .siembra-time-list-header {font-size:.58rem;}
+    }
+    @media(max-width:560px){
+      .siembra-time-summary {grid-template-columns:1fr;gap:8px;}
+      .siembra-time-summary .siembra-time-kpi:last-child {grid-column:auto;}
+      .siembra-time-list {overflow-x:auto;}
+      .siembra-time-list-header,.siembra-time-row {min-width:530px;}
+      .siembra-time-details {min-width:0;padding:10px;}
+      .siembra-time-grid {grid-template-columns:1fr;}
+      .siembra-time-bottom {grid-template-columns:1fr;}
+    }
+
     .quality-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}
     .quality-table{min-width:900px}
     .quality-table th{font-size:.66rem;min-width:105px;text-align:center;white-space:normal}
@@ -2084,7 +2141,8 @@ window.ProductionIndicators={render,isoWeek,qualityRole,failuresOf,bandejasTimeH
  sampleLabor,sampleQuality,sourceQuality,enrichedLabor,matchLaborVariant};
 })();
 </script>
-  <script>
+  <script src="./siembra-tiempo-consulta.js?v=ba32042a" defer="false"></script>
+<script>
 /* FlowerLogix JN — Rendimiento de Producción: personas/grupo, año/semana/día y Labor/Tiempos */
 (()=>{
 "use strict";
@@ -2342,7 +2400,7 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  const config=MODS[mod.id];
  const origin=getRecords(areaId,mod.id),originTimes=getRecords(areaId,mod.id+"_tiempos");
  const matches=r=>!selectedVariant||window.ProductionIndicators?.matchLaborVariant?.(mod.id,r,selectedVariant);
- const labor=origin,times=originTimes;
+ let labor=origin,times=originTimes,siembraSource="";
  // Los datos de prueba se activan únicamente cuando no hay registros reales
  // de la modalidad. Es esencial porque ya no hay botón para alternar.
  const realTimesForView=selectedVariant?
@@ -2498,13 +2556,19 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
     '</span><strong class="performance-selection-total">'+
     fmt.format(count)+' '+(count===1?"registro":"registros")+
     ' de '+(detailMode==="labor"?"labor":"tiempos")+'</strong>';
-  $("pResult").innerHTML='<h3 class="quality-heading">'+(detailMode==="labor"?"Registros de labor":"Tiempos consultados")+'</h3>'+
+  $("pResult").innerHTML=mod.id==="siembra-campo"&&detailMode==="tiempos"&&window.SiembraTimeConsultation?
+   window.SiembraTimeConsultation.render(filteredLabor,filteredTimes):
+   '<h3 class="quality-heading">'+(detailMode==="labor"?"Registros de labor":"Tiempos consultados")+'</h3>'+
    (detailMode==="tiempos"?
      '<p class="page-description">Solo consulta: registros recogidos en otra aplicación. Todas las cantidades se muestran en horas. Desliza la tabla horizontalmente para ver las actividades y el tiempo efectivo.</p>':"")+
    htmlTable(result.headers,result.rows,"Sin registros para la labor y el período seleccionados.");
   $("pNote").textContent=detailMode==="tiempos"?
-    "Consulta de tiempos de la otra aplicación. Puedes cargar su JSON para visualizarlos, pero aquí no se registran ni editan jornadas. "+
-    "El tiempo real guardado en origen prevalece sobre cualquier cálculo; no hay conexión automática con la API.":
+    (mod.id==="siembra-campo"?
+      (siembraSource?"Se consultaron los registros locales de Labores JN en este navegador. ":
+        "Solo se muestran los registros disponibles en este navegador. ")+
+      "La información es de lectura únicamente; no se conecta automáticamente a servidores.":
+      "Consulta de tiempos recogidos fuera de FlowerLogix. "+
+      "Se utiliza el tiempo real de origen cuando existe; sin conexión automática con la API."):
     (personMode==="grupal"?
      "Rendimiento grupal: todas las personas que realizaron esta labor en el período. "+
      "La productividad por hora utiliza cantidades y tiempos comparables.":
@@ -2529,6 +2593,18 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  week.addEventListener("change",()=>{selectedWeek=week.value;selectedDay="";refresh()});
  date.addEventListener("change",()=>{selectedDay=date.value;refresh()});
  refresh();
+ if(mod.id==="siembra-campo"&&window.SiembraTimeConsultation){
+  window.SiembraTimeConsultation.load().then(source=>{
+   if(panel.isConnected===false||!source)return;
+   const sourceLabor=source.plantings.length?source.plantings:source.rendimiento;
+   if(!sourceLabor.length&&!source.times.length)return;
+   if(sourceLabor.length)labor=sourceLabor;
+   if(source.times.length)times=source.times;
+   siembraSource="indexeddb";
+   selectedYear=null;selectedWeek=null;selectedDay="";
+   refresh();
+  }).catch(()=>{/* Sin acceso a la base local: conservar registros presentes. */});
+ }
  return true;
 }
 window.PerformanceReports={render,weekKey,netHours,joinLabor,summary,displayLabor,displayTimes,demoDesbotonado};
