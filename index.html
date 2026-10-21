@@ -2525,6 +2525,7 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
   const registeredTime=new Map(filteredTimes.map(r=>[dayPerson(r)+"|"+(r.__laborGrupo??""),netHours(r)]));
   const registeredHours=[...registeredTime.values()].filter(v=>v!==null);
   const totalTime=registeredHours.reduce((sum,h)=>sum+h,0);
+  $("pStats").hidden=mod.id==="siembra-campo"&&detailMode==="tiempos";
   $("pStats").innerHTML=[
    asLabel(fmt.format(detailMode==="tiempos"?new Set(filteredTimes.map(code).filter(Boolean)).size:stats.people),"Colaboradores"),
    asLabel(fmt.format(detailMode==="tiempos"?filteredTimes.length:stats.records),
