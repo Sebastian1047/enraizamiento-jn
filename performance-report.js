@@ -264,7 +264,7 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  const demo=(mod.id==="bandejas-enraizamiento"||mod.id==="desbotonado-mallas")&&
    !origin.some(matches)&&!realTimesForView;
  const example=mod.id==="desbotonado-mallas"?demoDesbotonado():demoBandejas();
- let personMode="grupal",detailMode="labor";
+ let personMode="grupal",detailMode=mod.id==="siembra-campo"?"tiempos":"labor";
  const areaText=selectedVariant?String(selectedVariant):mod.name;
  panel.innerHTML='<div class="performance-controls">'+
  '<section class="performance-filter-card" aria-label="Filtros de rendimiento">'+
@@ -285,7 +285,7 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  '</div>'+
  '<div id="pFilterSelection" class="performance-filter-selection" role="status" aria-live="polite" aria-atomic="true"></div>'+
  '</section>'+
- '<div class="performance-result-heading"><span class="performance-field-caption">VER INFORMACIÓN DE</span>'+
+ '<div class="performance-result-heading"'+(mod.id==="siembra-campo"?' hidden':'')+'><span class="performance-field-caption">VER INFORMACIÓN DE</span>' +
  '<nav class="performance-detail-nav" aria-label="Registros de rendimiento">'+
  '<button type="button" class="active" data-detail-mode="labor" aria-pressed="true">Labor</button>'+
  '<button type="button" data-detail-mode="tiempos" aria-pressed="false">Tiempos</button></nav></div>'+
@@ -412,13 +412,13 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
     '</span><strong class="performance-selection-total">'+
     fmt.format(count)+' '+(count===1?"registro":"registros")+
     ' de '+(detailMode==="labor"?"labor":"tiempos")+'</strong>';
-  $("pResult").innerHTML=mod.id==="siembra-campo"&&detailMode==="tiempos"&&window.SiembraTimeConsultation?
+  $("pResult").innerHTML=mod.id==="siembra-campo"&&window.SiembraTimeConsultation?
    window.SiembraTimeConsultation.render(filteredLabor,filteredTimes):
    '<h3 class="quality-heading">'+(detailMode==="labor"?"Registros de labor":"Tiempos consultados")+'</h3>'+
    (detailMode==="tiempos"?
      '<p class="page-description">Solo consulta: registros recogidos en otra aplicación. Todas las cantidades se muestran en horas. Desliza la tabla horizontalmente para ver las actividades y el tiempo efectivo.</p>':"")+
    htmlTable(result.headers,result.rows,"Sin registros para la labor y el período seleccionados.");
-  $("pNote").textContent=detailMode==="tiempos"?
+  $("pNote").textContent=(mod.id==="siembra-campo"||detailMode==="tiempos")?
     (mod.id==="siembra-campo"?
       (siembraSource?"Se consultaron los registros locales de Labores JN en este navegador. ":
         "Solo se muestran los registros disponibles en este navegador. ")+
