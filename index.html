@@ -613,6 +613,21 @@
 .siembra-demo-entry p,.siembra-demo-quantity{font-size:.78rem;color:#596e5e}
 @media(max-width:760px){.siembra-demo-person-summary{grid-template-columns:1fr auto;gap:12px}.siembra-demo-meters{grid-row:2;grid-column:1/-1}.siembra-demo-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.siembra-demo-person-summary{padding:14px}.siembra-demo-expanded{padding:10px}}
 
+
+.siembra-edit-controls{margin-left:auto;display:flex;gap:8px}
+.siembra-edit-controls button{border:1px solid #d4dfd3;border-radius:19px;background:#f8faf5;color:#27513a;padding:6px 12px;cursor:pointer;font-weight:700}
+.siembra-edit-controls button:last-child{background:#ae4848;border-color:#ae4848;color:white}
+.siembra-edit-form[hidden]{display:none}
+.siembra-edit-form{margin-top:13px;border-top:1px solid #dce8d4;padding-top:13px}
+.siembra-edit-form p{font-size:.77rem;color:#815914}
+.siembra-edit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.siembra-edit-grid label{display:flex;flex-direction:column;gap:5px;font-size:.75rem;color:#35533e}
+.siembra-edit-grid input,.siembra-edit-grid textarea{border:1px solid #bad4c1;border-radius:8px;padding:8px;min-width:0;font:inherit;background:white}
+.siembra-edit-observation{grid-column:1/-1}
+.siembra-edit-actions{display:flex;gap:8px;margin-top:12px}
+.siembra-edit-actions button{background:#1d784a;color:white;border:0;border-radius:8px;padding:9px 14px;cursor:pointer}
+.siembra-edit-actions button:last-child{background:#e8eee9;color:#294833}
+@media(max-width:650px){.siembra-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.siembra-demo-entry-header{flex-wrap:wrap}}
 </style>
 </head>
 <body>
@@ -2178,7 +2193,7 @@ window.ProductionIndicators={render,isoWeek,qualityRole,failuresOf,bandejasTimeH
  sampleLabor,sampleQuality,sourceQuality,enrichedLabor,matchLaborVariant};
 })();
 </script>
-  <script src="./siembra-tiempo-consulta.js?v=demo20261021"></script>
+  <script src="./siembra-tiempo-consulta.js?v=edit20261021"></script>
 <script>
 /* FlowerLogix JN — Rendimiento de Producción: personas/grupo, año/semana/día y Labor/Tiempos */
 (()=>{
@@ -2632,6 +2647,7 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  week.addEventListener("change",()=>{selectedWeek=week.value;selectedDay="";refresh()});
  date.addEventListener("change",()=>{selectedDay=date.value;refresh()});
  refresh();
+ if(mod.id==="siembra-campo"&&window.SiembraTimeConsultation)window.SiembraTimeConsultation.bind(panel,refresh);
  if(mod.id==="siembra-campo"&&window.SiembraTimeConsultation){
   window.SiembraTimeConsultation.load().then(source=>{
    if(panel.isConnected===false||!source)return;
