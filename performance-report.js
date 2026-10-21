@@ -255,7 +255,7 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  const config=MODS[mod.id];
  const origin=getRecords(areaId,mod.id),originTimes=getRecords(areaId,mod.id+"_tiempos");
  const matches=r=>!selectedVariant||window.ProductionIndicators?.matchLaborVariant?.(mod.id,r,selectedVariant);
- const labor=origin,times=originTimes;
+ let labor=origin,times=originTimes,siembraSource="";
  // Los datos de prueba se activan únicamente cuando no hay registros reales
  // de la modalidad. Es esencial porque ya no hay botón para alternar.
  const realTimesForView=selectedVariant?
@@ -411,13 +411,19 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
     '</span><strong class="performance-selection-total">'+
     fmt.format(count)+' '+(count===1?"registro":"registros")+
     ' de '+(detailMode==="labor"?"labor":"tiempos")+'</strong>';
-  $("pResult").innerHTML='<h3 class="quality-heading">'+(detailMode==="labor"?"Registros de labor":"Tiempos consultados")+'</h3>'+
+  $("pResult").innerHTML=mod.id==="siembra-campo"&&detailMode==="tiempos"&&window.SiembraTimeConsultation?
+   window.SiembraTimeConsultation.render(filteredLabor,filteredTimes):
+   '<h3 class="quality-heading">'+(detailMode==="labor"?"Registros de labor":"Tiempos consultados")+'</h3>'+
    (detailMode==="tiempos"?
      '<p class="page-description">Solo consulta: registros recogidos en otra aplicación. Todas las cantidades se muestran en horas. Desliza la tabla horizontalmente para ver las actividades y el tiempo efectivo.</p>':"")+
    htmlTable(result.headers,result.rows,"Sin registros para la labor y el período seleccionados.");
   $("pNote").textContent=detailMode==="tiempos"?
-    "Consulta de tiempos de la otra aplicación. Puedes cargar su JSON para visualizarlos, pero aquí no se registran ni editan jornadas. "+
-    "El tiempo real guardado en origen prevalece sobre cualquier cálculo; no hay conexión automática con la API.":
+    (mod.id==="siembra-campo"?
+      (siembraSource?"Se consultaron los registros locales de Labores JN en este navegador. ":
+        "Solo se muestran los registros disponibles en este navegador. ")+
+      "La información es de lectura únicamente; no se conecta automáticamente a servidores.":
+      "Consulta de tiempos recogidos fuera de FlowerLogix. "+
+      "Se utiliza el tiempo real de origen cuando existe; sin conexión automática con la API."):
     (personMode==="grupal"?
      "Rendimiento grupal: todas las personas que realizaron esta labor en el período. "+
      "La productividad por hora utiliza cantidades y tiempos comparables.":
@@ -442,6 +448,18 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  week.addEventListener("change",()=>{selectedWeek=week.value;selectedDay="";refresh()});
  date.addEventListener("change",()=>{selectedDay=date.value;refresh()});
  refresh();
+ if(mod.id==="siembra-campo"&&window.SiembraTimeConsultation){
+  window.SiembraTimeConsultation.load().then(source=>{
+   if(panel.isConnected===false||!source)return;
+   const sourceLabor=source.plantings.length?source.plantings:source.rendimiento;
+   if(!sourceLabor.length&&!source.times.length)return;
+   if(sourceLabor.length)labor=sourceLabor;
+   if(source.times.length)times=source.times;
+   siembraSource="indexeddb";
+   selectedYear=null;selectedWeek=null;selectedDay="";
+   refresh();
+  }).catch(()=>{/* Sin acceso a la base local: conservar registros presentes. */});
+ }
  return true;
 }
 window.PerformanceReports={render,weekKey,netHours,joinLabor,summary,displayLabor,displayTimes,demoDesbotonado};
