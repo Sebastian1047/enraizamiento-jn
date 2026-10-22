@@ -256,7 +256,8 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  const origin=getRecords(areaId,mod.id),originTimes=getRecords(areaId,mod.id+"_tiempos");
  const matches=r=>!selectedVariant||window.ProductionIndicators?.matchLaborVariant?.(mod.id,r,selectedVariant);
  let labor=origin,times=originTimes,siembraSource="";
- if(mod.id==="siembra-campo"&&!origin.length&&!originTimes.length&&window.SiembraTimeConsultation){const mock=window.SiembraTimeConsultation.demo();labor=mock.labor;times=mock.times;siembraSource="demostracion";}
+ const forceSiembraDemo=mod.id==="siembra-campo"&&new URLSearchParams(location.search).get("demo")==="1";
+ if(mod.id==="siembra-campo"&&(forceSiembraDemo||(!origin.length&&!originTimes.length))&&window.SiembraTimeConsultation){const mock=window.SiembraTimeConsultation.demo();labor=mock.labor;times=mock.times;siembraSource="demostracion";}
  // Los datos de prueba se activan únicamente cuando no hay registros reales
  // de la modalidad. Es esencial porque ya no hay botón para alternar.
  const realTimesForView=selectedVariant?
@@ -421,9 +422,10 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
    htmlTable(result.headers,result.rows,"Sin registros para la labor y el período seleccionados.");
   $("pNote").textContent=(mod.id==="siembra-campo"||detailMode==="tiempos")?
     (mod.id==="siembra-campo"?
-      (siembraSource?"Se consultaron los registros locales de Labores JN en este navegador. ":
-        "Solo se muestran los registros disponibles en este navegador. ")+
-      "La información es de lectura únicamente; no se conecta automáticamente a servidores.":
+      (siembraSource==="demostracion"?"MODO DEMOSTRACIÓN: datos ficticios para revisar la aplicación. Los cambios de edición o eliminación son solo locales; Labores JN no se modifica. ":
+      siembraSource==="indexeddb"?"Registros locales de Labores JN encontrados en este navegador. La edición o eliminación en FlowerLogix es únicamente local. ":
+      "Se muestran los registros disponibles en este navegador. La edición o eliminación en FlowerLogix es únicamente local. ")+
+      "No existe conexión automática de escritura con Labores JN.":
       "Consulta de tiempos recogidos fuera de FlowerLogix. "+
       "Se utiliza el tiempo real de origen cuando existe; sin conexión automática con la API."):
     (personMode==="grupal"?
@@ -451,7 +453,7 @@ function render({areaId,mod,panel,getRecords,selectedVariant=null}){
  date.addEventListener("change",()=>{selectedDay=date.value;refresh()});
  refresh();
  if(mod.id==="siembra-campo"&&window.SiembraTimeConsultation)window.SiembraTimeConsultation.bind(panel,refresh);
- if(mod.id==="siembra-campo"&&window.SiembraTimeConsultation){
+ if(mod.id==="siembra-campo"&&!forceSiembraDemo&&window.SiembraTimeConsultation){
   window.SiembraTimeConsultation.load().then(source=>{
    if(panel.isConnected===false||!source)return;
    const sourceLabor=source.plantings.length?source.plantings:source.rendimiento;
