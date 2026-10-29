@@ -808,12 +808,14 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    allGroups.filter(id=>allowedGroups.includes(id)):allGroups;
  if(!groupNames.length){panel.innerHTML='<div class="module-empty">No hay catálogo de calidad para este módulo.</div>';return;}
  const demoRows=sampleQualityRecords(groups,mod.id);
- let storedRows=read(key(areaId,storageKey));
- let demoMode=storedRows.length===0;
+ let storedRows=read(key(areaId,storageKey)),sourceRows=[],conteosLocales=new Map();
+ const forcedDemo=mod.id==="siembra-campo"&&new URLSearchParams(location.search).get("calidadDemo")==="1";
+ let manualChoice=forcedDemo,demoMode=forcedDemo||storedRows.length===0;
  let selectedGroup=groupNames.includes(initialGroup)?initialGroup:groupNames[0],
  records=demoMode?demoRows:storedRows,reportRows=[],reportHeaders=[],pdfFilename="informe-calidad.pdf",reportPayload=null;
  panel.innerHTML='<h3 class="quality-heading">Resultados de conformidad individual</h3>'+
  '<div class="quality-demo-banner" id="qDemoBanner" role="status"></div>'+
+ (mod.id==="siembra-campo"?'<div style="display:flex;justify-content:flex-end;margin:8px 0 12px"><button type="button" id="qVisibleDemo" class="btn-secondary">Ver datos de prueba</button></div>':'')+
  '<div class="quality-internal-controls" hidden style="display:none" aria-hidden="true">'+
  '<select id="qGroup">'+groupNames.map(g=>'<option value="'+esc(g)+'">'+esc(groups[g].label)+'</option>').join("")+'</select>'+
  '<select id="qYear"></select><select id="qWeek"></select>'+
@@ -880,9 +882,12 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    demoBanner.innerHTML=demoMode?
      '<strong>DATOS DE PRUEBA — VISTA DEMOSTRATIVA</strong><span>Los nombres, fechas, resultados y porcentajes son ficticios. No se almacenan ni se mezclan con datos reales.</span>':"";
    demoToggle.textContent=demoMode?"Ver registros reales":"Ver datos de prueba";
+   const btn=panel.querySelector("#qVisibleDemo");
+   if(btn)btn.textContent=demoMode?"Ver registros reales":"Ver datos de prueba";
    panel.querySelector("#qCSV").textContent=demoMode?"Exportar CSV de prueba":"Exportar CSV";
  }
- const active=()=>records.filter(r=>real(r)&&rowRole(r,groups)===selectedGroup);
+ const active=()=>records.filter(r=>real(r)&&rowRole(r,groups)===selectedGroup)
+  .map(r=>mod.id==="siembra-campo"?vincularConteo(r,conteosLocales):r);
  const cols=()=>{const c=groups[selectedGroup],saved=read(key(areaId,mod.id+"_quality_catalog_"+selectedGroup));
  return (demoMode?demoItems(c):(c.external&&saved.length?saved:c.items)).filter(x=>Array.isArray(x)&&x.length===2)
  .filter(x=>!c.conformIds.includes(String(x[0]))&&!/^(ramo\s+)?conforme$/.test(norm(x[1])))
@@ -986,12 +991,16 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
      button.textContent="Descargar";
    }
  });
- demoToggle.addEventListener("click",()=>{
-   demoMode=!demoMode;
-   records=demoMode?demoRows:read(key(areaId,storageKey));
-   y.value="";w.value="";search.value="";
-   periods();refresh();syncExplore(true,true);
- });
+ function cambiarDemo(){
+  manualChoice=true;
+  demoMode=!demoMode;
+  storedRows=combinarRegistrosCalidad(read(key(areaId,storageKey)),sourceRows);
+  records=demoMode?demoRows:storedRows;
+  y.value="";w.value="";search.value="";
+  periods();refresh();syncExplore(true,true);
+ }
+ demoToggle.addEventListener("click",cambiarDemo);
+ panel.querySelector("#qVisibleDemo")?.addEventListener("click",cambiarDemo);
  g.addEventListener("change",()=>{selectedGroup=g.value;periods();refresh();syncExplore(true)});
  y.addEventListener("change",()=>{periods();refresh()});w.addEventListener("change",refresh);search.addEventListener("input",refresh);
  async function importQualityFile(event){
@@ -1005,7 +1014,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
      if(catalog&&groups[selectedGroup].external){const items=catalog.map(x=>Array.isArray(x)?x:[x.id??x.idItem,x.nombre??x.name])
        .filter(x=>x?.length===2&&x[0]!=null&&x[1]);localStorage.setItem(key(areaId,mod.id+"_quality_catalog_"+selectedGroup),JSON.stringify(items));}
      storedRows=list.map(x=>({...x,__calidadGrupo:rowRole(x,groups)||selectedGroup}));
-     records=storedRows;demoMode=false;
+     records=storedRows;demoMode=false;manualChoice=true;
      localStorage.setItem(key(areaId,storageKey),JSON.stringify(storedRows));
      note.textContent=records.length+" evaluaciones importadas localmente. Los registros sin modalidad se asignaron a "+groups[selectedGroup].label+". Sin conexión automática a Producción.";
      periods();refresh();syncExplore(true,true);
@@ -1292,6 +1301,22 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
  }
  syncExplore=renderChoices;
  periods();refresh();renderChoices(true);
+ // Base compartida solo por el origen sebastian1047.github.io, en el
+ // navegador actual; no es sincronización con servidor ni entre equipos.
+ if(mod.id==="siembra-campo"){
+  const cargarOrigen=async()=>{
+   const datos=await leerLaboresLocal();
+   if(!panel.isConnected)return;
+   sourceRows=datos.rows;
+   conteosLocales=datos.counts;
+   storedRows=combinarRegistrosCalidad(read(key(areaId,storageKey)),sourceRows);
+   if(!manualChoice)demoMode=storedRows.length===0;
+   records=demoMode?demoRows:storedRows;
+   periods();refresh();renderChoices(false);
+  };
+  void cargarOrigen();
+  window.addEventListener("focus",()=>{if(panel.isConnected)void cargarOrigen();});
+ }
  styleModeButton(xa,false);
  styleModeButton(xi,true);
 
