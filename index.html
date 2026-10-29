@@ -749,6 +749,12 @@ function conteoEstado(r){
 }
 function vincularConteo(row,counts){
  if(row.__soloDemostracion)return row;
+ // La relación exacta reemplaza cualquier inferencia por rango.
+ if(row.cicloSiembraId){
+  const ciclo=(counts.ciclos||[]).find(c=>c.id===row.cicloSiembraId);
+  return {...row,__conteoClave:"ciclo:"+row.cicloSiembraId,
+   __conteoEstado:ciclo?conteoEstado(ciclo):"Pendiente"};
+ }
  const fecha=date(row),k=conteoClave(fecha,row.bloque,row.cama);
  const ciclos=(counts.ciclos||[]).filter(c=>
   conteoCodigo(c.bloque)===conteoCodigo(row.bloque)&&
@@ -806,7 +812,7 @@ function leerLaboresLocal(){
      for(const m of e.target.result||[]){
       const key=String(m.key??""),v=m.value||{};
       if(key.startsWith("calidadSiembraConteoCiclo:v2:")){
-       if(v.id&&v.fechaInicio&&v.fechaFin&&v.fechaInicio<=v.fechaFin)
+       if(v.id&&v.fechaInicio&&(!v.fechaFin||v.fechaInicio<=v.fechaFin))
         result.counts.ciclos.push(v);
       }else if(key.startsWith("calidadSiembraDensidad:v1:")){
        const k=conteoClave(v.fecha,v.bloque,v.cama);
