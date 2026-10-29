@@ -75,11 +75,18 @@ function conteoEstado(r){
 }
 function vincularConteo(row,counts){
  if(row.__soloDemostracion)return row;
- const k=conteoClave(date(row),row.bloque,row.cama);
+ const fecha=date(row),k=conteoClave(fecha,row.bloque,row.cama);
+ const ciclos=(counts.ciclos||[]).filter(c=>
+  conteoCodigo(c.bloque)===conteoCodigo(row.bloque)&&
+  conteoCodigo(c.cama)===conteoCodigo(row.cama)&&
+  c.fechaInicio<=fecha&&fecha<=c.fechaFin);
+ if(ciclos.length===1)return {...row,__conteoClave:"ciclo:"+ciclos[0].id,
+  __conteoEstado:conteoEstado(ciclos[0])};
+ if(ciclos.length>1)return {...row,__conteoClave:"",__conteoEstado:"Pendiente"};
  const direct=row.__conteoEstado??row.conteoLineasEstado??row.estadoConteoLineas;
  const estado=counts.has(k)?counts.get(k):
   direct==="Conforme"||direct==="Inconforme"?direct:"Pendiente";
- return {...row,__conteoClave:k,__conteoEstado:estado};
+ return {...row,__conteoClave:k?"fecha:"+k:"",__conteoEstado:estado};
 }
 function idRevision(r){
  return r.correlationId||[r.colaborador??r.sembrador??r.empleado??"",
@@ -114,6 +121,7 @@ function leerLaboresLocal(){
    if(!db.objectStoreNames.contains("calidadEvaluaciones")||
     !db.objectStoreNames.contains("meta")){db.close();empty();return;}
    const result={rows:[],counts:new Map()};
+   result.counts.ciclos=[];
    try{
     const tx=db.transaction(["calidadEvaluaciones","meta"],"readonly");
     tx.objectStore("calidadEvaluaciones").getAll().onsuccess=e=>{
@@ -122,9 +130,14 @@ function leerLaboresLocal(){
     };
     tx.objectStore("meta").getAll().onsuccess=e=>{
      for(const m of e.target.result||[]){
-      if(!String(m.key??"").startsWith("calidadSiembraDensidad:v1:"))continue;
-      const v=m.value||{},k=conteoClave(v.fecha,v.bloque,v.cama);
-      if(k)result.counts.set(k,conteoEstado(v));
+      const key=String(m.key??""),v=m.value||{};
+      if(key.startsWith("calidadSiembraConteoCiclo:v2:")){
+       if(v.id&&v.fechaInicio&&v.fechaFin&&v.fechaInicio<=v.fechaFin)
+        result.counts.ciclos.push(v);
+      }else if(key.startsWith("calidadSiembraDensidad:v1:")){
+       const k=conteoClave(v.fecha,v.bloque,v.cama);
+       if(k)result.counts.set(k,conteoEstado(v));
+      }
      }
     };
     tx.oncomplete=()=>{db.close();resolve(result);};
@@ -432,6 +445,16 @@ function demoCalidadSiembra(){
    }
   }
  }
+ // Una cama revisada el viernes (dos veces, semana 43) y el lunes
+ // siguiente (tres veces, semana 44), con conteo final inconforme.
+ const comun={__calidadGrupo:"campo",bloque:"B-CRUCE",cama:"101",
+  colaborador:"DEMO-CRUCE",colaboradorNombre:"Elena Mora · cama entre semanas (ejemplo)",
+  __conteoClave:"ciclo:DEMO-CAMA-20261023",__conteoEstado:"Inconforme",
+  incumplimientos:[],esMuestraReal:true,__soloDemostracion:true};
+ for(let n=0;n<2;n++)out.push({...comun,id:"DEMO-CROSS-FRI-"+n,
+  fecha:"2026-10-23",anio:2026,semana:43,revision:n+1});
+ for(let n=0;n<3;n++)out.push({...comun,id:"DEMO-CROSS-MON-"+n,
+  fecha:"2026-10-26",anio:2026,semana:44,revision:n+1});
  return out;
 }
 function sampleQualityRecords(groups,modId){
@@ -1316,6 +1339,12 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   };
   void cargarOrigen();
   window.addEventListener("focus",()=>{if(panel.isConnected)void cargarOrigen();});
+  try{
+   const channel=new BroadcastChannel("labores-jn-conteo-lineas");
+   channel.addEventListener("message",event=>{
+    if(event.data?.tipo==="conteo-actualizado"&&panel.isConnected)void cargarOrigen();
+   });
+  }catch(error){console.warn("Canal de conteos no disponible",error);}
  }
  styleModeButton(xa,false);
  styleModeButton(xi,true);
