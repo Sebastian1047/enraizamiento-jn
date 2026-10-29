@@ -284,11 +284,49 @@ function analyzeComparison(rows,group,items,selectedIds,years,weeks,exactPeriods
   const ev=evaluate(r,group,items);
   if(ev.unknown){invalid.push(r);return;}
   let row=out.get(per);
-  if(!row){row={year,week,label:year+' · S'+String(week).padStart(2,"0"),n:0,overall:0,selected:0,ids:new Map(chosen.map(([id])=>[id,0]))};out.set(per,row)}
+  if(!row){
+   row={year,week,label:year+' · S'+String(week).padStart(2,"0"),
+    n:0,measuredN:0,overall:0,selected:0,selectedN:0,
+    ids:new Map(chosen.map(([id])=>[id,0])),
+    idCounts:new Map(chosen.map(([id])=>[id,0])),seenBeds:new Set()};
+   out.set(per,row);
+  }
   row.n++;
-  if(!ev.failed.size)row.overall++;
-  if(!chosen.some(([id])=>ev.failed.has(id)))row.selected++;
-  for(const [id] of chosen)if(!ev.failed.has(id))row.ids.set(id,row.ids.get(id)+1);
+  if(!group.conteoPorCama){
+   row.measuredN++;
+   if(!ev.failed.size)row.overall++;
+   row.selectedN++;
+   if(!chosen.some(([id])=>ev.failed.has(id)))row.selected++;
+   for(const [id] of chosen){
+    row.idCounts.set(id,row.idCounts.get(id)+1);
+    if(!ev.failed.has(id))row.ids.set(id,row.ids.get(id)+1);
+   }
+  }else{
+   const completed=!ev.pendingConteo;
+   if(completed){row.measuredN++;if(!ev.failed.size)row.overall++;}
+   const onlyCount=chosen.length===1&&chosen[0][0]==="13";
+   const needsCount=chosen.some(([id])=>id==="13");
+   const bedId=String(r.colaborador??r.sembrador??worker(r))+"|"+String(r.__conteoClave??"");
+   const newBed=completed&&Boolean(r.__conteoClave)&&!row.seenBeds.has(bedId);
+   if(newBed)row.seenBeds.add(bedId);
+   if(onlyCount){
+    if(newBed){row.selectedN++;if(!ev.failed.has("13"))row.selected++;}
+   }else if(!needsCount||completed){
+    row.selectedN++;
+    if(!chosen.some(([id])=>ev.failed.has(id)))row.selected++;
+   }
+   for(const [id] of chosen){
+    if(id==="13"){
+     if(newBed){
+      row.idCounts.set(id,row.idCounts.get(id)+1);
+      if(!ev.failed.has(id))row.ids.set(id,row.ids.get(id)+1);
+     }
+    }else{
+     row.idCounts.set(id,row.idCounts.get(id)+1);
+     if(!ev.failed.has(id))row.ids.set(id,row.ids.get(id)+1);
+    }
+   }
+  }
  });
  return {periods:[...out.values()].sort((a,b)=>a.year-b.year||a.week-b.week),chosen,excluded:invalid.length};
 }
@@ -1191,11 +1229,13 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
      canSelectDays()?selectedDays:null);
   const {periods,chosen,excluded}=data;
   const total=periods.reduce((sum,r)=>sum+r.n,0);
+  const selectedN=periods.reduce((sum,r)=>sum+r.selectedN,0);
+  const measuredN=periods.reduce((sum,r)=>sum+r.measuredN,0);
   const chosenOk=periods.reduce((sum,r)=>sum+r.selected,0);
   const overall=periods.reduce((sum,r)=>sum+r.overall,0);
   const labels=periods.map(r=>r.label);
   const series=chosen.map(([id,name])=>({
-   label:name,values:periods.map(r=>r.n?100*r.ids.get(id)/r.n:null)
+   label:name,values:periods.map(r=>r.idCounts.get(id)?100*r.ids.get(id)/r.idCounts.get(id):null)
   }));
   const format=(ok,n)=>n?pct(ok,n):"—";
   const who=personMode==="grupal"?"Todas las personas":searched?"Persona: "+searched:"Selecciona una persona";
@@ -1229,15 +1269,15 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   }
   const metrics='<div class="quality-stats q-explore-stats">'+
    '<div class="module-stat"><span>Evaluaciones comparadas</span><strong>'+fmt.format(total)+'</strong></div>'+
-   '<div class="module-stat"><span>Conformidad de ítems seleccionados</span><strong>'+format(chosenOk,total)+'</strong></div>'+
-   '<div class="module-stat"><span>Conformidad total (todos los ítems)</span><strong>'+format(overall,total)+'</strong></div>'+
+   '<div class="module-stat"><span>Conformidad de ítems seleccionados</span><strong>'+format(chosenOk,selectedN)+'</strong></div>'+
+   '<div class="module-stat"><span>Conformidad total (todos los ítems)</span><strong>'+format(overall,c.conteoPorCama?measuredN:total)+'</strong></div>'+
    '</div>';
   const th=['AÑO','SEMANA','EVALUACIONES',...chosen.map(row=>row[1]),'CONFORMIDAD SELECCIONADA'];
   const header='<tr>'+th.map(v=>'<th>'+esc(v)+'</th>').join("")+'</tr>';
   const cells=periods.length?periods.map(r=>'<tr><td>'+r.year+'</td><td>S'+
     String(r.week).padStart(2,"0")+'</td><td>'+r.n+'</td>'+
-    chosen.map(([id])=>'<td>'+format(r.ids.get(id),r.n)+'</td>').join("")+
-    '<td><strong>'+format(r.selected,r.n)+'</strong></td></tr>').join(""):
+    chosen.map(([id])=>'<td>'+format(r.ids.get(id),r.idCounts.get(id))+'</td>').join("")+
+    '<td><strong>'+format(r.selected,r.selectedN)+'</strong></td></tr>').join(""):
     '<tr><td colspan="'+th.length+'" class="module-empty">No hay evaluaciones para los años, semanas, ítems y colaborador seleccionados.</td></tr>';
   xresult.innerHTML=metrics+'<div class="q-explore-visual"><h4>Evolución de conformidad por período</h4>'+
    '<p>Cada línea representa un ítem. Los valores corresponden al porcentaje de evaluaciones sin incumplimiento del ítem.</p>'+
@@ -1246,6 +1286,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    '</thead><tbody>'+cells+'</tbody></table></div>'+
    '<p class="q-explore-help">La conformidad seleccionada exige que una evaluación no presente fallas en ninguno de los ítems elegidos. '+
    'La conformidad total considera todos los ítems del formulario, aunque solo compares uno. '+
+   (c.conteoPorCama?' El ítem Conteo de Líneas utiliza camas, mientras que la conformidad total utiliza revisiones con conteo finalizado.':'')+
    'Los períodos sin evaluaciones no generan porcentajes.'+
    (excluded?' Se excluyeron '+excluded+' evaluaciones con fallas sin identificar.':'')+'</p>';
  }
