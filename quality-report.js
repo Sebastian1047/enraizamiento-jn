@@ -547,6 +547,11 @@ function qualityPDFReport(pdf,payload,logos={}){
   qualityPDFText(pdf,"CELDA VACÍA = ÍTEM NO ASIGNADO. ASEO APLICA A TODOS.",margin,y+3.4);
   y+=5;
  }
+ if(payload.group.conteoPorCama){
+  pdf.setFont("helvetica","normal");pdf.setFontSize(6.2);pdf.setTextColor(54,83,65);
+  qualityPDFText(pdf,"CONTEO POR CAMAS; TOTAL POR REVISIONES CERRADAS. * RESULTADO PROVISIONAL.",margin,y+3.4);
+  y+=5;
+ }
  pdf.setTextColor(34,52,41);pdf.setFillColor(241,245,242);
  pdf.rect(margin,y,width,7,"FD");
  pdf.setFont("helvetica","bold");pdf.setFontSize(8);
@@ -719,7 +724,7 @@ function qualityPaperReport({moduleId,group,items,rows,weekRows,current,excluded
   '<th scope="col" rowspan="2">Conformidad Total</th></tr><tr>'+head+'</tr>':
   '<tr><th scope="col">NOMBRE DEL COLABORADOR</th>'+head+'<th scope="col">Conformidad Total</th></tr>';
  const details=weekRows.map(row=>'<tr><th scope="row">SEMANA '+row.week+' · '+row.yr+'</th>'+
-  '<td>'+pct(row.pass,row.n)+'</td></tr>').join("");
+  '<td>'+pct(row.pass,row.n)+(row.pending?" *":"")+'</td></tr>').join("");
  const areaName=moduleId==="siembra-campo"?"SIEMBRA EN CAMPO":group.label.toUpperCase();
  const responsible=moduleId==="siembra-campo"?"ERASMO GOMEZ":"—";
  const indicator=moduleId==="siembra-campo"?"METEORO":"CALIDAD DE LA LABOR";
@@ -739,6 +744,7 @@ function qualityPaperReport({moduleId,group,items,rows,weekRows,current,excluded
   (isDemo?'<div class="quality-paper-demowarning">DATOS DE PRUEBA — INFORME DEMOSTRATIVO, NO VÁLIDO COMO EVALUACIÓN REAL</div>':'')+
   '<h3 class="quality-paper-title">RESULTADOS CONFORMIDAD INDIVIDUAL '+esc(currentPeriod)+'</h3>'+
   (group.porGruposPreparacion?'<p class="quality-paper-scope-note">Cada colaborador realiza un solo grupo de trabajo. Se califican únicamente los ítems de ese grupo; los demás quedan vacíos. Aseo aplica a todos. La conformidad individual se calcula sobre sus ítems asignados.</p>':'')+
+  (group.conteoPorCama?'<p class="quality-paper-scope-note">Conteo de Líneas: porcentaje por camas terminadas. Una cama inconforme hace inconformes todas las revisiones asociadas. La conformidad total y grupal usan revisiones con conteo conocido; * señala resultados provisionales por conteos pendientes.</p>':'')+
   '<div class="quality-paper-table-scroll"><table class="quality-paper-main-table'+
    (items.length>12?' quality-paper-many-cols':'')+'"><thead>'+groupedHeader+'</thead><tbody>'+
   (first||'<tr><td colspan="'+(items.length+2)+'" class="quality-paper-empty">No hay evaluaciones para este período.</td></tr>')+
@@ -899,7 +905,8 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    const weeks=(selectedIndex<0?[]:chronological.slice(Math.max(0,selectedIndex-3),selectedIndex+1)).map(p=>{
      const result=calc(p.records,c,items);
      return {yr:p.yr,week:p.week,
-      n:result.rows.reduce((sum,r)=>sum+r.samples,0),
+      n:result.rows.reduce((sum,r)=>sum+(c.conteoPorCama?r.completed:r.samples),0),
+      pending:result.rows.reduce((sum,r)=>sum+(r.pending||0),0),
       pass:result.rows.reduce((sum,r)=>sum+r.pass,0)};
    });
    reportPayload={moduleId:mod.id,group:c,items,rows:res.rows,weekRows:weeks,
