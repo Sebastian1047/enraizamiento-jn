@@ -80,18 +80,25 @@ function evaluate(r,config,items){
 
 const PREP_GROUP_ITEMS={1:["2","4"],2:["3","5"],3:["6"],4:["7"],5:["9"],6:["10"]};
 const PREP_GROUP_HEADERS=[["Limpieza y nivelación",2],["Enmiendas y durmientes",2],["Profundidad",1],["Riego",1],["Instalación de malla",1],["Mangueras de goteo",1],["Aseo",1]];
+// Solo un grupo de trabajo por colaborador y evaluación.
+function prepGroup(r){
+ const values=r.gruposPreparacion??r.grupos??(r.grupoPreparacion!=null?[r.grupoPreparacion]:null);
+ if(!Array.isArray(values))return null;
+ const groups=new Set();
+ for(const value of values){
+  const g=Number(value);
+  if(g===7)continue; // Aseo es transversal.
+  if(!Number.isInteger(g)||!PREP_GROUP_ITEMS[g])return null;
+  groups.add(g);
+ }
+ return groups.size===1?[...groups][0]:null;
+}
 function prepAssigned(r,c,items){
  const ids=new Set(items.map(([id])=>String(id)));
  if(!c.porGruposPreparacion)return ids;
- const groups=r.gruposPreparacion??r.grupos??(r.grupoPreparacion!=null?[r.grupoPreparacion]:null);
- if(!Array.isArray(groups))return new Set();
- let hasGroup=false;const assigned=new Set(["8"]);
- for(const value of groups){
-  const g=Number(value);
-  if(!Number.isInteger(g)||!PREP_GROUP_ITEMS[g])continue;
-  hasGroup=true;PREP_GROUP_ITEMS[g].forEach(id=>assigned.add(id));
- }
- return hasGroup?new Set([...assigned].filter(id=>ids.has(id))):new Set();
+ const group=prepGroup(r);
+ if(group===null)return new Set();
+ return new Set([...PREP_GROUP_ITEMS[group],"8"].filter(id=>ids.has(id)));
 }
 function prepItemPct(p,id,c){
  if(c.porGruposPreparacion){
@@ -200,9 +207,22 @@ function analyzeComparison(rows,group,items,selectedIds,years,weeks,exactPeriods
 
 function calc(records,group,items){
  const people=new Map();let excluded=0;
+ // Excluir a una persona si sus evaluaciones de este informe
+ // contienen grupos de trabajo incompatibles.
+ const selected=new Map(),conflicts=new Set();
+ if(group.porGruposPreparacion){
+  for(const r of records){
+   const g=prepGroup(r);
+   if(g===null)continue;
+   const id=String(r.colaborador||r.sembrador||r.empleado||worker(r)||"Sin código");
+   if(selected.has(id)&&selected.get(id)!==g)conflicts.add(id);
+   else selected.set(id,g);
+  }
+ }
  for(const r of records){
   const failure=evaluate(r,group,items),assigned=prepAssigned(r,group,items);
-  if(failure.unknown||!assigned.size||[...failure.failed].some(id=>!assigned.has(id))){
+  if(conflicts.has(String(r.colaborador||r.sembrador||r.empleado||worker(r)||"Sin código"))||
+   failure.unknown||!assigned.size||[...failure.failed].some(id=>!assigned.has(id))){
    excluded++;continue;
   }
   const id=String(r.colaborador||r.sembrador||r.empleado||worker(r)||"Sin código");
@@ -242,8 +262,8 @@ function demoPreparacionGrupos(){
  for(const [year,week] of periods){
   const dates=compareWeekDays(year+"-S"+String(week).padStart(2,"0"));
   for(let i=0;i<names.length;i++){
-   const grupos=i===0?[1,4]:[1+i%6];
-   const own=[...new Set(grupos.flatMap(g=>PREP_GROUP_ITEMS[g]))];
+   const grupos=[1+i%6];
+   const own=PREP_GROUP_ITEMS[grupos[0]];
    for(let rev=0;rev<2;rev++){
     const fail=[];
     if((i+week+rev)%5===0)fail.push(own[(i+rev)%own.length]);
@@ -600,7 +620,7 @@ function qualityPaperReport({moduleId,group,items,rows,weekRows,current,excluded
   '</header>'+
   (isDemo?'<div class="quality-paper-demowarning">DATOS DE PRUEBA — INFORME DEMOSTRATIVO, NO VÁLIDO COMO EVALUACIÓN REAL</div>':'')+
   '<h3 class="quality-paper-title">RESULTADOS CONFORMIDAD INDIVIDUAL '+esc(currentPeriod)+'</h3>'+
-  (group.porGruposPreparacion?'<p class="quality-paper-scope-note">Cada persona recibe calificación solo en los ítems de sus grupos; las celdas vacías significan que el criterio no corresponde. Aseo aplica a todos. La conformidad individual se calcula sobre sus ítems asignados.</p>':'')+
+  (group.porGruposPreparacion?'<p class="quality-paper-scope-note">Cada colaborador realiza un solo grupo de trabajo. Se califican únicamente los ítems de ese grupo; los demás quedan vacíos. Aseo aplica a todos. La conformidad individual se calcula sobre sus ítems asignados.</p>':'')+
   '<div class="quality-paper-table-scroll"><table class="quality-paper-main-table'+
    (items.length>12?' quality-paper-many-cols':'')+'"><thead>'+groupedHeader+'</thead><tbody>'+
   (first||'<tr><td colspan="'+(items.length+2)+'" class="quality-paper-empty">No hay evaluaciones para este período.</td></tr>')+
@@ -612,7 +632,9 @@ function qualityPaperReport({moduleId,group,items,rows,weekRows,current,excluded
    '<div class="quality-paper-chart-wrap"><h4>'+esc(indicator)+' · CONFORMIDAD GRUPAL (SEMANAL)</h4>'+
     qualityWeeklyGraph(weekRows)+'</div>'+
   '</section>'+
-  (excluded?'<p class="quality-paper-excluded">'+fmt.format(excluded)+' muestra(s) sin correspondencia con el catálogo excluidas del cálculo.</p>':'')+
+  (excluded?'<p class="quality-paper-excluded">'+fmt.format(excluded)+
+    (group.porGruposPreparacion?' evaluación(es) excluidas por grupos ausentes, múltiples o inconsistentes.':
+    ' muestra(s) sin correspondencia con el catálogo excluidas del cálculo.')+'</p>':'')+
   '<footer class="quality-paper-signatures">'+signing.map(n=>'<div>'+esc(n)+'</div>').join("")+'</footer>'+
   '</article>';
 }
