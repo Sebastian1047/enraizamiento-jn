@@ -1,6 +1,6 @@
 /* Informes de calidad: patrón de evaluacion-siembra, criterios de Labores JN. */
 (()=>{"use strict";
-const CONFIG={"siembra-campo":{"campo":{"label":"Siembra Campo","conteoPorCama":true,"items":[["2","Estado de la planta"],["3","Distribución"],["4","Densidad"],["5","Profundidad de la planta"],["6","Planta inclinada"],["7","Ubicación de mangueras"],["8","Selección de esqueje"],["9","Siembra con marcador"],["10","Aseo sitio de trabajo"],["11","Uso de EPP"],["12","Acuerdos de oro"],["13","Conteo de líneas"]],"conformIds":["-Infinity"],"meta":{"2":{"tipo":"Número","subitems":["Botrytis severa","Daño mecánico"]},"3":{"tipo":"Número"},"4":{"tipo":"Número"},"5":{"tipo":"Número"},"6":{"tipo":"Número"},"7":{"tipo":"X"},"8":{"tipo":"Número"},"9":{"tipo":"X"},"10":{"tipo":"X"},"11":{"tipo":"X"},"12":{"tipo":"X"},"13":{"tipo":"X"}}}},"desbotonado-mallas":{"spider":{"label":"Spider / Cremon","items":[["1","Plantas con Botón o Tocón"],["2","Plantas con Tocón Largo"],["3","Daño Mecánico"],["4","Desbotón a 15 cm de la Base"],["5","Aseo Caminos"]],"conformIds":["-Infinity"],"meta":{"1":{"tipo":"Número"},"2":{"tipo":"Número"},"3":{"tipo":"Número","subitems":["Tallos partidos","Desbotón de tallo principal","Tallos heridos en tocón"]},"4":{"tipo":"X"},"5":{"tipo":"X"}}},"pompon":{"label":"Pompón","items":[["1","Tallos con Botón Principal"],["2","Tallos con Tocón Largo"],["3","Daño Mecánico"],["4","Aseo de Labor"]],"conformIds":["-Infinity"],"meta":{"1":{"tipo":"Número","nota":"tolerancia: 3 plantas con boton"},"2":{"tipo":"Número","nota":"tocon 1 cm max"},"3":{"tipo":"Número","subitems":["Tallos partidos","Exceso de desbotonado","Tallos heridos en tocón"],"nota":"tolerancia: tres tallos por sitio"},"4":{"tipo":"X"}}},"mallas":{"label":"Mallas","items":[["2","Estado de la Malla"],["3","Posición de la Malla"],["4","Daño Mecánico"],["5","Enmallado Oportuno"],["6","Uso de las Herramientas"],["7","Estado de la Flor"]],"conformIds":[],"meta":{"2":{"tipo":"Número","subitems":["Sucia","Rota","Mojada"]},"3":{"tipo":"Número","subitems":["Muy arriba","Muy abajo"]},"4":{"tipo":"X"},"5":{"tipo":"X"},"6":{"tipo":"X"},"7":{"tipo":"X"}}}},"corte":{"cortador-pompon":{"label":"Cortador - Pompón","items":[["2","Deshoje"],["3","Daño mecánico en la flor"],["17","Daño mecánico en el follaje"],["4","Peso del ramo y/o número de tallos"],["5","Número de puntos florales por tallo"],["6","Cauchos"],["7","Longitud del ramo"],["8","Base del ramo"],["9","Alineación de la flor"],["10","Follaje"],["11","Fitosanidad"],["12","Presentación del ramo"],["13","Hidratación"],["14","Aperturas"],["16","Acuerdos de oro"]],"conformIds":["1"],"meta":{"2":{"tipo":"X"},"3":{"tipo":"Número","subitems":["Cabezas de flor","Penunculos quebrados"]},"4":{"tipo":"X"},"5":{"tipo":"X"},"6":{"tipo":"Número","subitems":["Alimenacion","Numero de vueltas","Ubicacion"]},"7":{"tipo":"Número","subitems":["Corto","Largo"]},"8":{"tipo":"Número","subitems":["Corte parejo","Tallos rasgados","Pata leñosa"]},"9":{"tipo":"X"},"10":{"tipo":"Número","subitems":["Amarillento","Quemado","Deshidratado","Necrótico","Sucio"]},"11":{"tipo":"Número","subitems":["Botrytis","Stemphylium","Quemazón","Minador","Trips","Áfidos","Gusano cogollero"]},"12":{"tipo":"Número","subitems":["Estado del capuchon","Ubicacion del capuchon","Flor sucia"]},"13":{"tipo":"Número","subitems":["Cantidad","Ramos en balde","Agua en balde"]},"14":{"tipo":"Número","subitems":["Abierto","Cerrado","Mezclas"]},"16":{"tipo":"X"},"17":{"tipo":"Número","subitems":["Hojas quebradas","Maltrato"]}}},"cortador-spider":{"label":"Cortador - Spider","items":[["2","Deshoje"],["3","Daño mecánico en la flor"],["17","Daño mecánico en el follaje"],["4","Peso del ramo y/o número de tallos"],["5","Número de puntos florales por tallo"],["6","Cauchos"],["7","Longitud del ramo"],["8","Base del ramo"],["9","Alineación de la flor"],["10","Follaje"],["11","Fitosanidad"],["12","Presentación del ramo"],["13","Hidratación"],["14","Aperturas"],["16","Acuerdos de oro"]],"conformIds":["1"],"meta":{"2":{"tipo":"X"},"3":{"tipo":"Número","subitems":["Cabezas de flor","Penunculos quebrados"]},"4":{"tipo":"X"},"5":{"tipo":"X"},"6":{"tipo":"Número","subitems":["Alimenacion","Numero de vueltas","Ubicacion"]},"7":{"tipo":"Número","subitems":["Corto","Largo"]},"8":{"tipo":"Número","subitems":["Corte parejo","Tallos rasgados","Pata leñosa"]},"9":{"tipo":"X"},"10":{"tipo":"Número","subitems":["Amarillento","Quemado","Deshidratado","Necrótico","Sucio"]},"11":{"tipo":"Número","subitems":["Botrytis","Stemphylium","Quemazón","Minador","Trips","Áfidos","Gusano cogollero"]},"12":{"tipo":"Número","subitems":["Estado del capuchon","Ubicacion del capuchon","Flor sucia"]},"13":{"tipo":"Número","subitems":["Cantidad","Ramos en balde","Agua en balde"]},"14":{"tipo":"Número","subitems":["Abierto","Cerrado","Mezclas"]},"16":{"tipo":"X"},"17":{"tipo":"Número","subitems":["Hojas quebradas","Maltrato"]}}},"garruchero":{"label":"Transportador","items":[["2","Cuidado de Ramos Campo"],["3","Hidratación en Balde"],["4","Cantidad de Ramos en Balde"],["5","Cuidado de Ramos Poscosecha"],["6","Descargue de Flor en Sala"],["7","EE PP"]],"conformIds":["1"],"meta":{"2":{"tipo":"Número"},"3":{"tipo":"Número","subitems":["Balde sin solución inicial","Tallos sin contacto con solución"]},"4":{"tipo":"X"},"5":{"tipo":"X"},"6":{"tipo":"Número"},"7":{"tipo":"X"}}},"recogedor":{"label":"Recogedor","items":[["3","Cuidado de Ramos"],["4","Marcación de etiquetas"],["5","Cantidad"],["6","Hidratación en Balde"],["7","Mezcla de Medidas"],["8","Ramos en la Malla Caminos"],["9","Desplazamiento de Baldes"],["10","Acuerdos de Oro"]],"conformIds":["1"],"meta":{"3":{"tipo":"Número"},"4":{"tipo":"Número"},"5":{"tipo":"Número"},"6":{"tipo":"Número"},"7":{"tipo":"Número"},"8":{"tipo":"Número"},"9":{"tipo":"Número"},"10":{"tipo":"Número"}}}},"bandejas-enraizamiento":{"bandejas":{"label":"Bandejas Enraizamiento","items":[["2","Estado de Esqueje"],["3","Ubicación del Esqueje"],["4","Esqueje Inclinado"],["5","Espacios Vacíos"],["6","Daño Mecánico"],["7","Hundimiento del Sustrato al momento de la Siembra"],["8","Marcación"]],"conformIds":["-Infinity","1"],"meta":{"2":{"tipo":"X"},"3":{"tipo":"Número"},"4":{"tipo":"Número"},"5":{"tipo":"X"},"6":{"tipo":"Número","subitems":["Esqueje partido","Esqueje sin cogollo"]},"7":{"tipo":"X"},"8":{"tipo":"X"}}}},"preparacion-camas":{"preparacion":{"label":"Preparación Camas","porGruposPreparacion":true,"items":[["2","Limpieza de Terreno"],["3","Distribución de Enmiendas"],["4","Nivelación del Suelo"],["5","(Estado, Distribución y Cantidad de Durmientes)"],["6","Profundidad de la Preparación"],["7","Riego"],["8","Aseo"],["9","Instalación de la Malla"],["10","Instalación de Mangueras de Goteo"]],"conformIds":["-Infinity","1"],"meta":{"2":{"tipo":"X"},"3":{"tipo":"X"},"4":{"tipo":"X"},"5":{"tipo":"X"},"6":{"tipo":"X"},"7":{"tipo":"X"},"8":{"tipo":"X"},"9":{"tipo":"X"},"10":{"tipo":"X"}}}},"empacador-rendimiento":{"empacador":{"label":"Empacador","items":[["2","Área de Empaque limpia y Ordenada"],["3","Tipo de Caja"],["4","Simetría"],["5","Ubicación del logo de capuchón"],["6","Código Empaque"],["7","Presentación de Ramos"],["8","Número de Ramos por Caja"],["9","Especificaciones de PO, SO y OM"],["10","Marcación / Código"],["11","Daño Mecánico"],["12","UPC y Capuchón Manchado, rasgado"]],"conformIds":["1"]}},"surtidor-rendimiento":{"surtidor":{"label":"Surtidor","items":[["2","Surtido"],["3","Apertura"],["4","Daño Mecánico"],["5","Marcación"]],"conformIds":["1"]}},"zunchador-rendimiento":{"zunchador":{"label":"Zunchador","items":[["2","Zunchos"],["3","Daño mecánico"]],"conformIds":["1"]}},"digitador-rendimiento":{"digitador":{"label":"Digitador","items":[["2","Mala marcación"]],"conformIds":["1"]}},"aspersion-rendimiento":{"aspersion":{"label":"Aspersión","items":[["2","Conocimiento del Programa de Aplicación"],["3","Uso Correcto de EPP´S"],["4","Herramientas de Aspersión"],["5","Desagüe antes de la Aplicación"],["6","Dirección de las Boquillas"],["7","Cobertura"],["8","Rendimiento de la Labor"],["9","Paso Sincronizado"],["10","Orden y Aseo"],["11","Horarios de la Labor"],["12","Acuerdos de Oro"]],"conformIds":["1"]}},"tanquista-rendimiento":{"tanquista":{"label":"Tanquista","items":[["2","Conocimiento del Programa de Aplicación"],["3","Uso Correcto de EPP´S"],["4","Premezcla"],["5","Preparación de la mezcla"],["6","Equipos"],["7","Avisos Informativos"],["8","Orden y Aseo"],["9","Horarios de la Labor"],["10","Acuerdos de Oro"]],"conformIds":["1"]}}};
+const CONFIG={"siembra-campo":{"campo":{"label":"Siembra Campo","conteoIndependiente":true,"items":[["2","Estado de la planta"],["3","Distribución"],["4","Densidad"],["5","Profundidad de la planta"],["6","Planta inclinada"],["7","Ubicación de mangueras"],["8","Selección de esqueje"],["9","Siembra con marcador"],["10","Aseo sitio de trabajo"],["11","Uso de EPP"],["12","Acuerdos de oro"]],"conformIds":["-Infinity"],"meta":{"2":{"tipo":"Número","subitems":["Botrytis severa","Daño mecánico"]},"3":{"tipo":"Número"},"4":{"tipo":"Número"},"5":{"tipo":"Número"},"6":{"tipo":"Número"},"7":{"tipo":"X"},"8":{"tipo":"Número"},"9":{"tipo":"X"},"10":{"tipo":"X"},"11":{"tipo":"X"},"12":{"tipo":"X"}}}},"desbotonado-mallas":{"spider":{"label":"Spider / Cremon","items":[["1","Plantas con Botón o Tocón"],["2","Plantas con Tocón Largo"],["3","Daño Mecánico"],["4","Desbotón a 15 cm de la Base"],["5","Aseo Caminos"]],"conformIds":["-Infinity"],"meta":{"1":{"tipo":"Número"},"2":{"tipo":"Número"},"3":{"tipo":"Número","subitems":["Tallos partidos","Desbotón de tallo principal","Tallos heridos en tocón"]},"4":{"tipo":"X"},"5":{"tipo":"X"}}},"pompon":{"label":"Pompón","items":[["1","Tallos con Botón Principal"],["2","Tallos con Tocón Largo"],["3","Daño Mecánico"],["4","Aseo de Labor"]],"conformIds":["-Infinity"],"meta":{"1":{"tipo":"Número","nota":"tolerancia: 3 plantas con boton"},"2":{"tipo":"Número","nota":"tocon 1 cm max"},"3":{"tipo":"Número","subitems":["Tallos partidos","Exceso de desbotonado","Tallos heridos en tocón"],"nota":"tolerancia: tres tallos por sitio"},"4":{"tipo":"X"}}},"mallas":{"label":"Mallas","items":[["2","Estado de la Malla"],["3","Posición de la Malla"],["4","Daño Mecánico"],["5","Enmallado Oportuno"],["6","Uso de las Herramientas"],["7","Estado de la Flor"]],"conformIds":[],"meta":{"2":{"tipo":"Número","subitems":["Sucia","Rota","Mojada"]},"3":{"tipo":"Número","subitems":["Muy arriba","Muy abajo"]},"4":{"tipo":"X"},"5":{"tipo":"X"},"6":{"tipo":"X"},"7":{"tipo":"X"}}}},"corte":{"cortador-pompon":{"label":"Cortador - Pompón","items":[["2","Deshoje"],["3","Daño mecánico en la flor"],["17","Daño mecánico en el follaje"],["4","Peso del ramo y/o número de tallos"],["5","Número de puntos florales por tallo"],["6","Cauchos"],["7","Longitud del ramo"],["8","Base del ramo"],["9","Alineación de la flor"],["10","Follaje"],["11","Fitosanidad"],["12","Presentación del ramo"],["13","Hidratación"],["14","Aperturas"],["16","Acuerdos de oro"]],"conformIds":["1"],"meta":{"2":{"tipo":"X"},"3":{"tipo":"Número","subitems":["Cabezas de flor","Penunculos quebrados"]},"4":{"tipo":"X"},"5":{"tipo":"X"},"6":{"tipo":"Número","subitems":["Alimenacion","Numero de vueltas","Ubicacion"]},"7":{"tipo":"Número","subitems":["Corto","Largo"]},"8":{"tipo":"Número","subitems":["Corte parejo","Tallos rasgados","Pata leñosa"]},"9":{"tipo":"X"},"10":{"tipo":"Número","subitems":["Amarillento","Quemado","Deshidratado","Necrótico","Sucio"]},"11":{"tipo":"Número","subitems":["Botrytis","Stemphylium","Quemazón","Minador","Trips","Áfidos","Gusano cogollero"]},"12":{"tipo":"Número","subitems":["Estado del capuchon","Ubicacion del capuchon","Flor sucia"]},"13":{"tipo":"Número","subitems":["Cantidad","Ramos en balde","Agua en balde"]},"14":{"tipo":"Número","subitems":["Abierto","Cerrado","Mezclas"]},"16":{"tipo":"X"},"17":{"tipo":"Número","subitems":["Hojas quebradas","Maltrato"]}}},"cortador-spider":{"label":"Cortador - Spider","items":[["2","Deshoje"],["3","Daño mecánico en la flor"],["17","Daño mecánico en el follaje"],["4","Peso del ramo y/o número de tallos"],["5","Número de puntos florales por tallo"],["6","Cauchos"],["7","Longitud del ramo"],["8","Base del ramo"],["9","Alineación de la flor"],["10","Follaje"],["11","Fitosanidad"],["12","Presentación del ramo"],["13","Hidratación"],["14","Aperturas"],["16","Acuerdos de oro"]],"conformIds":["1"],"meta":{"2":{"tipo":"X"},"3":{"tipo":"Número","subitems":["Cabezas de flor","Penunculos quebrados"]},"4":{"tipo":"X"},"5":{"tipo":"X"},"6":{"tipo":"Número","subitems":["Alimenacion","Numero de vueltas","Ubicacion"]},"7":{"tipo":"Número","subitems":["Corto","Largo"]},"8":{"tipo":"Número","subitems":["Corte parejo","Tallos rasgados","Pata leñosa"]},"9":{"tipo":"X"},"10":{"tipo":"Número","subitems":["Amarillento","Quemado","Deshidratado","Necrótico","Sucio"]},"11":{"tipo":"Número","subitems":["Botrytis","Stemphylium","Quemazón","Minador","Trips","Áfidos","Gusano cogollero"]},"12":{"tipo":"Número","subitems":["Estado del capuchon","Ubicacion del capuchon","Flor sucia"]},"13":{"tipo":"Número","subitems":["Cantidad","Ramos en balde","Agua en balde"]},"14":{"tipo":"Número","subitems":["Abierto","Cerrado","Mezclas"]},"16":{"tipo":"X"},"17":{"tipo":"Número","subitems":["Hojas quebradas","Maltrato"]}}},"garruchero":{"label":"Transportador","items":[["2","Cuidado de Ramos Campo"],["3","Hidratación en Balde"],["4","Cantidad de Ramos en Balde"],["5","Cuidado de Ramos Poscosecha"],["6","Descargue de Flor en Sala"],["7","EE PP"]],"conformIds":["1"],"meta":{"2":{"tipo":"Número"},"3":{"tipo":"Número","subitems":["Balde sin solución inicial","Tallos sin contacto con solución"]},"4":{"tipo":"X"},"5":{"tipo":"X"},"6":{"tipo":"Número"},"7":{"tipo":"X"}}},"recogedor":{"label":"Recogedor","items":[["3","Cuidado de Ramos"],["4","Marcación de etiquetas"],["5","Cantidad"],["6","Hidratación en Balde"],["7","Mezcla de Medidas"],["8","Ramos en la Malla Caminos"],["9","Desplazamiento de Baldes"],["10","Acuerdos de Oro"]],"conformIds":["1"],"meta":{"3":{"tipo":"Número"},"4":{"tipo":"Número"},"5":{"tipo":"Número"},"6":{"tipo":"Número"},"7":{"tipo":"Número"},"8":{"tipo":"Número"},"9":{"tipo":"Número"},"10":{"tipo":"Número"}}}},"bandejas-enraizamiento":{"bandejas":{"label":"Bandejas Enraizamiento","items":[["2","Estado de Esqueje"],["3","Ubicación del Esqueje"],["4","Esqueje Inclinado"],["5","Espacios Vacíos"],["6","Daño Mecánico"],["7","Hundimiento del Sustrato al momento de la Siembra"],["8","Marcación"]],"conformIds":["-Infinity","1"],"meta":{"2":{"tipo":"X"},"3":{"tipo":"Número"},"4":{"tipo":"Número"},"5":{"tipo":"X"},"6":{"tipo":"Número","subitems":["Esqueje partido","Esqueje sin cogollo"]},"7":{"tipo":"X"},"8":{"tipo":"X"}}}},"preparacion-camas":{"preparacion":{"label":"Preparación Camas","porGruposPreparacion":true,"items":[["2","Limpieza de Terreno"],["3","Distribución de Enmiendas"],["4","Nivelación del Suelo"],["5","(Estado, Distribución y Cantidad de Durmientes)"],["6","Profundidad de la Preparación"],["7","Riego"],["8","Aseo"],["9","Instalación de la Malla"],["10","Instalación de Mangueras de Goteo"]],"conformIds":["-Infinity","1"],"meta":{"2":{"tipo":"X"},"3":{"tipo":"X"},"4":{"tipo":"X"},"5":{"tipo":"X"},"6":{"tipo":"X"},"7":{"tipo":"X"},"8":{"tipo":"X"},"9":{"tipo":"X"},"10":{"tipo":"X"}}}},"empacador-rendimiento":{"empacador":{"label":"Empacador","items":[["2","Área de Empaque limpia y Ordenada"],["3","Tipo de Caja"],["4","Simetría"],["5","Ubicación del logo de capuchón"],["6","Código Empaque"],["7","Presentación de Ramos"],["8","Número de Ramos por Caja"],["9","Especificaciones de PO, SO y OM"],["10","Marcación / Código"],["11","Daño Mecánico"],["12","UPC y Capuchón Manchado, rasgado"]],"conformIds":["1"]}},"surtidor-rendimiento":{"surtidor":{"label":"Surtidor","items":[["2","Surtido"],["3","Apertura"],["4","Daño Mecánico"],["5","Marcación"]],"conformIds":["1"]}},"zunchador-rendimiento":{"zunchador":{"label":"Zunchador","items":[["2","Zunchos"],["3","Daño mecánico"]],"conformIds":["1"]}},"digitador-rendimiento":{"digitador":{"label":"Digitador","items":[["2","Mala marcación"]],"conformIds":["1"]}},"aspersion-rendimiento":{"aspersion":{"label":"Aspersión","items":[["2","Conocimiento del Programa de Aplicación"],["3","Uso Correcto de EPP´S"],["4","Herramientas de Aspersión"],["5","Desagüe antes de la Aplicación"],["6","Dirección de las Boquillas"],["7","Cobertura"],["8","Rendimiento de la Labor"],["9","Paso Sincronizado"],["10","Orden y Aseo"],["11","Horarios de la Labor"],["12","Acuerdos de Oro"]],"conformIds":["1"]}},"tanquista-rendimiento":{"tanquista":{"label":"Tanquista","items":[["2","Conocimiento del Programa de Aplicación"],["3","Uso Correcto de EPP´S"],["4","Premezcla"],["5","Preparación de la mezcla"],["6","Equipos"],["7","Avisos Informativos"],["8","Orden y Aseo"],["9","Horarios de la Labor"],["10","Acuerdos de Oro"]],"conformIds":["1"]}}};
 const fmt=new Intl.NumberFormat("es-CO",{maximumFractionDigits:2});
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const norm=v=>String(v??"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
@@ -58,42 +58,6 @@ function rowRole(r,groups){
  const keys=Object.keys(groups);return keys.length===1?keys[0]:"";
 }
 
-const conteoCodigo=v=>{
- const s=String(v??"").trim().toUpperCase();
- return /^\d+$/.test(s)?String(Number(s)):s;
-};
-function conteoClave(fecha,bloque,cama){
- const f=String(fecha??"").slice(0,10),b=conteoCodigo(bloque),c=conteoCodigo(cama);
- return /^\d{4}-\d{2}-\d{2}$/.test(f)&&b&&c?f+"|"+b+"|"+c:"";
-}
-function conteoEstado(r){
- if(!r)return "Pendiente";
- const a=String(r.reporte??""),b=String(r.aseguradas??"");
- if(!/^\d+$/.test(a)||!/^\d+$/.test(b)||
-  !Number.isSafeInteger(Number(a))||!Number.isSafeInteger(Number(b)))return "Pendiente";
- return Math.abs(Number(a)-Number(b))>=3?"Inconforme":"Conforme";
-}
-function vincularConteo(row,counts){
- if(row.__soloDemostracion)return row;
- // La relación exacta reemplaza cualquier inferencia por rango.
- if(row.cicloSiembraId){
-  const ciclo=(counts.ciclos||[]).find(c=>c.id===row.cicloSiembraId);
-  return {...row,__conteoClave:"ciclo:"+row.cicloSiembraId,
-   __conteoEstado:ciclo?conteoEstado(ciclo):"Pendiente"};
- }
- const fecha=date(row),k=conteoClave(fecha,row.bloque,row.cama);
- const ciclos=(counts.ciclos||[]).filter(c=>
-  conteoCodigo(c.bloque)===conteoCodigo(row.bloque)&&
-  conteoCodigo(c.cama)===conteoCodigo(row.cama)&&
-  c.fechaInicio<=fecha&&fecha<=c.fechaFin);
- if(ciclos.length===1)return {...row,__conteoClave:"ciclo:"+ciclos[0].id,
-  __conteoEstado:conteoEstado(ciclos[0])};
- if(ciclos.length>1)return {...row,__conteoClave:"",__conteoEstado:"Pendiente"};
- const direct=row.__conteoEstado??row.conteoLineasEstado??row.estadoConteoLineas;
- const estado=counts.has(k)?counts.get(k):
-  direct==="Conforme"||direct==="Inconforme"?direct:"Pendiente";
- return {...row,__conteoClave:k?"fecha:"+k:"",__conteoEstado:estado};
-}
 function idRevision(r){
  return r.correlationId||[r.colaborador??r.sembrador??r.empleado??"",
   r.semana??"",r.revision??"",date(r)].join("|");
@@ -113,43 +77,27 @@ function combinarRegistrosCalidad(saved,local){
  }
  return [...out.values()];
 }
+// Consultar solo revisiones: nunca el seguimiento ni sus conteos.
 function leerLaboresLocal(){
  return new Promise(resolve=>{
-  const empty=()=>resolve({rows:[],counts:new Map()});
+  const empty=()=>resolve({rows:[]});
   if(typeof indexedDB==="undefined"){empty();return;}
-  let request;
-  try{request=indexedDB.open("labores-jn-offline");}
-  catch{empty();return;}
-  request.onupgradeneeded=()=>{request.transaction.abort();};
-  request.onerror=empty;
-  request.onsuccess=()=>{
-   const db=request.result;
-   if(!db.objectStoreNames.contains("calidadEvaluaciones")||
-    !db.objectStoreNames.contains("meta")){db.close();empty();return;}
-   const result={rows:[],counts:new Map()};
-   result.counts.ciclos=[];
+  let req;try{req=indexedDB.open("labores-jn-offline")}catch{empty();return;}
+  req.onupgradeneeded=()=>req.transaction.abort();
+  req.onerror=empty;
+  req.onsuccess=()=>{
+   const db=req.result;
+   if(!db.objectStoreNames.contains("calidadEvaluaciones")){db.close();empty();return;}
+   const result={rows:[]};
    try{
-    const tx=db.transaction(["calidadEvaluaciones","meta"],"readonly");
+    const tx=db.transaction(["calidadEvaluaciones"],"readonly");
     tx.objectStore("calidadEvaluaciones").getAll().onsuccess=e=>{
-     result.rows=(e.target.result||[]).filter(x=>x&&
-      String(x.bloque??"").trim()&&String(x.cama??"").trim());
+     result.rows=(e.target.result||[]).filter(x=>x&&x.fecha&&x.colaborador!=null);
     };
-    tx.objectStore("meta").getAll().onsuccess=e=>{
-     for(const m of e.target.result||[]){
-      const key=String(m.key??""),v=m.value||{};
-      if(key.startsWith("calidadSiembraConteoCiclo:v2:")){
-       if(v.id&&v.fechaInicio&&(!v.fechaFin||v.fechaInicio<=v.fechaFin))
-        result.counts.ciclos.push(v);
-      }else if(key.startsWith("calidadSiembraDensidad:v1:")){
-       const k=conteoClave(v.fecha,v.bloque,v.cama);
-       if(k)result.counts.set(k,conteoEstado(v));
-      }
-     }
-    };
-    tx.oncomplete=()=>{db.close();resolve(result);};
-    tx.onerror=()=>{db.close();empty();};
-    tx.onabort=()=>{db.close();empty();};
-   }catch{db.close();empty();}
+    tx.oncomplete=()=>{db.close();resolve(result)};
+    tx.onerror=()=>{db.close();empty()};
+    tx.onabort=()=>{db.close();empty()};
+   }catch{db.close();empty()}
   };
  });
 }
@@ -168,15 +116,11 @@ function evaluate(r,config,items){
    const txt=String(item??"").trim();
    if(!txt)continue;
    if(config.conformIds.includes(txt)||/^(ramo\s+)?conforme$/.test(norm(txt)))continue;
+   if(config.conteoIndependiente&&(txt==="13"||norm(txt)==="conteo de lineas"))continue;
    const found=ids.get(txt)||names.get(norm(txt));
    if(found)failed.add(found);else unknown=true;
  }
- if(config.conteoPorCama){
-  failed.delete("13");
-  if(r.__conteoEstado==="Inconforme")failed.add("13");
- }
- return {failed,unknown,pendingConteo:Boolean(config.conteoPorCama&&
-  r.__conteoEstado!=="Conforme"&&r.__conteoEstado!=="Inconforme")};
+ return {failed,unknown,pendingConteo:false};
 }
 
 const PREP_GROUP_ITEMS={1:["2","4"],2:["3","5"],3:["6"],4:["7"],5:["9"],6:["10"]};
@@ -440,27 +384,14 @@ function demoCalidadSiembra(){
    const [code,name]=people[index],bloque="B"+(index+1);
    for(let revision=1;revision<=30;revision++){
     const cama=revision<=5?"101":revision<=15?"102":"103";
-    const inconforme=index===0?cama==="101":index===1?cama==="102":index===3?cama==="103":false;
     const fallos=index===2&&revision%8===0?["5"]:[];
     out.push({id:"DEMO-CALIDAD-SIEMBRA-"+year+"-"+week+"-"+code+"-"+revision,
      __calidadGrupo:"campo",fecha:day,anio:year,semana:week,revision,
      colaborador:code,colaboradorNombre:name,bloque,cama,
-     __conteoClave:conteoClave(day,bloque,cama),
-     __conteoEstado:inconforme?"Inconforme":"Conforme",
      incumplimientos:fallos,esMuestraReal:true,__soloDemostracion:true});
    }
   }
  }
- // Una cama revisada el viernes (dos veces, semana 43) y el lunes
- // siguiente (tres veces, semana 44), con conteo final inconforme.
- const comun={__calidadGrupo:"campo",bloque:"B-CRUCE",cama:"101",
-  colaborador:"DEMO-CRUCE",colaboradorNombre:"Elena Mora · cama entre semanas (ejemplo)",
-  __conteoClave:"ciclo:DEMO-CAMA-20261023",__conteoEstado:"Inconforme",
-  incumplimientos:[],esMuestraReal:true,__soloDemostracion:true};
- for(let n=0;n<2;n++)out.push({...comun,id:"DEMO-CROSS-FRI-"+n,
-  fecha:"2026-10-23",anio:2026,semana:43,revision:n+1});
- for(let n=0;n<3;n++)out.push({...comun,id:"DEMO-CROSS-MON-"+n,
-  fecha:"2026-10-26",anio:2026,semana:44,revision:n+1});
  return out;
 }
 function sampleQualityRecords(groups,modId){
@@ -837,7 +768,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    allGroups.filter(id=>allowedGroups.includes(id)):allGroups;
  if(!groupNames.length){panel.innerHTML='<div class="module-empty">No hay catálogo de calidad para este módulo.</div>';return;}
  const demoRows=sampleQualityRecords(groups,mod.id);
- let storedRows=read(key(areaId,storageKey)),sourceRows=[],conteosLocales=new Map();
+ let storedRows=read(key(areaId,storageKey)),sourceRows=[];
  const forcedDemo=mod.id==="siembra-campo"&&new URLSearchParams(location.search).get("calidadDemo")==="1";
  let manualChoice=forcedDemo,demoMode=forcedDemo||storedRows.length===0;
  let selectedGroup=groupNames.includes(initialGroup)?initialGroup:groupNames[0],
@@ -915,8 +846,7 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    if(btn)btn.textContent=demoMode?"Ver registros reales":"Ver datos de prueba";
    panel.querySelector("#qCSV").textContent=demoMode?"Exportar CSV de prueba":"Exportar CSV";
  }
- const active=()=>records.filter(r=>real(r)&&rowRole(r,groups)===selectedGroup)
-  .map(r=>mod.id==="siembra-campo"?vincularConteo(r,conteosLocales):r);
+ const active=()=>records.filter(r=>real(r)&&rowRole(r,groups)===selectedGroup);
  const cols=()=>{const c=groups[selectedGroup],saved=read(key(areaId,mod.id+"_quality_catalog_"+selectedGroup));
  return (demoMode?demoItems(c):(c.external&&saved.length?saved:c.items)).filter(x=>Array.isArray(x)&&x.length===2)
  .filter(x=>!c.conformIds.includes(String(x[0]))&&!/^(ramo\s+)?conforme$/.test(norm(x[1])))
@@ -1337,7 +1267,6 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
    const datos=await leerLaboresLocal();
    if(!panel.isConnected)return;
    sourceRows=datos.rows;
-   conteosLocales=datos.counts;
    storedRows=combinarRegistrosCalidad(read(key(areaId,storageKey)),sourceRows);
    if(!manualChoice)demoMode=storedRows.length===0;
    records=demoMode?demoRows:storedRows;
@@ -1345,12 +1274,6 @@ function render({areaId,mod,key:storageKey,panel,allowedGroups=null,initialGroup
   };
   void cargarOrigen();
   window.addEventListener("focus",()=>{if(panel.isConnected)void cargarOrigen();});
-  try{
-   const channel=new BroadcastChannel("labores-jn-conteo-lineas");
-   channel.addEventListener("message",event=>{
-    if(event.data?.tipo==="conteo-actualizado"&&panel.isConnected)void cargarOrigen();
-   });
-  }catch(error){console.warn("Canal de conteos no disponible",error);}
  }
  styleModeButton(xa,false);
  styleModeButton(xi,true);
