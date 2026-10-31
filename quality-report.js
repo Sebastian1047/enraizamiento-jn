@@ -92,7 +92,10 @@ function leerLaboresLocal(){
    try{
     const tx=db.transaction(["calidadEvaluaciones"],"readonly");
     tx.objectStore("calidadEvaluaciones").getAll().onsuccess=e=>{
-     result.rows=(e.target.result||[]).filter(x=>x&&x.fecha&&x.colaborador!=null);
+     result.rows=(e.target.result||[]).filter(x=>x&&x.fecha&&x.colaborador!=null&&
+       (x.moduloCalidad==="siembra-campo"||
+        (!x.moduloCalidad&&!x.tipoLaborCalidad&&!x.gruposPreparacion&&
+         String(x.bloque??"").trim()&&String(x.cama??"").trim())));
     };
     tx.oncomplete=()=>{db.close();resolve(result)};
     tx.onerror=()=>{db.close();empty()};
